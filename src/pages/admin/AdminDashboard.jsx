@@ -32,7 +32,17 @@ import {
   CardHeader,
   Divider,
   alpha,
-  useTheme
+  useTheme,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Badge,
+  Tabs,
+  Tab,
+  CardActions,
+  Switch,
+  FormControlLabel
 } from "@mui/material";
 
 import {
@@ -48,10 +58,23 @@ import {
   Close as CloseIcon,
   Dashboard as DashboardIcon,
   PersonAdd as PersonAddIcon,
-  Group as GroupIcon
+  Group as GroupIcon,
+  Sports as SportsIcon,
+  Person as PersonIcon,
+  Download as DownloadIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  CalendarToday as CalendarIcon,
+  LocationOn as LocationIcon,
+  Paid as PaymentIcon,
+  AccessTime as TimeIcon,
+  ArrowBack as ArrowBackIcon,
+  CheckCircle as CheckCircleIcon
 } from "@mui/icons-material";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const API_BASE_URL = "http://localhost:4000";
 const ITEMS_PER_PAGE = 5;
@@ -127,6 +150,14 @@ export default function AdminDashboard() {
     pending: 0
   });
   const [expandedCaptain, setExpandedCaptain] = useState(null);
+  
+  // New states for team details
+  const [captainTeams, setCaptainTeams] = useState([]);
+  const [teamsLoading, setTeamsLoading] = useState(false); // Added this missing state
+  const [teamPlayers, setTeamPlayers] = useState([]); // Added this state for team players
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [teamTabValue, setTeamTabValue] = useState(0);
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
   // Formik form
   const formik = useFormik({
@@ -276,8 +307,99 @@ export default function AdminDashboard() {
   };
 
   /* ================= VIEW DETAILS ================= */
-  const viewDetails = (captain) => {
-    setSelectedCaptain(captain);
+  const viewDetails = async (captain) => {
+    try {
+      setSelectedCaptain(captain);
+      setTeamsLoading(true);
+      setDetailsDialogOpen(true);
+      
+      // Fetch captain teams
+      const res = await API.get(`/admin/captain/${captain._id}/team`);
+      
+      if (res.data.team) {
+        setCaptainTeams([
+          {
+            ...res.data.team,
+            players: res.data.members || []
+          }
+        ]);
+      } else {
+        setCaptainTeams([]);
+      }
+      
+    } catch (err) {
+      showSnackbar("Failed to fetch team details", "error");
+      console.error("Fetch teams error:", err);
+    } finally {
+      setTeamsLoading(false);
+    }
+  };
+
+  /* ================= FETCH TEAM PLAYERS ================= */
+  const fetchTeamPlayers = async (teamId) => {
+    try {
+      // You can implement this if you have an API endpoint for team players
+      // For now, we'll use the players data from captainTeams
+      const team = captainTeams.find(t => t._id === teamId);
+      if (team && team.players) {
+        setTeamPlayers(team.players);
+      } else {
+        setTeamPlayers([]);
+      }
+    } catch (err) {
+      console.error("Error fetching team players:", err);
+      setTeamPlayers([]);
+    }
+  };
+
+  /* ================= DOWNLOAD TEAMS PDF ================= */
+  const downloadTeamsPDF = () => {
+    if (!selectedCaptain || captainTeams.length === 0) return;
+    
+    const doc = new jsPDF();
+    
+    // PDF Header
+    doc.setFontSize(20);
+    doc.setTextColor(40, 53, 147);
+    doc.text(`${selectedCaptain.name}'s Teams Report`, 105, 20, null, null, 'center');
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Captain Email: ${selectedCaptain.email}`, 105, 30, null, null, 'center');
+    doc.text(`Phone: ${selectedCaptain.phoneNo}`, 105, 36, null, null, 'center');
+    doc.text(`Total Teams: ${captainTeams.length}`, 105, 42, null, null, 'center');
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 48, null, null, 'center');
+    
+    // Teams Table
+    const tableColumn = ["Team ID", "Team Name", "Sport", "Players", "Created Date"];
+    const tableRows = captainTeams.map((team, index) => [
+      index + 1,
+      team.teamName || "Unnamed Team",
+      team.sportType || "Not Specified",
+      team.players ? team.players.length : 0,
+      new Date(team.createdAt).toLocaleDateString()
+    ]);
+    
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 55,
+      theme: 'grid',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [40, 53, 147] }
+    });
+    
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
+    }
+    
+    doc.save(`${selectedCaptain.name}_Teams_Report.pdf`);
+    showSnackbar("PDF downloaded successfully!");
   };
 
   /* ================= FILTER & PAGINATION ================= */
@@ -342,6 +464,44 @@ export default function AdminDashboard() {
       </Card>
     </motion.div>
   );
+
+  /* ================= TEAM STATS CALCULATION ================= */
+  const calculateTeamStats = () => {
+    if (captainTeams.length === 0) return null;
+    
+    const totalTeams = captainTeams.length;
+    const activeTeams = captainTeams.filter(t => t.isActive).length;
+    const totalPlayers = captainTeams.reduce((sum, team) => sum + (team.players?.length || 0), 0);
+    const avgPlayers = Math.round(totalPlayers / totalTeams);
+    
+    // Count by sport type
+    const sportsCount = {};
+    captainTeams.forEach(team => {
+      const sport = team.sportType || 'Other';
+      sportsCount[sport] = (sportsCount[sport] || 0) + 1;
+    });
+    
+    return {
+      totalTeams,
+      activeTeams,
+      totalPlayers,
+      avgPlayers,
+      sportsCount
+    };
+  };
+
+  const teamStats = calculateTeamStats();
+
+  /* ================= HANDLE TEAM TAB CHANGE ================= */
+  const handleTeamTabChange = (event, newValue) => {
+    setTeamTabValue(newValue);
+  };
+
+  /* ================= HANDLE TEAM SELECTION ================= */
+  const handleTeamSelect = (teamId) => {
+    setSelectedTeam(teamId);
+    fetchTeamPlayers(teamId);
+  };
 
   return (
     <motion.div
@@ -549,17 +709,12 @@ export default function AdminDashboard() {
                       >
                         <TableCell>
                           <Box display="flex" alignItems="center">
-                            <motion.div whileHover={{ scale: 1.1 }}>
-                              <Avatar
-                                src={c.image ? `${API_BASE_URL}${c.image}` : ""}
-                                sx={{ 
-                                  width: 50, 
-                                  height: 50,
-                                  mr: 2,
-                                  border: `2px solid ${c.paymentStatus === "Paid" ? theme.palette.success.main : theme.palette.warning.main}`
-                                }}
-                              />
-                            </motion.div>
+                            <Avatar
+                              src={c.image || ""}
+                              sx={{ mr: 2, bgcolor: theme.palette.primary.main }}
+                            >
+                              {c.name?.charAt(0)}
+                            </Avatar>
                             <Box>
                               <Typography fontWeight="bold">{c.name}</Typography>
                               <Typography variant="caption" color="textSecondary">
@@ -574,7 +729,7 @@ export default function AdminDashboard() {
                             {c.phoneNo}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell> 
                           <motion.div whileHover={{ scale: 1.05 }}>
                             <Chip
                               label={c.paymentStatus || "Pending"}
@@ -616,7 +771,7 @@ export default function AdminDashboard() {
                             
                             <Tooltip title="Delete">
                               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                                <IconButton
+                                <IconButton 
                                   color="error"
                                   onClick={() => {
                                     const id = c._id || c.id;
@@ -628,7 +783,7 @@ export default function AdminDashboard() {
                                   <DeleteIcon />
                                 </IconButton>
                               </motion.div>
-                            </Tooltip>
+                            </Tooltip>  
                           </Box>
                         </TableCell>
                       </motion.tr>
@@ -702,46 +857,7 @@ export default function AdminDashboard() {
                   </Grid>
                 ))}
 
-                <Grid item xs={12}>
-                  <Button
-                    component="label"
-                    variant="outlined"
-                    startIcon={<UploadIcon />}
-                    fullWidth
-                    sx={{ py: 1.5 }}
-                  >
-                    Upload Profile Image
-                    <input
-                      hidden
-                      type="file"
-                      accept="image/*"
-                      onChange={e => handleImage(e.target.files[0])}
-                    />
-                  </Button>
-                  
-                  {preview && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ type: "spring" }}
-                    >
-                      <Box mt={2} display="flex" flexDirection="column" alignItems="center">
-                        <Avatar
-                          src={preview}
-                          sx={{
-                            width: 100,
-                            height: 100,
-                            border: `3px solid ${theme.palette.primary.main}`,
-                            boxShadow: theme.shadows[3]
-                          }}
-                        />
-                        <Typography variant="caption" color="textSecondary" mt={1}>
-                          Preview
-                        </Typography>
-                      </Box>
-                    </motion.div>
-                  )}
-                </Grid>
+              
               </Grid>
             </form>
           </DialogContent>
@@ -758,6 +874,302 @@ export default function AdminDashboard() {
             >
               {creating ? "Creating..." : "Create Captain"}
             </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* TEAM DETAILS DIALOG */}
+        <Dialog
+          open={detailsDialogOpen}
+          onClose={() => setDetailsDialogOpen(false)}
+          maxWidth="lg"
+          fullWidth
+          fullScreen={teamTabValue === 1 && selectedTeam}
+        >
+          <DialogTitle>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box display="flex" alignItems="center" gap={2}>
+                {teamTabValue === 1 && selectedTeam ? (
+                  <IconButton 
+                    onClick={() => setSelectedTeam(null)}
+                    size="small"
+                  >
+                    <ArrowBackIcon />
+                  </IconButton>
+                ) : null}
+                <Box display="flex" alignItems="center">
+                  <GroupIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
+                  <Box>
+                    <Typography variant="h6">
+                      {selectedCaptain?.name}'s Teams
+                      <Typography variant="caption" sx={{ ml: 2, color: "text.secondary" }}>
+                        ({captainTeams.length} teams)
+                      </Typography>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedCaptain?.email} • {selectedCaptain?.phoneNo}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+              <Box display="flex" gap={1}>
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  onClick={() => viewDetails(selectedCaptain)}
+                  size="small"
+                >
+                  Refresh
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<DownloadIcon />}
+                  onClick={downloadTeamsPDF}
+                  disabled={captainTeams.length === 0}
+                  size="small"
+                >
+                  Download PDF
+                </Button>
+                <IconButton onClick={() => setDetailsDialogOpen(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          </DialogTitle>
+          
+          <DialogContent dividers>
+            {teamsLoading ? (
+              <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Loading teams...</Typography>
+              </Box>
+            ) : captainTeams.length === 0 ? (
+              <Box textAlign="center" py={4}>
+                <SportsIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
+                <Typography variant="h6" color="textSecondary">
+                  No teams found
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  This captain hasn't created any teams yet.
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                {!selectedTeam ? (
+                  <>
+                    {/* Tabs for Teams and Stats */}
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                      <Tabs value={teamTabValue} onChange={handleTeamTabChange}>
+                        <Tab label="Teams List" />
+                        <Tab label="Statistics" />
+                      </Tabs>
+                    </Box>
+
+                    {/* Teams List Tab */}
+                    {teamTabValue === 0 && (
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table>
+                          <TableHead>
+                            <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
+                              <TableCell><Typography fontWeight="bold">Team Name</Typography></TableCell>                              <TableCell><Typography fontWeight="bold">Players</Typography></TableCell>
+                              <TableCell><Typography fontWeight="bold">Created On</Typography></TableCell>
+                              <TableCell><Typography fontWeight="bold">Status</Typography></TableCell>
+                              <TableCell><Typography fontWeight="bold">Actions</Typography></TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {captainTeams.map((team) => (
+                              <TableRow key={team._id} hover>
+                                <TableCell>
+                                  <Box display="flex" alignItems="center">
+                                    <SportsIcon sx={{ mr: 2, color: "action.active" }} />
+                                    <Typography fontWeight="medium">{team.teamName}</Typography>
+                                  </Box>
+                                </TableCell>
+                            
+                                <TableCell>
+                                  <Button
+                                    variant="text"
+                                    startIcon={<PersonIcon />}
+                                    onClick={() => handleTeamSelect(team._id)}
+                                    size="small"
+                                  >
+                                    {team.players?.length || 0} players
+                                  </Button>
+                                </TableCell>
+                                <TableCell>
+                                  {new Date(team.createdAt).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <Chip 
+                                    label={team.isActive ? "Active" : "Inactive"} 
+                                    size="small"
+                                    color={team.isActive ? "success" : "default"}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleTeamSelect(team._id)}
+                                  >
+                                    <ViewIcon />
+                                  </IconButton>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+
+                    {/* Statistics Tab */}
+                    {teamTabValue === 1 && teamStats && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <Grid container spacing={3}>
+                          {/* Team Statistics Cards */}
+                          <Grid item xs={12} md={3}>
+                            <Card variant="outlined">
+                              <CardContent sx={{ textAlign: 'center' }}>
+                                <SportsIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
+                                <Typography color="textSecondary" variant="body2">Total Teams</Typography>
+                                <Typography variant="h4" fontWeight="bold">{teamStats.totalTeams}</Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                          <Grid item xs={12} md={3}>
+                            <Card variant="outlined">
+                              <CardContent sx={{ textAlign: 'center' }}>
+                                <CheckCircleIcon sx={{ fontSize: 40, color: theme.palette.success.main, mb: 1 }} />
+                                <Typography color="textSecondary" variant="body2">Active Teams</Typography>
+                                <Typography variant="h4" fontWeight="bold">{teamStats.activeTeams}</Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                          <Grid item xs={12} md={3}>
+                            <Card variant="outlined">
+                              <CardContent sx={{ textAlign: 'center' }}>
+                                <GroupIcon sx={{ fontSize: 40, color: theme.palette.info.main, mb: 1 }} />
+                                <Typography color="textSecondary" variant="body2">Total Players</Typography>
+                                <Typography variant="h4" fontWeight="bold">{teamStats.totalPlayers}</Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                          <Grid item xs={12} md={3}>
+                            <Card variant="outlined">
+                              <CardContent sx={{ textAlign: 'center' }}>
+                                <PersonIcon sx={{ fontSize: 40, color: theme.palette.warning.main, mb: 1 }} />
+                                <Typography color="textSecondary" variant="body2">Avg Players/Team</Typography>
+                                <Typography variant="h4" fontWeight="bold">{teamStats.avgPlayers}</Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+
+                          {/* Sport Distribution */}
+                          <Grid item xs={12} md={6}>
+                            <Card variant="outlined">
+                              <CardContent>
+                                <Typography variant="h6" gutterBottom>Sport Distribution</Typography>
+                                {Object.entries(teamStats.sportsCount).map(([sport, count]) => (
+                                  <Box key={sport} display="flex" justifyContent="space-between" mb={1}>
+                                    <Typography>{sport}</Typography>
+                                    <Typography fontWeight="bold">{count} teams</Typography>
+                                  </Box>
+                                ))}
+                              </CardContent>
+                            </Card>
+                          </Grid>
+
+                          {/* Recent Teams */}
+                          <Grid item xs={12} md={6}>
+                            <Card variant="outlined">
+                              <CardContent>
+                                <Typography variant="h6" gutterBottom>Recent Teams</Typography>
+                                <List>
+                                  {captainTeams.slice(0, 3).map((team) => (
+                                    <ListItem key={team._id}>
+                                      <ListItemAvatar>
+                                        <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                                          <SportsIcon />
+                                        </Avatar>
+                                      </ListItemAvatar>
+                                      <ListItemText
+                                        primary={team.teamName}
+                                        secondary={`${team.sportType} • ${team.players?.length || 0} players`}
+                                      />
+                                    </ListItem>
+                                  ))}
+                                </List>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        </Grid>
+                      </motion.div>
+                    )}
+                  </>
+                ) : (
+                  // Team Players View
+                  <Box>
+                    <Typography variant="h6" gutterBottom>
+                      Team Players
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" gutterBottom>
+                      {captainTeams.find(t => t._id === selectedTeam)?.teamName} • 
+                      {captainTeams.find(t => t._id === selectedTeam)?.sportType}
+                    </Typography>
+                    
+                    {teamPlayers.length === 0 ? (
+                      <Box textAlign="center" py={4}>
+                        <PersonIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
+                        <Typography variant="h6" color="textSecondary">
+                          No players found
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          This team has no players yet.
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <List>
+                        {teamPlayers.map((player, index) => (
+                          <ListItem key={player._id || index} divider>
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
+                                {player.name?.charAt(0)}
+                              </Avatar>
+                            </ListItemAvatar>
+
+                            <ListItemText
+                              primary={player.name}
+                              secondary={
+                                <>
+                                  <Box display="block">{player.email}</Box>
+                                  <Box display="block">{player.mobile}</Box>
+                                </>
+                              }
+                            />
+
+                            <Chip label={player.role || "Player"} size="small" />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                  </Box>
+                )}
+              </>
+            )}
+          </DialogContent>
+          
+          <DialogActions sx={{ p: 2 }}>
+            {selectedTeam ? (
+              <Button 
+                startIcon={<ArrowBackIcon />}
+                onClick={() => setSelectedTeam(null)}
+              >
+                Back to Teams
+              </Button>
+            ) : null}
+            <Button onClick={() => setDetailsDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
 
