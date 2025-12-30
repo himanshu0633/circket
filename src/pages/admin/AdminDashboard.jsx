@@ -29,11 +29,6 @@ import {
   Alert,
   Snackbar,
   Tooltip,
-  Fade,
-  Zoom,
-  Slide,
-  Grow,
-  Collapse,
   CardHeader,
   Divider,
   alpha,
@@ -166,9 +161,19 @@ export default function AdminDashboard() {
       const captainsData = res.data.captains || [];
       setCaptains(captainsData);
       calculateStats(captainsData);
+      
+      // Debug: Log first captain data
+      if (captainsData.length > 0) {
+        console.log("First captain data:", captainsData[0]);
+        console.log("Captain IDs:", captainsData.map(c => ({ 
+          id: c._id, 
+          name: c.name,
+          hasId: !!c._id 
+        })));
+      }
     } catch (err) {
       showSnackbar("Failed to fetch captains", "error");
-      console.error(err);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -226,14 +231,34 @@ export default function AdminDashboard() {
     }
   };
 
-  /* ================= PAYMENT HANDLER ================= */
-  const markPaid = async (id) => {
+  /* ================= PAYMENT HANDLER - FIXED ================= */
+  const markPaid = async (captain) => {
     try {
+      // Get ID with multiple fallback options
+      const id = captain._id || captain.id || captain.userId;
+      
+      // Validate ID
+      if (!id) {
+        showSnackbar("Cannot update payment: No valid ID found for captain", "error");
+        console.error("No ID found for captain:", captain);
+        return;
+      }
+      
+      console.log("Updating payment for ID:", id);
+      
       await API.put(`/admin/updatePayment/${id}`, { status: "Paid" });
       showSnackbar("Payment status updated to Paid");
       fetchCaptains();
     } catch (err) {
-      showSnackbar("Failed to update payment status", "error");
+      const errorMsg = err?.response?.data?.message || 
+                       err?.message || 
+                       "Failed to update payment status";
+      showSnackbar(errorMsg, "error");
+      console.error("Payment update error:", {
+        error: err,
+        response: err?.response,
+        captain
+      });
     }
   };
 
@@ -442,194 +467,198 @@ export default function AdminDashboard() {
         </motion.div>
 
         {/* TABLE */}
-        <Slide direction="up" in={!loading} mountOnEnter unmountOnExit>
-          <div>
-            <TableContainer
-              component={Paper}
-              sx={{
-                borderRadius: 2,
-                overflow: "hidden",
-                boxShadow: theme.shadows[3],
-                transition: "box-shadow 0.3s",
-                "&:hover": {
-                  boxShadow: theme.shadows[6]
-                }
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
-                    <TableCell>
-                      <Typography fontWeight="bold">Captain</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography fontWeight="bold">Contact</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography fontWeight="bold">Payment Status</Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography fontWeight="bold">Actions</Typography>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
+        <div>
+          <TableContainer
+            component={Paper}
+            sx={{
+              borderRadius: 2,
+              overflow: "hidden",
+              boxShadow: theme.shadows[3],
+              transition: "box-shadow 0.3s",
+              "&:hover": {
+                boxShadow: theme.shadows[6]
+              }
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
+                  <TableCell>
+                    <Typography fontWeight="bold">Captain</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography fontWeight="bold">Contact</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography fontWeight="bold">Payment Status</Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography fontWeight="bold">Actions</Typography>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
 
-                <TableBody>
-                  <AnimatePresence>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            <CircularProgress size={50} />
-                            <Typography variant="body2" color="textSecondary" mt={2}>
-                              Loading captains...
-                            </Typography>
-                          </motion.div>
-                        </TableCell>
-                      </TableRow>
-                    ) : paginated.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ type: "spring" }}
-                          >
-                            <GroupIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
-                            <Typography variant="h6" color="textSecondary" gutterBottom>
-                              No captains found
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary">
-                              {search ? "Try a different search term" : "Add your first captain"}
-                            </Typography>
-                          </motion.div>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      paginated.map((c, index) => (
-                        <motion.tr
-                          key={c._id}
-                          variants={tableRowVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          custom={index}
-                          whileHover={{ 
-                            backgroundColor: alpha(theme.palette.primary.light, 0.05),
-                            transition: { duration: 0.2 }
-                          }}
+              <TableBody>
+                <AnimatePresence>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
                         >
-                          <TableCell>
-                            <Box display="flex" alignItems="center">
-                              <motion.div whileHover={{ scale: 1.1 }}>
-                                {/* <Avatar
-                                  src={c.image ? `${API_BASE_URL}${c.image}` : ""}
-                                  sx={{ 
-                                    width: 50, 
-                                    height: 50,
-                                    mr: 2,
-                                    border: `2px solid ${c.paymentStatus === "Paid" ? theme.palette.success.main : theme.palette.warning.main}`
-                                  }}
-                                /> */}
-                              </motion.div>
-                              <Box>
-                                <Typography fontWeight="bold">{c.name}</Typography>
-                             
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Typography>{c.email}</Typography>
-                            <Typography variant="body2" color="textSecondary">
-                              {c.phoneNo}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <motion.div whileHover={{ scale: 1.05 }}>
-                              <Chip
-                                label={c.paymentStatus || "Pending"}
-                                color={c.paymentStatus === "Paid" ? "success" : "warning"}
-                                variant="outlined"
+                          <CircularProgress size={50} />
+                          <Typography variant="body2" color="textSecondary" mt={2}>
+                            Loading captains...
+                          </Typography>
+                        </motion.div>
+                      </TableCell>
+                    </TableRow>
+                  ) : paginated.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ type: "spring" }}
+                        >
+                          <GroupIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
+                          <Typography variant="h6" color="textSecondary" gutterBottom>
+                            No captains found
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            {search ? "Try a different search term" : "Add your first captain"}
+                          </Typography>
+                        </motion.div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginated.map((c, index) => (
+                      <motion.tr
+                        key={c._id || c.id || index}
+                        variants={tableRowVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        custom={index}
+                        whileHover={{ 
+                          backgroundColor: alpha(theme.palette.primary.light, 0.05),
+                          transition: { duration: 0.2 }
+                        }}
+                      >
+                        <TableCell>
+                          <Box display="flex" alignItems="center">
+                            <motion.div whileHover={{ scale: 1.1 }}>
+                              <Avatar
+                                src={c.image ? `${API_BASE_URL}${c.image}` : ""}
                                 sx={{ 
-                                  fontWeight: "bold",
-                                  borderRadius: 1
+                                  width: 50, 
+                                  height: 50,
+                                  mr: 2,
+                                  border: `2px solid ${c.paymentStatus === "Paid" ? theme.palette.success.main : theme.palette.warning.main}`
                                 }}
                               />
                             </motion.div>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Box display="flex" gap={1} justifyContent="center">
-                              <Tooltip title="Mark as Paid">
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                                  <IconButton
-                                    color="success"
-                                    disabled={c.paymentStatus === "Paid"}
-                                    onClick={() => markPaid(c._id)}
-                                    size="small"
-                                  >
-                                    <PaidIcon />
-                                  </IconButton>
-                                </motion.div>
-                              </Tooltip>
-                              
-                              {/* <Tooltip title="View Details">
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                                  <IconButton
-                                    color="info"
-                                    onClick={() => viewDetails(c)}
-                                    size="small"
-                                  >
-                                    <ViewIcon />
-                                  </IconButton>
-                                </motion.div>
-                              </Tooltip>
-                              
-                              <Tooltip title="Delete">
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                                  <IconButton
-                                    color="error"
-                                    onClick={() => handleDelete(c._id)}
-                                    size="small"
-                                  >
-                                    <DeleteIcon />
-                                  </IconButton>
-                                </motion.div>
-                              </Tooltip> */}
+                            <Box>
+                              <Typography fontWeight="bold">{c.name}</Typography>
+                              <Typography variant="caption" color="textSecondary">
+                                ID: {(c._id || c.id || "N/A").toString().substring(0, 8)}...
+                              </Typography>
                             </Box>
-                          </TableCell>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </TableContainer>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography>{c.email}</Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            {c.phoneNo}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <motion.div whileHover={{ scale: 1.05 }}>
+                            <Chip
+                              label={c.paymentStatus || "Pending"}
+                              color={c.paymentStatus === "Paid" ? "success" : "warning"}
+                              variant="outlined"
+                              sx={{ 
+                                fontWeight: "bold",
+                                borderRadius: 1
+                              }}
+                            />
+                          </motion.div>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Box display="flex" gap={1} justifyContent="center">
+                            <Tooltip title="Mark as Paid">
+                              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                                <IconButton
+                                  color="success"
+                                  disabled={c.paymentStatus === "Paid"}
+                                  onClick={() => markPaid(c)}
+                                  size="small"
+                                >
+                                  <PaidIcon />
+                                </IconButton>
+                              </motion.div>
+                            </Tooltip>
+                            
+                            <Tooltip title="View Details">
+                              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                                <IconButton
+                                  color="info"
+                                  onClick={() => viewDetails(c)}
+                                  size="small"
+                                >
+                                  <ViewIcon />
+                                </IconButton>
+                              </motion.div>
+                            </Tooltip>
+                            
+                            <Tooltip title="Delete">
+                              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                                <IconButton
+                                  color="error"
+                                  onClick={() => {
+                                    const id = c._id || c.id;
+                                    if (id) handleDelete(id);
+                                    else showSnackbar("Cannot delete: No ID found", "error");
+                                  }}
+                                  size="small"
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </motion.div>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </motion.tr>
+                    ))
+                  )}
+                </AnimatePresence>
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-            {/* PAGINATION */}
-            {filtered.length > ITEMS_PER_PAGE && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Box display="flex" justifyContent="center" mt={3}>
-                  <Pagination
-                    count={Math.ceil(filtered.length / ITEMS_PER_PAGE)}
-                    page={page}
-                    onChange={(e, v) => setPage(v)}
-                    color="primary"
-                    size="large"
-                    shape="rounded"
-                  />
-                </Box>
-              </motion.div>
-            )}
-          </div>
-        </Slide>
+          {/* PAGINATION */}
+          {filtered.length > ITEMS_PER_PAGE && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Box display="flex" justifyContent="center" mt={3}>
+                <Pagination
+                  count={Math.ceil(filtered.length / ITEMS_PER_PAGE)}
+                  page={page}
+                  onChange={(e, v) => setPage(v)}
+                  color="primary"
+                  size="large"
+                  shape="rounded"
+                />
+              </Box>
+            </motion.div>
+          )}
+        </div>
 
         {/* CREATE CAPTAIN DIALOG */}
         <Dialog
@@ -637,8 +666,9 @@ export default function AdminDashboard() {
           onClose={() => setOpenDialog(false)}
           maxWidth="sm"
           fullWidth
-          TransitionComponent={Slide}
-          transitionDuration={300}
+          TransitionProps={{
+            timeout: 300
+          }}
         >
           <DialogTitle>
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -672,7 +702,7 @@ export default function AdminDashboard() {
                   </Grid>
                 ))}
 
-                {/* <Grid item xs={12}>
+                <Grid item xs={12}>
                   <Button
                     component="label"
                     variant="outlined"
@@ -711,7 +741,7 @@ export default function AdminDashboard() {
                       </Box>
                     </motion.div>
                   )}
-                </Grid> */}
+                </Grid>
               </Grid>
             </form>
           </DialogContent>
@@ -737,7 +767,6 @@ export default function AdminDashboard() {
           autoHideDuration={3000}
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          TransitionComponent={Slide}
         >
           <Alert
             onClose={handleCloseSnackbar}

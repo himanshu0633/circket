@@ -104,7 +104,7 @@ export default function Login() {
             <div className="logo-ball"></div>
           </div>
           <h1 className="title">Welcome to Cricket Manager</h1>
-          <p className="subtitle">Sign in to continue</p>
+         
         </div>
 
         <form onSubmit={handleLogin} className="login-form" ref={formRef}>
