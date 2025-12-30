@@ -401,7 +401,7 @@ const TeamManagement = () => {
                       </td>
                       <td>{member.mobile || '-'}</td>
                       <td>{member.email || '-'}</td>
-                      <td>{formatDate(member.dateOfBirth)}</td>
+                     
                       <td>
                         <span className={`status-badge ${member.status?.toLowerCase() || 'pending'}`}>
                           {member.status || 'Pending'}
