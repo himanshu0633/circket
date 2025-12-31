@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import API from "../api/axios";
 import { useNavigate } from "react-router-dom";
-
-
+import logo from "../assets/logo.png";
+import "../pages/login.css";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -10,6 +10,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [bounceAnimation, setBounceAnimation] = useState(false);
   
   const navigate = useNavigate();
   const ballRef = useRef(null);
@@ -23,6 +24,26 @@ export default function Login() {
       setEmail(savedEmail);
       setRememberMe(true);
     }
+    
+    // Start cricket ball animation
+    const animateBall = () => {
+      if (ballRef.current) {
+        ballRef.current.classList.add('bouncing');
+        setTimeout(() => {
+          if (ballRef.current) {
+            ballRef.current.classList.remove('bouncing');
+          }
+        }, 2000);
+      }
+    };
+    
+    // Animate ball every 5 seconds
+    const ballInterval = setInterval(animateBall, 5000);
+    
+    // Initial animation
+    setTimeout(animateBall, 1000);
+    
+    return () => clearInterval(ballInterval);
   }, []);
 
   const handleLogin = async (e) => {
@@ -31,6 +52,8 @@ export default function Login() {
     
     if (!email || !password) {
       setMsg("Please fill in all fields");
+      setBounceAnimation(true);
+      setTimeout(() => setBounceAnimation(false), 1000);
       return;
     }
     
@@ -51,20 +74,29 @@ export default function Login() {
       // Add success class for animation
       if (formRef.current) {
         formRef.current.classList.add('success');
+        if (ballRef.current) {
+          ballRef.current.classList.add('hit');
+        }
+        
         setTimeout(() => {
           if (res.data.role === "admin") navigate("/admin");
           else navigate("/captain");
-        }, 1000);
+        }, 1500);
       }
       
     } catch (err) {
       setMsg(err?.response?.data?.message || "Login failed");
-      // Add error animation
       if (formRef.current) {
         formRef.current.classList.add('error');
+        if (ballRef.current) {
+          ballRef.current.classList.add('shake');
+          setTimeout(() => {
+            ballRef.current.classList.remove('shake');
+          }, 500);
+        }
         setTimeout(() => {
           formRef.current.classList.remove('error');
-        }, 1000);
+        }, 1500);
       }
     } finally {
       setLoading(false);
@@ -73,144 +105,166 @@ export default function Login() {
 
   return (
     <div className="login-container" ref={containerRef}>
-      {/* Cricket Field Background */}
-      <div className="cricket-field">
-        <div className="pitch"></div>
-        <div className="stumps">
-          <div className="bails"></div>
+      {/* Left Side - Enhanced Cricket Field */}
+      <div className="login-field-left">
+        <div className="login-pitch"></div>
+        
+        {/* Stumps at both ends */}
+        <div className="login-stumps login-stumps-left">
+          <div className="login-stump login-stump-1"></div>
+          <div className="login-stump login-stump-2"></div>
+          <div className="login-stump login-stump-3"></div>
+          <div className="login-bails"></div>
         </div>
-        <div className="cricket-ball" ref={ballRef}></div>
-        <div className="ball-shadow"></div>
-        <div className="boundary"></div>
         
-        {/* Fielders */}
-        <div className="fielder fielder1"></div>
-        <div className="fielder fielder2"></div>
+        <div className="login-stumps login-stumps-right">
+          <div className="login-stump login-stump-1"></div>
+          <div className="login-stump login-stump-2"></div>
+          <div className="login-stump login-stump-3"></div>
+          <div className="login-bails"></div>
+        </div>
         
-        {/* Cricket Equipment */}
-        <div className="cricket-bat"></div>
-        <div className="cricket-glove"></div>
+        {/* Animated Cricket Ball */}
+        <div className="login-cricket-ball" ref={ballRef}>
+          <div className="login-ball-seam"></div>
+          <div className="login-ball-shine"></div>
+        </div>
+        
+        {/* Ball Trail Effect */}
+        <div className="login-ball-trail-container">
+          <div className="login-trail-dot login-dot-1"></div>
+          <div className="login-trail-dot login-dot-2"></div>
+          <div className="login-trail-dot login-dot-3"></div>
+          <div className="login-trail-dot login-dot-4"></div>
+          <div className="login-trail-dot login-dot-5"></div>
+        </div>
+        
+        {/* Fielders positioned around the field */}
+        <div className="login-fielder login-fielder-1">
+          <div className="login-fielder-body"></div>
+          <div className="login-fielder-shadow"></div>
+        </div>
+        <div className="login-fielder login-fielder-2">
+          <div className="login-fielder-body"></div>
+          <div className="login-fielder-shadow"></div>
+        </div>
+        <div className="login-fielder login-fielder-3">
+          <div className="login-fielder-body"></div>
+          <div className="login-fielder-shadow"></div>
+        </div>
+        <div className="login-fielder login-fielder-4">
+          <div className="login-fielder-body"></div>
+          <div className="login-fielder-shadow"></div>
+        </div>
       </div>
-      
-      {/* Clouds */}
-      <div className="cloud"></div>
-      <div className="cloud cloud2"></div>
 
-      {/* Login Form */}
-      <div className="login-card">
-        <div className="card-header">
-          <div className="cricket-logo">
-            <div className="logo-bat"></div>
-            <div className="logo-ball"></div>
+      {/* Right Side - Login Form */}
+      <div className="login-card-right">
+        <div className="login-logo-container">
+          <div className="login-logo-wrapper">
+            <img src={logo} alt="CDS Premier League Logo" className="login-logo-image" />
+            <div className="login-logo-glow"></div>
+            <div className="login-logo-shine"></div>
           </div>
-          <h1 className="title">Welcome to Cricket Manager</h1>
-         
+        </div>
+        
+        <div className="login-title-container">
+          <h1 className="login-title">CDS Premier League</h1>
+          <div className="login-title-underline">
+            <div className="login-underline-line"></div>
+            <div className="login-underline-ball"></div>
+          </div>
         </div>
 
-        <form onSubmit={handleLogin} className="login-form" ref={formRef}>
+        <form onSubmit={handleLogin} className={`login-form ${bounceAnimation ? 'bounce' : ''}`} ref={formRef}>
           {msg && (
-            <div className={`message ${msg.includes('failed') ? 'error' : 'info'}`}>
-              <span className="message-icon">
-                {msg.includes('failed') ? '⚠️' : 'ℹ️'}
+            <div className={`login-message ${msg.includes('failed') || msg.includes('Please') || msg.includes('coming soon') ? 'info' : 'info'}`}>
+              <span className="login-message-icon">
+                {msg.includes('failed') ? '⚠️' : msg.includes('Please') ? 'ℹ️' : 'ℹ️'}
               </span>
-              {msg}
+              <span className="login-message-text">{msg}</span>
+              <div className="login-message-underline"></div>
             </div>
           )}
 
-          <div className="form-group">
-            <div className="input-wrapper">
+          <div className="login-form-group">
+            <label className="login-form-label">Email Address</label>
+            <div className="login-input-wrapper">
               <input
                 type="email"
-                placeholder="Email Address"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="form-input"
+                className="login-form-input"
               />
-              <span className="input-icon">📧</span>
-              <div className="input-underline"></div>
+              <span className="login-input-icon">📧</span>
             </div>
           </div>
 
-          <div className="form-group">
-            <div className="input-wrapper">
+          <div className="login-form-group">
+            <label className="login-form-label">Password</label>
+            <div className="login-input-wrapper">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="form-input"
+                className="login-form-input"
               />
-              <span className="input-icon">🔒</span>
+              <span className="login-input-icon">🔒</span>
               <button 
                 type="button"
-                className="password-toggle"
+                className="login-password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                <span className="login-toggle-icon">
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </span>
               </button>
-              <div className="input-underline"></div>
             </div>
             
             {/* Password strength indicator */}
-            <div className="password-strength">
-              <div className={`strength-bar ${password.length > 0 ? 'active' : ''}`}>
-                <div className={`strength-fill ${
-                  password.length > 8 ? 'strong' : 
-                  password.length > 4 ? 'medium' : 'weak'
-                }`}></div>
+            <div className="login-password-strength">
+              <div className="login-strength-labels">
+                <span className={`login-strength-label ${password.length === 0 ? 'active' : ''}`}>Weak</span>
+                <span className={`login-strength-label ${password.length > 4 && password.length <= 8 ? 'active' : ''}`}>Medium</span>
+                <span className={`login-strength-label ${password.length > 8 ? 'active' : ''}`}>Strong</span>
+              </div>
+              <div className="login-strength-bar">
+                <div 
+                  className={`login-strength-fill ${
+                    password.length > 8 ? 'strong' : 
+                    password.length > 4 ? 'medium' : 'weak'
+                  }`}
+                  style={{width: `${Math.min(password.length * 10, 100)}%`}}
+                ></div>
               </div>
             </div>
           </div>
-
-          <div className="form-options">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={() => setRememberMe(!rememberMe)}
-                className="checkbox-input"
-              />
-              <span className="checkmark"></span>
-              Remember me
-            </label>
-            
-          
-          </div>
-
           <button 
             type="submit" 
-            className={`submit-btn ${loading ? 'loading' : ''}`}
+            className={`login-submit-btn ${loading ? 'loading' : ''}`}
             disabled={loading}
           >
             {loading ? (
               <>
-                <span className="spinner"></span>
-                Signing In...
+                <span className="login-spinner"></span>
+                <span className="login-btn-text">Signing In...</span>
+                <span className="login-btn-cricket">🏏</span>
               </>
             ) : (
               <>
-                <span className="btn-icon">🏏</span>
-                Sign In
+                <span className="login-btn-icon">🎯</span>
+                <span className="login-btn-text">Sign In</span>
+                <span className="login-btn-cricket">🏏</span>
+                <div className="login-btn-shine"></div>
+                <div className="login-btn-pulse"></div>
               </>
             )}
           </button>
-
-          <div className="form-footer">
-          
-            
-            <div className="role-info">
-              <div className="role-badge admin">
-                <span className="badge-icon">👑</span>
-                Admin
-              </div>
-              <div className="role-badge captain">
-                <span className="badge-icon">🎯</span>
-                Captain
-              </div>
-            </div>
-          </div>
         </form>
       </div>
     </div>

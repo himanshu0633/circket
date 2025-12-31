@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
-
+import logo from '../../assets/logo.png'; // Assuming you have a logo image in assets folder
 const API_BASE_URL = 'http://localhost:4000/api';
 
 const TeamManagement = () => {
@@ -515,10 +514,20 @@ const TeamManagement = () => {
         </div>
       )}
 
-      {/* Header with Logout */}
+      {/* Updated Header */}
       <div className="team-header">
-        <div className="header-top">
-          <h1>Team Management</h1>
+        <div className="header-left">
+          <div className="logo-container">
+           <img src={logo} alt="Logo" />
+          </div>
+        </div>
+        
+        <div className="header-center">
+          <h1 className="tournament-title">CDS Premier League</h1>
+          <p className="tournament-subtitle">Team Management Portal</p>
+        </div>
+        
+        <div className="header-right">
           <button 
             className="btn btn-logout"
             onClick={handleLogout}
@@ -528,7 +537,11 @@ const TeamManagement = () => {
             Logout
           </button>
         </div>
-        
+      </div>
+
+      {/* Main Content Container */}
+      <div className="main-content">
+        {/* Header Actions */}
         <div className="header-actions">
           {!team ? (
             <button 
@@ -555,241 +568,247 @@ const TeamManagement = () => {
                 >
                   {isExporting ? 'Exporting...' : 'Export PDF'}
                 </button>
-           
+                <button 
+                  className="btn btn-secondary"
+                  onClick={exportToJSON}
+                  disabled={isExporting}
+                >
+                  Export JSON
+                </button>
               </div>
             </>
           )}
         </div>
-      </div>
 
-      {/* Team Info Card */}
-      {team && (
-        <div className="team-info-card">
-          <div className="team-info-header">
-            <h2>{team.teamName}</h2>
-            <span className={`status-badge ${team.status?.toLowerCase() || 'pending'}`}>
-              {team.status || 'Pending'}
-            </span>
-          </div>
-          <div className="team-info-details">
-            <div className="info-item">
-              <span className="label">Total Slots:</span>
-              <span className="value">{team.totalPlayers || 0}</span>
+        {/* Team Info Card */}
+        {team && (
+          <div className="team-info-card">
+            <div className="team-info-header">
+              <h2>{team.teamName}</h2>
+              <span className={`status-badge ${team.status?.toLowerCase() || 'pending'}`}>
+                {team.status || 'Pending'}
+              </span>
             </div>
-            <div className="info-item">
-              <span className="label">Players Added:</span>
-              <span className="value">{members.length}</span>
-            </div>
-            <div className="info-item">
-              <span className="label">Available Slots:</span>
-              <span className="value">{(team.totalPlayers || 0) - members.length}</span>
-            </div>
-            <div className="info-item">
-              <span className="label">Created Date:</span>
-              <span className="value">{formatDate(team.createdAt)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Team Members Section */}
-      {team && (
-        <div className="team-members-section">
-          <div className="section-header">
-            <h3>Team Members ({members.length})</h3>
-            {members.length > 0 && (
-              <div className="view-toggle">
-                <span className="toggle-label">View:</span>
-                <button 
-                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  onClick={() => setViewMode('table')}
-                  disabled={isExporting}
-                >
-                  <span className="view-icon">📊</span>
-                  Table
-                </button>
-                <button 
-                  className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                  onClick={() => setViewMode('cards')}
-                  disabled={isExporting}
-                >
-                  <span className="view-icon">🃏</span>
-                  Cards
-                </button>
+            <div className="team-info-details">
+              <div className="info-item">
+                <span className="label">Total Slots:</span>
+                <span className="value">{team.totalPlayers || 0}</span>
               </div>
-            )}
-          </div>
-          
-          {members.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">👥</div>
-              <p>No players added yet.</p>
-              <button 
-                className="btn btn-primary"
-                onClick={() => setShowAddPlayersModal(true)}
-                disabled={isExporting}
-              >
-                Add Players
-              </button>
+              <div className="info-item">
+                <span className="label">Players Added:</span>
+                <span className="value">{members.length}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Available Slots:</span>
+                <span className="value">{(team.totalPlayers || 0) - members.length}</span>
+              </div>
+              <div className="info-item">
+                <span className="label">Created Date:</span>
+                <span className="value">{formatDate(team.createdAt)}</span>
+              </div>
             </div>
-          ) : (
-            <>
-              {/* Table View */}
-              {viewMode === 'table' && (
-                <div className="members-table-container">
-                  <table className="members-table">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Role</th>
-                        <th>Mobile</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {members.map((member, index) => (
-                        <tr key={member._id}>
-                          <td>{index + 1}</td>
-                          <td>
-                            <div className="member-name-cell">
-                              {member.name}
-                              {member.role === 'Captain' && (
-                                <span className="captain-badge">©</span>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <span className={`role-badge ${member.role?.toLowerCase().replace(/\s+/g, '-')}`}>
-                              {member.role}
-                            </span>
-                          </td>
-                          <td>{member.mobile || '-'}</td>
-                          <td>{member.email || '-'}</td>
-                          <td>
-                            <span className={`status-badge ${member.status?.toLowerCase() || 'pending'}`}>
-                              {member.status || 'Pending'}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="action-buttons">
-                              <button
-                                className="btn-icon edit"
-                                onClick={() => {
-                                  setEditMember(member);
-                                  setShowEditModal(true);
-                                }}
-                                title="Edit"
-                                disabled={isExporting}
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                className="btn-icon delete"
-                                onClick={() => handleDeleteMember(member._id)}
-                                title="Delete"
-                                disabled={isExporting}
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+          </div>
+        )}
+
+        {/* Team Members Section */}
+        {team && (
+          <div className="team-members-section">
+            <div className="section-header">
+              <h3>Team Members ({members.length})</h3>
+              {members.length > 0 && (
+                <div className="view-toggle">
+                  <span className="toggle-label">View:</span>
+                  <button 
+                    className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
+                    onClick={() => setViewMode('table')}
+                    disabled={isExporting}
+                  >
+                    <span className="view-icon">📊</span>
+                    Table
+                  </button>
+                  <button 
+                    className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
+                    onClick={() => setViewMode('cards')}
+                    disabled={isExporting}
+                  >
+                    <span className="view-icon">🃏</span>
+                    Cards
+                  </button>
                 </div>
               )}
+            </div>
+            
+            {members.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">👥</div>
+                <p>No players added yet.</p>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setShowAddPlayersModal(true)}
+                  disabled={isExporting}
+                >
+                  Add Players
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Table View */}
+                {viewMode === 'table' && (
+                  <div className="members-table-container">
+                    <table className="members-table">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Name</th>
+                          <th>Role</th>
+                          <th>Mobile</th>
+                          <th>Email</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {members.map((member, index) => (
+                          <tr key={member._id}>
+                            <td>{index + 1}</td>
+                            <td>
+                              <div className="member-name-cell">
+                                {member.name}
+                                {member.role === 'Captain' && (
+                                  <span className="captain-badge">©</span>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <span className={`role-badge ${member.role?.toLowerCase().replace(/\s+/g, '-')}`}>
+                                {member.role}
+                              </span>
+                            </td>
+                            <td>{member.mobile || '-'}</td>
+                            <td>{member.email || '-'}</td>
+                            <td>
+                              <span className={`status-badge ${member.status?.toLowerCase() || 'pending'}`}>
+                                {member.status || 'Pending'}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="action-buttons">
+                                <button
+                                  className="btn-icon edit"
+                                  onClick={() => {
+                                    setEditMember(member);
+                                    setShowEditModal(true);
+                                  }}
+                                  title="Edit"
+                                  disabled={isExporting}
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  className="btn-icon delete"
+                                  onClick={() => handleDeleteMember(member._id)}
+                                  title="Delete"
+                                  disabled={isExporting}
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
-              {/* Card View */}
-              {viewMode === 'cards' && (
-                <div className="members-card-container">
-                  {members.map((member, index) => (
-                    <div key={member._id} className="member-card">
-                      <div className="card-header">
-                        <div className="member-info">
-                          <span className="member-number">{index + 1}</span>
-                          <div>
-                            <h4 className="member-name">
-                              {member.name}
-                              {member.role === 'Captain' && (
-                                <span className="captain-badge-card">© Captain</span>
-                              )}
-                            </h4>
-                            <span className={`role-badge ${member.role?.toLowerCase().replace(/\s+/g, '-')}`}>
-                              {member.role}
-                            </span>
+                {/* Card View */}
+                {viewMode === 'cards' && (
+                  <div className="members-card-container">
+                    {members.map((member, index) => (
+                      <div key={member._id} className="member-card">
+                        <div className="card-header">
+                          <div className="member-info">
+                            <span className="member-number">{index + 1}</span>
+                            <div>
+                              <h4 className="member-name">
+                                {member.name}
+                                {member.role === 'Captain' && (
+                                  <span className="captain-badge-card">© Captain</span>
+                                )}
+                              </h4>
+                              <span className={`role-badge ${member.role?.toLowerCase().replace(/\s+/g, '-')}`}>
+                                {member.role}
+                              </span>
+                            </div>
+                          </div>
+                          <span className={`status-badge ${member.status?.toLowerCase() || 'pending'}`}>
+                            {member.status || 'Pending'}
+                          </span>
+                        </div>
+                        
+                        <div className="card-details">
+                          <div className="detail-item">
+                            <span className="detail-label">Mobile:</span>
+                            <span className="detail-value">{member.mobile || '-'}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-label">Email:</span>
+                            <span className="detail-value">{member.email || '-'}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-label">Added:</span>
+                            <span className="detail-value">{formatDate(member.createdAt)}</span>
                           </div>
                         </div>
-                        <span className={`status-badge ${member.status?.toLowerCase() || 'pending'}`}>
-                          {member.status || 'Pending'}
-                        </span>
-                      </div>
-                      
-                      <div className="card-details">
-                        <div className="detail-item">
-                          <span className="detail-label">Mobile:</span>
-                          <span className="detail-value">{member.mobile || '-'}</span>
+                        
+                        <div className="card-actions">
+                          <button
+                            className="btn-icon edit"
+                            onClick={() => {
+                              setEditMember(member);
+                              setShowEditModal(true);
+                            }}
+                            title="Edit"
+                            disabled={isExporting}
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            className="btn-icon delete"
+                            onClick={() => handleDeleteMember(member._id)}
+                            title="Delete"
+                            disabled={isExporting}
+                          >
+                            🗑️ Delete
+                          </button>
                         </div>
-                        <div className="detail-item">
-                          <span className="detail-label">Email:</span>
-                          <span className="detail-value">{member.email || '-'}</span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="detail-label">Added:</span>
-                          <span className="detail-value">{formatDate(member.createdAt)}</span>
-                        </div>
                       </div>
-                      
-                      <div className="card-actions">
-                        <button
-                          className="btn-icon edit"
-                          onClick={() => {
-                            setEditMember(member);
-                            setShowEditModal(true);
-                          }}
-                          title="Edit"
-                          disabled={isExporting}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          className="btn-icon delete"
-                          onClick={() => handleDeleteMember(member._id)}
-                          title="Delete"
-                          disabled={isExporting}
-                        >
-                          🗑️ Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* No Team State */}
-      {!team && (
-        <div className="no-team-state">
-          <div className="empty-state-card">
-            <div className="empty-icon">🏏</div>
-            <h3>No Team Created Yet</h3>
-            <p>Create your team to start managing players and participate in tournaments.</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowCreateTeamModal(true)}
-              disabled={isExporting}
-            >
-              Create Your First Team
-            </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        </div>
-      )}
+        )}
+
+        {/* No Team State */}
+        {!team && (
+          <div className="no-team-state">
+            <div className="empty-state-card">
+              <div className="empty-icon">🏏</div>
+              <h3>No Team Created Yet</h3>
+              <p>Create your team to start managing players and participate in tournaments.</p>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setShowCreateTeamModal(true)}
+                disabled={isExporting}
+              >
+                Create Your First Team
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Create Team Modal */}
       {showCreateTeamModal && (
