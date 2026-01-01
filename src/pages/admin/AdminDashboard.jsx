@@ -37,15 +37,13 @@ import {
   ListItem,
   ListItemText,
   ListItemAvatar,
-  Badge,
   Tabs,
   Tab,
-  CardActions,
-  Switch,
-  FormControlLabel,
   AppBar,
   Toolbar,
-  Container
+  Container,
+  FormControlLabel,
+  Switch
 } from "@mui/material";
 
 import {
@@ -74,7 +72,11 @@ import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
   ExitToApp as LogoutIcon,
-  SportsCricket as CricketIcon
+  SportsCricket as CricketIcon,
+  ExpandMore as ExpandMoreIcon,
+  EventAvailable as EventIcon,
+  Schedule as ScheduleIcon,
+  SportsSoccer as SoccerIcon
 } from "@mui/icons-material";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -124,7 +126,7 @@ const tableRowVariants = {
   exit: { opacity: 0, x: 20 }
 };
 
-// Validation schema
+// Validation schema for captain
 const validationSchema = yup.object({
   name: yup.string().required("Name is required").min(2, "Name too short"),
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -138,8 +140,17 @@ const validationSchema = yup.object({
     .required("Password is required")
 });
 
+// Slot validation schema (groundId और capacity की validation हटा दी है)
+const slotValidationSchema = yup.object({
+  slotDate: yup.string().required("Date is required"),
+  startTime: yup.string().required("Start time is required"),
+  endTime: yup.string().required("End time is required")
+});
+
 export default function AdminDashboard() {
   const theme = useTheme();
+  
+  // Captain states
   const [captains, setCaptains] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -157,9 +168,8 @@ export default function AdminDashboard() {
     paid: 0,
     pending: 0
   });
-  const [expandedCaptain, setExpandedCaptain] = useState(null);
   
-  // New states for team details
+  // Team details states
   const [captainTeams, setCaptainTeams] = useState([]);
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState([]);
@@ -167,8 +177,31 @@ export default function AdminDashboard() {
   const [teamTabValue, setTeamTabValue] = useState(0);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
+  
+  // Slot states
+  const [slots, setSlots] = useState([]);
+  const [slotLoading, setSlotLoading] = useState(false);
+  const [slotDialogOpen, setSlotDialogOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [activeTab, setActiveTab] = useState(0); // 0: Captains, 1: Slots
 
-  // Formik form
+  // Bulk slot states
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [disableDateDialog, setDisableDateDialog] = useState(false);
+
+  const [bulkSlotData, setBulkSlotData] = useState({
+    startDate: "",
+    endDate: "",
+    timeSlots: [
+      { startTime: "09:00", endTime: "10:00" }
+    ]
+  });
+
+  const [disableDate, setDisableDate] = useState({
+    slotDate: ""
+  });
+
+  // Formik for captain form
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -179,6 +212,25 @@ export default function AdminDashboard() {
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       await createCaptain(values, resetForm);
+    }
+  });
+
+  // Formik for slot form - capacity हटा दी है और groundId हटा दी है
+  const slotFormik = useFormik({
+    initialValues: {
+      slotDate: "",
+      startTime: "09:00",
+      endTime: "10:00",
+      isDisabled: false
+    },
+    validationSchema: slotValidationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      // Backend में हमेशा capacity 2 भेजेंगे
+      const slotData = {
+        ...values,
+        capacity: 2 // हमेशा 2 सेट करें
+      };
+      await saveSlot(slotData, resetForm);
     }
   });
 
@@ -208,16 +260,6 @@ export default function AdminDashboard() {
       const captainsData = res.data.captains || [];
       setCaptains(captainsData);
       calculateStats(captainsData);
-      
-      // Debug: Log first captain data
-      if (captainsData.length > 0) {
-        console.log("First captain data:", captainsData[0]);
-        console.log("Captain IDs:", captainsData.map(c => ({ 
-          id: c._id, 
-          name: c.name,
-          hasId: !!c._id 
-        })));
-      }
     } catch (err) {
       showSnackbar("Failed to fetch captains", "error");
       console.error("Fetch error:", err);
@@ -226,8 +268,118 @@ export default function AdminDashboard() {
     }
   };
 
+  /* ================= FETCH SLOTS ================= */
+  const fetchSlots = async () => {
+    try {
+      setSlotLoading(true);
+      const res = await API.get("/admin/slots");
+      setSlots(res.data.data || []);
+    } catch (err) {
+      showSnackbar("Failed to fetch slots", "error");
+    } finally {
+      setSlotLoading(false);
+    }
+  };
+
+  /* ================= SAVE SLOT ================= */
+  const saveSlot = async (values, resetForm) => {
+    try {
+      // Backend में capacity 2 और groundId नहीं भेजेंगे
+      const slotData = {
+        slotDate: values.slotDate,
+        startTime: values.startTime,
+        endTime: values.endTime,
+        capacity: 2, // हमेशा 2
+        isDisabled: values.isDisabled
+      };
+      
+      if (editingSlot) {
+        await API.put(`/admin/slots/${editingSlot._id}`, slotData);
+        showSnackbar("Slot updated successfully!");
+      } else {
+        await API.post("/admin/slots", slotData);
+        showSnackbar("Slot created successfully!");
+      }
+      fetchSlots();
+      resetForm();
+      setSlotDialogOpen(false);
+      setEditingSlot(null);
+    } catch (err) {
+      showSnackbar(err?.response?.data?.message || "Failed to save slot", "error");
+    }
+  };
+
+  /* ================= TOGGLE SLOT STATUS ================= */
+  const toggleSlotStatus = async (slotId) => {
+    try {
+      await API.patch(`/admin/slots/toggle/${slotId}`);
+      showSnackbar("Slot status updated!");
+      fetchSlots();
+    } catch (err) {
+      showSnackbar("Failed to update slot status", "error");
+    }
+  };
+
+  /* ================= DELETE SLOT ================= */
+  const deleteSlot = async (slotId) => {
+    if (window.confirm("Are you sure you want to delete this slot?")) {
+      try {
+        await API.delete(`/admin/slots/${slotId}`);
+        showSnackbar("Slot deleted successfully");
+        fetchSlots();
+      } catch (err) {
+        showSnackbar("Failed to delete slot", "error");
+      }
+    }
+  };
+
+  /* ================= GENERATE FUTURE SLOTS ================= */
+  const generateFutureSlots = async () => {
+    try {
+      // Bulk slots के लिए भी capacity 2 भेजेंगे
+      const bulkData = {
+        ...bulkSlotData,
+        capacity: 2 // हमेशा 2
+      };
+      
+      await API.post("/admin/slots/generate-future", bulkData);
+      showSnackbar("Future slots generated successfully");
+      setBulkDialogOpen(false);
+      fetchSlots();
+      
+      // Reset bulk slot data
+      setBulkSlotData({
+        startDate: "",
+        endDate: "",
+        timeSlots: [
+          { startTime: "09:00", endTime: "10:00" }
+        ]
+      });
+    } catch (err) {
+      showSnackbar(err?.response?.data?.message || "Failed to generate slots", "error");
+    }
+  };
+
+  /* ================= DISABLE SLOTS BY DATE ================= */
+  const disableSlotsByDate = async () => {
+    try {
+      await API.post("/admin/slots/disable-by-date", disableDate);
+      showSnackbar(`Slots disabled for ${disableDate.slotDate}`);
+      setDisableDateDialog(false);
+      fetchSlots();
+      
+      // Reset disable date data
+      setDisableDate({
+        slotDate: ""
+      });
+    } catch (err) {
+      showSnackbar(err?.response?.data?.message || "Failed to disable slots", "error");
+    }
+  };
+
   useEffect(() => {
     fetchCaptains();
+    fetchSlots();
   }, []);
 
   /* ================= SNACKBAR HANDLER ================= */
@@ -239,21 +391,10 @@ export default function AdminDashboard() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  /* ================= IMAGE HANDLER ================= */
-  const handleImage = (file) => {
-    if (file && file.type.startsWith("image/")) {
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
-    } else {
-      showSnackbar("Please select a valid image file", "error");
-    }
-  };
-
   /* ================= CREATE CAPTAIN ================= */
   const createCaptain = async (formData, resetForm) => {
     try {
       setCreating(true);
-
       const data = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         data.append(key, value);
@@ -278,20 +419,15 @@ export default function AdminDashboard() {
     }
   };
 
-  /* ================= PAYMENT HANDLER - FIXED ================= */
+  /* ================= PAYMENT HANDLER ================= */
   const markPaid = async (captain) => {
     try {
-      // Get ID with multiple fallback options
       const id = captain._id || captain.id || captain.userId;
       
-      // Validate ID
       if (!id) {
         showSnackbar("Cannot update payment: No valid ID found for captain", "error");
-        console.error("No ID found for captain:", captain);
         return;
       }
-      
-      console.log("Updating payment for ID:", id);
       
       await API.put(`/admin/updatePayment/${id}`, { status: "Paid" });
       showSnackbar("Payment status updated to Paid");
@@ -301,11 +437,6 @@ export default function AdminDashboard() {
                        err?.message || 
                        "Failed to update payment status";
       showSnackbar(errorMsg, "error");
-      console.error("Payment update error:", {
-        error: err,
-        response: err?.response,
-        captain
-      });
     }
   };
 
@@ -329,7 +460,6 @@ export default function AdminDashboard() {
       setTeamsLoading(true);
       setDetailsDialogOpen(true);
       
-      // Fetch captain teams
       const res = await API.get(`/admin/captain/${captain._id}/team`);
       
       if (res.data.team) {
@@ -348,81 +478,6 @@ export default function AdminDashboard() {
       console.error("Fetch teams error:", err);
     } finally {
       setTeamsLoading(false);
-    }
-  };
-
-  /* ================= FETCH TEAM PLAYERS ================= */
-  const fetchTeamPlayers = async (teamId) => {
-    try {
-      // You can implement this if you have an API endpoint for team players
-      // For now, we'll use the players data from captainTeams
-      const team = captainTeams.find(t => t._id === teamId);
-      if (team && team.players) {
-        setTeamPlayers(team.players);
-      } else {
-        setTeamPlayers([]);
-      }
-    } catch (err) {
-      console.error("Error fetching team players:", err);
-      setTeamPlayers([]);
-    }
-  };
-
-  /* ================= DOWNLOAD TEAMS PDF ================= */
-  const downloadTeamsPDF = () => {
-    if (!selectedCaptain || captainTeams.length === 0) return;
-    
-    try {
-      setIsExporting(true);
-      const doc = new jsPDF();
-      
-      // PDF Header
-      doc.setFontSize(20);
-      doc.setTextColor(40, 53, 147);
-      doc.text(`${selectedCaptain.name}'s Teams Report`, 105, 20, null, null, 'center');
-      
-      doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Captain Email: ${selectedCaptain.email}`, 105, 30, null, null, 'center');
-      doc.text(`Phone: ${selectedCaptain.phoneNo}`, 105, 36, null, null, 'center');
-      doc.text(`Total Teams: ${captainTeams.length}`, 105, 42, null, null, 'center');
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 48, null, null, 'center');
-      
-      // Teams Table
-      const tableColumn = ["Team ID", "Team Name", "Sport", "Players", "Created Date"];
-      const tableRows = captainTeams.map((team, index) => [
-        index + 1,
-        team.teamName || "Unnamed Team",
-        team.sportType || "Not Specified",
-        team.players ? team.players.length : 0,
-        new Date(team.createdAt).toLocaleDateString()
-      ]);
-      
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 55,
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [40, 53, 147] }
-      });
-      
-      // Footer
-      const pageCount = doc.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(10);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
-      }
-      
-      doc.save(`${selectedCaptain.name}_Teams_Report.pdf`);
-      showSnackbar("PDF downloaded successfully!");
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      showSnackbar('Failed to generate PDF', 'error');
-    } finally {
-      setIsExporting(false);
     }
   };
 
@@ -489,44 +544,7 @@ export default function AdminDashboard() {
     </motion.div>
   );
 
-  /* ================= TEAM STATS CALCULATION ================= */
-  const calculateTeamStats = () => {
-    if (captainTeams.length === 0) return null;
-    
-    const totalTeams = captainTeams.length;
-    const activeTeams = captainTeams.filter(t => t.isActive).length;
-    const totalPlayers = captainTeams.reduce((sum, team) => sum + (team.players?.length || 0), 0);
-    const avgPlayers = Math.round(totalPlayers / totalTeams);
-    
-    // Count by sport type
-    const sportsCount = {};
-    captainTeams.forEach(team => {
-      const sport = team.sportType || 'Other';
-      sportsCount[sport] = (sportsCount[sport] || 0) + 1;
-    });
-    
-    return {
-      totalTeams,
-      activeTeams,
-      totalPlayers,
-      avgPlayers,
-      sportsCount
-    };
-  };
-
-  const teamStats = calculateTeamStats();
-
-  /* ================= HANDLE TEAM TAB CHANGE ================= */
-  const handleTeamTabChange = (event, newValue) => {
-    setTeamTabValue(newValue);
-  };
-
-  /* ================= HANDLE TEAM SELECTION ================= */
-  const handleTeamSelect = (teamId) => {
-    setSelectedTeam(teamId);
-    fetchTeamPlayers(teamId);
-  };
-
+  /* ================= MAIN RENDER ================= */
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -551,18 +569,12 @@ export default function AdminDashboard() {
                 display: 'flex',
                 alignItems: 'center',
                 padding: '8px 16px',
-                
                 borderRadius: '12px',
                 backdropFilter: 'blur(10px)',
-                // border: '1px solid rgba(255, 255, 255, 0.2)',
                 mr: 2
               }}
             >
-             <img src={logo} alt="Logo" 
-             style={
-              {width:"100px"}
-             }
-             />
+              <img src={logo} alt="Logo" style={{ width: "100px" }} />
             </Box>
           </Box>
 
@@ -608,7 +620,6 @@ export default function AdminDashboard() {
             <Button
               variant="outlined"
               onClick={handleLogout}
-              disabled={isExporting}
               startIcon={<LogoutIcon />}
               sx={{
                 color: 'white',
@@ -628,251 +639,203 @@ export default function AdminDashboard() {
       {/* MAIN CONTENT */}
       <Container maxWidth="xl">
         <Box p={3}>
-          {/* DASHBOARD HEADER */}
+          {/* DASHBOARD HEADER & TABS */}
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <Box display="flex" alignItems="center" mb={3}>
-              <DashboardIcon sx={{ fontSize: 40, mr: 2, color: theme.palette.primary.main }} />
-              <Box>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                  Team Captains Management
-                </Typography>
-                <Typography variant="body1" color="textSecondary">
-                  Manage team captains, track payments and view team details
-                </Typography>
-              </Box>
-              <Box flexGrow={1} />
-              <Tooltip title="Refresh Data">
-                <IconButton 
-                  onClick={fetchCaptains} 
-                  sx={{ 
-                    ml: 2,
-                    backgroundColor: theme.palette.grey[100],
-                    '&:hover': {
-                      backgroundColor: theme.palette.grey[200]
+            <Box mb={4}>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Admin Dashboard
+              </Typography>
+              <Typography variant="body1" color="textSecondary" mb={3}>
+                Manage captains, slots, and ground bookings
+              </Typography>
+              
+              {/* Navigation Tabs */}
+              <Paper sx={{ mb: 4, borderRadius: 2 }}>
+                <Tabs 
+                  value={activeTab} 
+                  onChange={(e, newValue) => setActiveTab(newValue)}
+                  variant="fullWidth"
+                  sx={{
+                    '& .MuiTab-root': {
+                      py: 2,
+                      fontWeight: 600,
+                      fontSize: '1rem'
                     }
                   }}
                 >
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
+                  <Tab 
+                    icon={<GroupIcon />} 
+                    iconPosition="start" 
+                    label="Team Captains" 
+                  />
+                  <Tab 
+                    icon={<ScheduleIcon />} 
+                    iconPosition="start" 
+                    label="Ground Slots" 
+                  />
+                </Tabs>
+              </Paper>
             </Box>
           </motion.div>
 
-          {/* STATS CARDS */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} sm={6} md={4}>
-                <StatCard
-                  title="Total Captains"
-                  value={stats.total}
-                  icon={<GroupIcon sx={{ color: theme.palette.primary.main }} />}
-                  color={theme.palette.primary.main}
-                  index={0}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <StatCard
-                  title="Paid"
-                  value={stats.paid}
-                  icon={<PaidIcon sx={{ color: theme.palette.success.main }} />}
-                  color={theme.palette.success.main}
-                  index={1}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <StatCard
-                  title="Pending Payment"
-                  value={stats.pending}
-                  icon={<FilterIcon sx={{ color: theme.palette.warning.main }} />}
-                  color={theme.palette.warning.main}
-                  index={2}
-                />
-              </Grid>
-            </Grid>
-          </motion.div>
-
-          {/* CREATE BUTTON & SEARCH */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card sx={{ mb: 3, borderRadius: 2 }}>
-              <CardContent>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      variant="outlined"
-                      placeholder="Search captains by name, email, or phone"
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      InputProps={{
-                        startAdornment: <SearchIcon sx={{ mr: 1, color: "action.active" }} />
-                      }}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          transition: "all 0.3s",
-                          "&:hover": {
-                            boxShadow: theme.shadows[2]
-                          }
-                        }
-                      }}
+          {/* TEAM CAPTAINS TAB CONTENT */}
+          {activeTab === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* STATS CARDS */}
+              <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                <Grid container spacing={3} mb={4}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <StatCard
+                      title="Total Captains"
+                      value={stats.total}
+                      icon={<GroupIcon sx={{ color: theme.palette.primary.main }} />}
+                      color={theme.palette.primary.main}
+                      index={0}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6} display="flex" justifyContent="flex-end">
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => setOpenDialog(true)}
-                      sx={{
-                        px: 4,
-                        py: 1,
-                        borderRadius: 2,
-                        background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                        transition: "all 0.3s",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                          boxShadow: theme.shadows[6]
-                        }
-                      }}
-                    >
-                      Add New Captain
-                    </Button>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <StatCard
+                      title="Paid"
+                      value={stats.paid}
+                      icon={<PaidIcon sx={{ color: theme.palette.success.main }} />}
+                      color={theme.palette.success.main}
+                      index={1}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <StatCard
+                      title="Pending Payment"
+                      value={stats.pending}
+                      icon={<FilterIcon sx={{ color: theme.palette.warning.main }} />}
+                      color={theme.palette.warning.main}
+                      index={2}
+                    />
                   </Grid>
                 </Grid>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </motion.div>
 
-          {/* TABLE */}
-          <div>
-            <TableContainer
-              component={Paper}
-              sx={{
-                borderRadius: 2,
-                overflow: "hidden",
-                boxShadow: theme.shadows[3],
-                transition: "box-shadow 0.3s",
-                "&:hover": {
-                  boxShadow: theme.shadows[6]
-                }
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
-                    <TableCell>
-                      <Typography fontWeight="bold">Captain</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography fontWeight="bold">Contact</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography fontWeight="bold">Payment Status</Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography fontWeight="bold">Actions</Typography>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
+              {/* CREATE BUTTON & SEARCH */}
+              <Card sx={{ mb: 3, borderRadius: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        variant="outlined"
+                        placeholder="Search captains by name, email, or phone"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        InputProps={{
+                          startAdornment: <SearchIcon sx={{ mr: 1, color: "action.active" }} />
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6} display="flex" justifyContent="flex-end" gap={2}>
+                      <Tooltip title="Refresh Data">
+                        <IconButton onClick={fetchCaptains}>
+                          <RefreshIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setOpenDialog(true)}
+                        sx={{
+                          px: 4,
+                          py: 1,
+                          borderRadius: 2,
+                          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                          "&:hover": {
+                            transform: "scale(1.05)",
+                            boxShadow: theme.shadows[6]
+                          }
+                        }}
+                      >
+                        Add New Captain
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
 
-                <TableBody>
-                  <AnimatePresence>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
+              {/* CAPTAINS TABLE */}
+              <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: theme.shadows[3] }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
+                      <TableCell><Typography fontWeight="bold">Captain</Typography></TableCell>
+                      <TableCell><Typography fontWeight="bold">Contact</Typography></TableCell>
+                      <TableCell><Typography fontWeight="bold">Payment Status</Typography></TableCell>
+                      <TableCell align="center"><Typography fontWeight="bold">Actions</Typography></TableCell>
+                    </TableRow>
+                  </TableHead>
+
+                  <TableBody>
+                    <AnimatePresence>
+                      {loading ? (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
                             <CircularProgress size={50} />
                             <Typography variant="body2" color="textSecondary" mt={2}>
                               Loading captains...
                             </Typography>
-                          </motion.div>
-                        </TableCell>
-                      </TableRow>
-                    ) : paginated.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ type: "spring" }}
-                          >
+                          </TableCell>
+                        </TableRow>
+                      ) : paginated.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
                             <GroupIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
                             <Typography variant="h6" color="textSecondary" gutterBottom>
                               No captains found
                             </Typography>
-                            <Typography variant="body2" color="textSecondary">
-                              {search ? "Try a different search term" : "Add your first captain"}
-                            </Typography>
-                          </motion.div>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      paginated.map((c, index) => (
-                        <motion.tr
-                          key={c._id || c.id || index}
-                          variants={tableRowVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          custom={index}
-                          whileHover={{ 
-                            backgroundColor: alpha(theme.palette.primary.light, 0.05),
-                            transition: { duration: 0.2 }
-                          }}
-                        >
-                          <TableCell>
-                            <Box display="flex" alignItems="center">
-                              <Avatar
-                                src={c.image || ""}
-                                sx={{ mr: 2, bgcolor: theme.palette.primary.main }}
-                              >
-                                {c.name?.charAt(0)}
-                              </Avatar>
-                              <Box>
-                                <Typography fontWeight="bold">{c.name}</Typography>
-                                <Typography variant="caption" color="textSecondary">
-                                  ID: {(c._id || c.id || "N/A").toString().substring(0, 8)}...
-                                </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginated.map((c, index) => (
+                          <motion.tr
+                            key={c._id || index}
+                            variants={tableRowVariants}
+                            initial="hidden"
+                            animate="visible"
+                            custom={index}
+                            whileHover={{ backgroundColor: alpha(theme.palette.primary.light, 0.05) }}
+                          >
+                            <TableCell>
+                              <Box display="flex" alignItems="center">
+                                <Avatar src={c.image} sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
+                                  {c.name?.charAt(0)}
+                                </Avatar>
+                                <Box>
+                                  <Typography fontWeight="bold">{c.name}</Typography>
+                                  <Typography variant="caption" color="textSecondary">
+                                    ID: {(c._id || "N/A").toString().substring(0, 8)}...
+                                  </Typography>
+                                </Box>
                               </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Typography>{c.email}</Typography>
-                            <Typography variant="body2" color="textSecondary">
-                              {c.phoneNo}
-                            </Typography>
-                          </TableCell>
-                          <TableCell> 
-                            <motion.div whileHover={{ scale: 1.05 }}>
+                            </TableCell>
+                            <TableCell>
+                              <Typography>{c.email}</Typography>
+                              <Typography variant="body2" color="textSecondary">{c.phoneNo}</Typography>
+                            </TableCell>
+                            <TableCell>
                               <Chip
                                 label={c.paymentStatus || "Pending"}
                                 color={c.paymentStatus === "Paid" ? "success" : "warning"}
                                 variant="outlined"
-                                sx={{ 
-                                  fontWeight: "bold",
-                                  borderRadius: 1
-                                }}
+                                sx={{ fontWeight: "bold" }}
                               />
-                            </motion.div>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Box display="flex" gap={1} justifyContent="center">
-                              <Tooltip title="Mark as Paid">
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Box display="flex" gap={1} justifyContent="center">
+                                <Tooltip title="Mark as Paid">
                                   <IconButton
                                     color="success"
                                     disabled={c.paymentStatus === "Paid"}
@@ -881,53 +844,33 @@ export default function AdminDashboard() {
                                   >
                                     <PaidIcon />
                                   </IconButton>
-                                </motion.div>
-                              </Tooltip>
-                              
-                              <Tooltip title="View Details">
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                                  <IconButton
-                                    color="info"
-                                    onClick={() => viewDetails(c)}
-                                    size="small"
-                                  >
+                                </Tooltip>
+                                <Tooltip title="View Details">
+                                  <IconButton color="info" onClick={() => viewDetails(c)} size="small">
                                     <ViewIcon />
                                   </IconButton>
-                                </motion.div>
-                              </Tooltip>
-                              
-                              <Tooltip title="Delete">
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                                </Tooltip>
+                                <Tooltip title="Delete">
                                   <IconButton 
                                     color="error"
-                                    onClick={() => {
-                                      const id = c._id || c.id;
-                                      if (id) handleDelete(id);
-                                      else showSnackbar("Cannot delete: No ID found", "error");
-                                    }}
+                                    onClick={() => handleDelete(c._id)}
                                     size="small"
                                   >
                                     <DeleteIcon />
                                   </IconButton>
-                                </motion.div>
-                              </Tooltip>  
-                            </Box>
-                          </TableCell>
-                        </motion.tr>
-                      ))
-                    )}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </TableContainer>
+                                </Tooltip>
+                              </Box>
+                            </TableCell>
+                          </motion.tr>
+                        ))
+                      )}
+                    </AnimatePresence>
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
-            {/* PAGINATION */}
-            {filtered.length > ITEMS_PER_PAGE && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+              {/* PAGINATION */}
+              {filtered.length > ITEMS_PER_PAGE && (
                 <Box display="flex" justifyContent="center" mt={3}>
                   <Pagination
                     count={Math.ceil(filtered.length / ITEMS_PER_PAGE)}
@@ -935,35 +878,240 @@ export default function AdminDashboard() {
                     onChange={(e, v) => setPage(v)}
                     color="primary"
                     size="large"
-                    shape="rounded"
                   />
                 </Box>
-              </motion.div>
-            )}
-          </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* GROUND SLOTS TAB CONTENT */}
+          {activeTab === 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* SLOTS STATS */}
+              <Grid container spacing={3} mb={4}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Total Slots"
+                    value={slots.length}
+                    icon={<EventIcon sx={{ color: theme.palette.primary.main }} />}
+                    color={theme.palette.primary.main}
+                    index={0}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Active Slots"
+                    value={slots.filter(s => !s.isDisabled).length}
+                    icon={<CheckCircleIcon sx={{ color: theme.palette.success.main }} />}
+                    color={theme.palette.success.main}
+                    index={1}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Disabled Slots"
+                    value={slots.filter(s => s.isDisabled).length}
+                    icon={<DeleteIcon sx={{ color: theme.palette.error.main }} />}
+                    color={theme.palette.error.main}
+                    index={2}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Total Bookings"
+                    value={slots.reduce((sum, slot) => sum + (slot.bookingsCount || 0), 0)}
+                    icon={<CalendarIcon sx={{ color: theme.palette.info.main }} />}
+                    color={theme.palette.info.main}
+                    index={3}
+                  />
+                </Grid>
+              </Grid>
+
+              {/* SLOTS TABLE */}
+              <Card sx={{ mb: 4 }}>
+                <CardHeader
+                  title="Ground Slots Management"
+                 
+                  action={
+                    <Box display="flex" gap={2}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setDisableDateDialog(true)}
+                      >
+                        Disable Date
+                      </Button>
+
+                      <Button
+                        variant="outlined"
+                        onClick={() => setBulkDialogOpen(true)}
+                      >
+                        Generate Future Slots
+                      </Button>
+
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          setEditingSlot(null);
+                          slotFormik.resetForm();
+                          slotFormik.setValues({
+                            slotDate: new Date().toISOString().split('T')[0],
+                            startTime: "09:00",
+                            endTime: "10:00",
+                            isDisabled: false
+                          });
+                          setSlotDialogOpen(true);
+                        }}
+                      >
+                        Add Slot
+                      </Button>
+                    </Box>
+                  }
+                />
+                <Divider />
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
+                        <TableCell><Typography fontWeight="bold">Date</Typography></TableCell>
+                        <TableCell><Typography fontWeight="bold">Time</Typography></TableCell>
+                        {/* Ground ID और Capacity की column हटा दी है */}
+                        <TableCell><Typography fontWeight="bold">Bookings</Typography></TableCell>
+                        <TableCell><Typography fontWeight="bold">Status</Typography></TableCell>
+                        <TableCell align="center"><Typography fontWeight="bold">Actions</Typography></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {slotLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                            <CircularProgress />
+                          </TableCell>
+                        </TableRow>
+                      ) : slots.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                            <ScheduleIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
+                            <Typography>No slots found</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        slots.map((slot) => (
+                          <TableRow key={slot._id} hover>
+                            <TableCell>{new Date(slot.slotDate).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Typography fontWeight="medium">
+                                {slot.startTime} - {slot.endTime}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>{slot.bookingsCount || 0}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={slot.isDisabled ? "Disabled" : "Active"}
+                                color={slot.isDisabled ? "error" : "success"}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <Box display="flex" gap={1} justifyContent="center">
+                                <Tooltip title="Edit">
+                                  <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() => {
+                                      setEditingSlot(slot);
+                                      slotFormik.setValues({
+                                        slotDate: slot.slotDate,
+                                        startTime: slot.startTime,
+                                        endTime: slot.endTime,
+                                        isDisabled: slot.isDisabled
+                                      });
+                                      setSlotDialogOpen(true);
+                                    }}
+                                  >
+                                    <EditIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={slot.isDisabled ? "Enable" : "Disable"}>
+                                  <IconButton
+                                    size="small"
+                                    color={slot.isDisabled ? "success" : "warning"}
+                                    onClick={() => toggleSlotStatus(slot._id)}
+                                  >
+                                    {slot.isDisabled ? <CheckCircleIcon /> : <DeleteIcon />}
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete">
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => deleteSlot(slot._id)}
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Card>
+
+              {/* CALENDAR PLACEHOLDER */}
+              <Card>
+                <CardHeader
+                  title="Calendar View"
+                  subheader="Interactive calendar will be available soon"
+                />
+                <Divider />
+                <CardContent sx={{ textAlign: 'center', py: 8 }}>
+                  <CalendarIcon sx={{ fontSize: 80, color: theme.palette.primary.main, mb: 3 }} />
+                  <Typography variant="h5" color="textPrimary" gutterBottom>
+                    Calendar Feature Coming Soon
+                  </Typography>
+                  <Typography variant="body1" color="textSecondary" sx={{ maxWidth: 600, mx: 'auto', mb: 3 }}>
+                    The interactive calendar view for visualizing all ground slots will be available in the next update.
+                    For now, please use the table view above to manage your slots.
+                  </Typography>
+                  <Button 
+                    variant="outlined" 
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setEditingSlot(null);
+                      slotFormik.resetForm();
+                      slotFormik.setValues({
+                        slotDate: new Date().toISOString().split('T')[0],
+                        startTime: "09:00",
+                        endTime: "10:00",
+                        isDisabled: false
+                      });
+                      setSlotDialogOpen(true);
+                    }}
+                  >
+                    Add New Slot
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
           {/* CREATE CAPTAIN DIALOG */}
-          <Dialog
-            open={openDialog}
-            onClose={() => setOpenDialog(false)}
-            maxWidth="sm"
-            fullWidth
-            TransitionProps={{
-              timeout: 300
-            }}
-          >
+          <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
             <DialogTitle>
               <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography variant="h6" fontWeight="bold">
-                  <PersonAddIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-                  Create New Captain
-                </Typography>
+                <Typography variant="h6">Create New Captain</Typography>
                 <IconButton onClick={() => setOpenDialog(false)} size="small">
                   <CloseIcon />
                 </IconButton>
               </Box>
             </DialogTitle>
-            
             <DialogContent dividers>
               <form onSubmit={formik.handleSubmit}>
                 <Grid container spacing={2}>
@@ -979,324 +1127,182 @@ export default function AdminDashboard() {
                         onBlur={formik.handleBlur}
                         error={formik.touched[field] && Boolean(formik.errors[field])}
                         helperText={formik.touched[field] && formik.errors[field]}
-                        variant="outlined"
                       />
                     </Grid>
                   ))}
-
-                
                 </Grid>
               </form>
             </DialogContent>
-            
-            <DialogActions sx={{ p: 2 }}>
-              <Button onClick={() => setOpenDialog(false)} color="inherit">
-                Cancel
-              </Button>
+            <DialogActions>
+              <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
               <Button
-                onClick={formik.submitForm}
                 variant="contained"
-                disabled={creating || !formik.isValid}
-                startIcon={creating ? <CircularProgress size={20} /> : <AddIcon />}
+                onClick={formik.submitForm}
+                disabled={creating}
               >
                 {creating ? "Creating..." : "Create Captain"}
               </Button>
             </DialogActions>
           </Dialog>
 
-          {/* TEAM DETAILS DIALOG */}
-          <Dialog
-            open={detailsDialogOpen}
-            onClose={() => setDetailsDialogOpen(false)}
-            maxWidth="lg"
-            fullWidth
-            fullScreen={teamTabValue === 1 && selectedTeam}
-          >
+          {/* CREATE/EDIT SLOT DIALOG */}
+          <Dialog open={slotDialogOpen} onClose={() => setSlotDialogOpen(false)} maxWidth="sm" fullWidth>
             <DialogTitle>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={2}>
-                  {teamTabValue === 1 && selectedTeam ? (
-                    <IconButton 
-                      onClick={() => setSelectedTeam(null)}
-                      size="small"
-                    >
-                      <ArrowBackIcon />
-                    </IconButton>
-                  ) : null}
-                  <Box display="flex" alignItems="center">
-                    <GroupIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                    <Box>
-                      <Typography variant="h6">
-                        {selectedCaptain?.name}'s Teams
-                        <Typography variant="caption" sx={{ ml: 2, color: "text.secondary" }}>
-                          ({captainTeams.length} teams)
-                        </Typography>
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedCaptain?.email} • {selectedCaptain?.phoneNo}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-                <Box display="flex" gap={1}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={() => viewDetails(selectedCaptain)}
-                    size="small"
-                  >
-                    Refresh
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<DownloadIcon />}
-                    onClick={downloadTeamsPDF}
-                    disabled={captainTeams.length === 0 || isExporting}
-                    size="small"
-                  >
-                    {isExporting ? "Exporting..." : "Download PDF"}
-                  </Button>
-                  <IconButton onClick={() => setDetailsDialogOpen(false)} size="small">
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-              </Box>
+              {editingSlot ? "Edit Slot" : "Create New Slot"}
             </DialogTitle>
-            
             <DialogContent dividers>
-              {teamsLoading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-                  <CircularProgress />
-                  <Typography sx={{ ml: 2 }}>Loading teams...</Typography>
-                </Box>
-              ) : captainTeams.length === 0 ? (
-                <Box textAlign="center" py={4}>
-                  <SportsIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
-                  <Typography variant="h6" color="textSecondary">
-                    No teams found
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    This captain hasn't created any teams yet.
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  {!selectedTeam ? (
-                    <>
-                      {/* Tabs for Teams and Stats */}
-                      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                        <Tabs value={teamTabValue} onChange={handleTeamTabChange}>
-                          <Tab label="Teams List" />
-                          <Tab label="Statistics" />
-                        </Tabs>
-                      </Box>
-
-                      {/* Teams List Tab */}
-                      {teamTabValue === 0 && (
-                        <TableContainer component={Paper} variant="outlined">
-                          <Table>
-                            <TableHead>
-                              <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
-                                <TableCell><Typography fontWeight="bold">Team Name</Typography></TableCell>                                <TableCell><Typography fontWeight="bold">Players</Typography></TableCell>
-                                <TableCell><Typography fontWeight="bold">Created On</Typography></TableCell>
-                                <TableCell><Typography fontWeight="bold">Status</Typography></TableCell>
-                                <TableCell><Typography fontWeight="bold">Actions</Typography></TableCell>
-                              </TableRow>
-                              </TableHead>
-                            <TableBody>
-                              {captainTeams.map((team) => (
-                                <TableRow key={team._id} hover>
-                                  <TableCell>
-                                    <Box display="flex" alignItems="center">
-                                      <SportsIcon sx={{ mr: 2, color: "action.active" }} />
-                                      <Typography fontWeight="medium">{team.teamName}</Typography>
-                                    </Box>
-                                  </TableCell>
-                              
-                                  <TableCell>
-                                    <Button
-                                      variant="text"
-                                      startIcon={<PersonIcon />}
-                                      onClick={() => handleTeamSelect(team._id)}
-                                      size="small"
-                                    >
-                                      {team.players?.length || 0} players
-                                    </Button>
-                                  </TableCell>
-                                  <TableCell>
-                                    {new Date(team.createdAt).toLocaleDateString()}
-                                  </TableCell>
-                                  <TableCell>
-                                    <Chip 
-                                      label={team.isActive ? "Active" : "Inactive"} 
-                                      size="small"
-                                      color={team.isActive ? "success" : "default"}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => handleTeamSelect(team._id)}
-                                    >
-                                      <ViewIcon />
-                                    </IconButton>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      )}
-
-                      {/* Statistics Tab */}
-                      {teamTabValue === 1 && teamStats && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                        >
-                          <Grid container spacing={3}>
-                            {/* Team Statistics Cards */}
-                            <Grid item xs={12} md={3}>
-                              <Card variant="outlined">
-                                <CardContent sx={{ textAlign: 'center' }}>
-                                  <SportsIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
-                                  <Typography color="textSecondary" variant="body2">Total Teams</Typography>
-                                  <Typography variant="h4" fontWeight="bold">{teamStats.totalTeams}</Typography>
-                                </CardContent>
-                              </Card>
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <Card variant="outlined">
-                                <CardContent sx={{ textAlign: 'center' }}>
-                                  <CheckCircleIcon sx={{ fontSize: 40, color: theme.palette.success.main, mb: 1 }} />
-                                  <Typography color="textSecondary" variant="body2">Active Teams</Typography>
-                                  <Typography variant="h4" fontWeight="bold">{teamStats.activeTeams}</Typography>
-                                </CardContent>
-                              </Card>
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <Card variant="outlined">
-                                <CardContent sx={{ textAlign: 'center' }}>
-                                  <GroupIcon sx={{ fontSize: 40, color: theme.palette.info.main, mb: 1 }} />
-                                  <Typography color="textSecondary" variant="body2">Total Players</Typography>
-                                  <Typography variant="h4" fontWeight="bold">{teamStats.totalPlayers}</Typography>
-                                </CardContent>
-                              </Card>
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                              <Card variant="outlined">
-                                <CardContent sx={{ textAlign: 'center' }}>
-                                  <PersonIcon sx={{ fontSize: 40, color: theme.palette.warning.main, mb: 1 }} />
-                                  <Typography color="textSecondary" variant="body2">Avg Players/Team</Typography>
-                                  <Typography variant="h4" fontWeight="bold">{teamStats.avgPlayers}</Typography>
-                                </CardContent>
-                              </Card>
-                            </Grid>
-
-                            {/* Sport Distribution */}
-                            <Grid item xs={12} md={6}>
-                              <Card variant="outlined">
-                                <CardContent>
-                                  <Typography variant="h6" gutterBottom>Sport Distribution</Typography>
-                                  {Object.entries(teamStats.sportsCount).map(([sport, count]) => (
-                                    <Box key={sport} display="flex" justifyContent="space-between" mb={1}>
-                                      <Typography>{sport}</Typography>
-                                      <Typography fontWeight="bold">{count} teams</Typography>
-                                    </Box>
-                                  ))}
-                                </CardContent>
-                              </Card>
-                            </Grid>
-
-                            {/* Recent Teams */}
-                            <Grid item xs={12} md={6}>
-                              <Card variant="outlined">
-                                <CardContent>
-                                  <Typography variant="h6" gutterBottom>Recent Teams</Typography>
-                                  <List>
-                                    {captainTeams.slice(0, 3).map((team) => (
-                                      <ListItem key={team._id}>
-                                        <ListItemAvatar>
-                                          <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                                            <SportsIcon />
-                                          </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                          primary={team.teamName}
-                                          secondary={`${team.sportType} • ${team.players?.length || 0} players`}
-                                        />
-                                      </ListItem>
-                                    ))}
-                                  </List>
-                                </CardContent>
-                              </Card>
-                            </Grid>
-                          </Grid>
-                        </motion.div>
-                      )}
-                    </>
-                  ) : (
-                    // Team Players View
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        Team Players
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary" gutterBottom>
-                        {captainTeams.find(t => t._id === selectedTeam)?.teamName} • 
-                        {captainTeams.find(t => t._id === selectedTeam)?.sportType}
-                      </Typography>
-                      
-                      {teamPlayers.length === 0 ? (
-                        <Box textAlign="center" py={4}>
-                          <PersonIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
-                          <Typography variant="h6" color="textSecondary">
-                            No players found
-                          </Typography>
-                          <Typography variant="body2" color="textSecondary">
-                            This team has no players yet.
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <List>
-                          {teamPlayers.map((player, index) => (
-                            <ListItem key={player._id || index} divider>
-                              <ListItemAvatar>
-                                <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                                  {player.name?.charAt(0)}
-                                </Avatar>
-                              </ListItemAvatar>
-
-                              <ListItemText
-                                primary={player.name}
-                                secondary={
-                                  <>
-                                    <Box display="block">{player.email}</Box>
-                                    <Box display="block">{player.mobile}</Box>
-                                  </>
-                                }
-                              />
-
-                              <Chip label={player.role || "Player"} size="small" />
-                            </ListItem>
-                          ))}
-                        </List>
-                      )}
-                    </Box>
-                  )}
-                </>
-              )}
+              <form onSubmit={slotFormik.handleSubmit}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      type="date"
+                      label="Slot Date"
+                      name="slotDate"
+                      InputLabelProps={{ shrink: true }}
+                      value={slotFormik.values.slotDate}
+                      onChange={slotFormik.handleChange}
+                      onBlur={slotFormik.handleBlur}
+                      error={slotFormik.touched.slotDate && Boolean(slotFormik.errors.slotDate)}
+                      helperText={slotFormik.touched.slotDate && slotFormik.errors.slotDate}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="time"
+                      label="Start Time"
+                      name="startTime"
+                      InputLabelProps={{ shrink: true }}
+                      value={slotFormik.values.startTime}
+                      onChange={slotFormik.handleChange}
+                      onBlur={slotFormik.handleBlur}
+                      error={slotFormik.touched.startTime && Boolean(slotFormik.errors.startTime)}
+                      helperText={slotFormik.touched.startTime && slotFormik.errors.startTime}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="time"
+                      label="End Time"
+                      name="endTime"
+                      InputLabelProps={{ shrink: true }}
+                      value={slotFormik.values.endTime}
+                      onChange={slotFormik.handleChange}
+                      onBlur={slotFormik.handleBlur}
+                      error={slotFormik.touched.endTime && Boolean(slotFormik.errors.endTime)}
+                      helperText={slotFormik.touched.endTime && slotFormik.errors.endTime}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={slotFormik.values.isDisabled}
+                          onChange={(e) => slotFormik.setFieldValue('isDisabled', e.target.checked)}
+                        />
+                      }
+                      label="Disable this slot"
+                    />
+                  </Grid>
+                </Grid>
+              </form>
             </DialogContent>
-            
-            <DialogActions sx={{ p: 2 }}>
-              {selectedTeam ? (
-                <Button 
-                  startIcon={<ArrowBackIcon />}
-                  onClick={() => setSelectedTeam(null)}
-                >
-                  Back to Teams
-                </Button>
-              ) : null}
-              <Button onClick={() => setDetailsDialogOpen(false)}>Close</Button>
+            <DialogActions>
+              <Button onClick={() => setSlotDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" onClick={slotFormik.submitForm}>
+                {editingSlot ? "Update Slot" : "Create Slot"}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* DISABLE DATE DIALOG */}
+          <Dialog open={disableDateDialog} onClose={() => setDisableDateDialog(false)} maxWidth="xs" fullWidth>
+            <DialogTitle>Disable Slots for Date</DialogTitle>
+            <DialogContent dividers>
+              <TextField
+                type="date"
+                fullWidth
+                label="Date"
+                InputLabelProps={{ shrink: true }}
+                value={disableDate.slotDate}
+                onChange={(e) => setDisableDate({ ...disableDate, slotDate: e.target.value })}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDisableDateDialog(false)}>Cancel</Button>
+              <Button variant="contained" color="error" onClick={disableSlotsByDate}>
+                Disable
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* GENERATE FUTURE SLOTS DIALOG */}
+          <Dialog open={bulkDialogOpen} onClose={() => setBulkDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Generate Future Slots</DialogTitle>
+            <DialogContent dividers>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <TextField
+                    type="date"
+                    label="Start Date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.startDate}
+                    onChange={(e) => setBulkSlotData({ ...bulkSlotData, startDate: e.target.value })}
+                  />
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    type="date"
+                    label="End Date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.endDate}
+                    onChange={(e) => setBulkSlotData({ ...bulkSlotData, endDate: e.target.value })}
+                  />
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    type="time"
+                    label="Start Time"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.timeSlots[0].startTime}
+                    onChange={(e) =>
+                      setBulkSlotData({
+                        ...bulkSlotData,
+                        timeSlots: [{ ...bulkSlotData.timeSlots[0], startTime: e.target.value }]
+                      })
+                    }
+                  />
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    type="time"
+                    label="End Time"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.timeSlots[0].endTime}
+                    onChange={(e) =>
+                      setBulkSlotData({
+                        ...bulkSlotData,
+                        timeSlots: [{ ...bulkSlotData.timeSlots[0], endTime: e.target.value }]
+                      })
+                    }
+                  />
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" onClick={generateFutureSlots}>
+                Generate
+              </Button>
             </DialogActions>
           </Dialog>
 
