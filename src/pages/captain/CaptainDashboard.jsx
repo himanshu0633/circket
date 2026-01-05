@@ -1296,7 +1296,8 @@ const TeamManagement = () => {
                   ))
                 )}
               </div>
-            </div> 
+            </div>
+ 
           </div>
         )}
       </div>

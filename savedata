@@ -1,0 +1,1396 @@
+AdminDashboard.jsx:695 MUI Grid: The `md` prop has been removed. See https://mui.com/material-ui/migration/upgrade-to-grid-v2/ for migration instructions.
+2
+AdminDashboard.jsx:838 MUI: You are providing a disabled `button` child to the Tooltip component.
+A disabled element does not fire events.
+Tooltip needs to listen to the child element's events to display the title.
+
+Add a simple wrapper element, such as a `span`.
+<ForwardRef(Tooltip2)>		
+(anonymous)	@	AdminDashboard.jsx:838
+AdminDashboard	@	AdminDashboard.jsx:802
+﻿
+
+Press cmd i to turn on code suggestions. Press cmd x to disable code suggestions.
+cmd
+i
+ to turn on code suggestions. Don't show again
+
+
+import { useEffect, useState } from "react";
+import { useFormik } from "formik";
+import * as yup from "yup";
+import API from "../../api/axios";
+import {
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Avatar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Pagination,
+  CircularProgress,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  Snackbar,
+  Tooltip,
+  CardHeader,
+  Divider,
+  alpha,
+  useTheme,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Tabs,
+  Tab,
+  AppBar,
+  Toolbar,
+  Container,
+  FormControlLabel,
+  Switch
+} from "@mui/material";
+
+import {
+  Upload as UploadIcon,
+  Delete as DeleteIcon,
+  CheckCircle as PaidIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Visibility as ViewIcon,
+  Add as AddIcon,
+  Close as CloseIcon,
+  Dashboard as DashboardIcon,
+  PersonAdd as PersonAddIcon,
+  Group as GroupIcon,
+  Sports as SportsIcon,
+  Person as PersonIcon,
+  Download as DownloadIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  CalendarToday as CalendarIcon,
+  LocationOn as LocationIcon,
+  Paid as PaymentIcon,
+  AccessTime as TimeIcon,
+  ArrowBack as ArrowBackIcon,
+  CheckCircle as CheckCircleIcon,
+  ExitToApp as LogoutIcon,
+  SportsCricket as CricketIcon,
+  ExpandMore as ExpandMoreIcon,
+  EventAvailable as EventIcon,
+  Schedule as ScheduleIcon,
+  SportsSoccer as SoccerIcon
+} from "@mui/icons-material";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+
+// Import your logo image
+import logo from "../../assets/logo.png"; 
+
+const API_BASE_URL = "http://localhost:4000";
+const ITEMS_PER_PAGE = 5;
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100
+    }
+  }
+};
+
+const tableRowVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: (custom) => ({
+    opacity: 1,
+    x: 0,
+    transition: {
+      delay: custom * 0.05,
+      type: "spring",
+      stiffness: 100
+    }
+  }),
+  exit: { opacity: 0, x: 20 }
+};
+
+// Validation schema for captain
+const validationSchema = yup.object({
+  name: yup.string().required("Name is required").min(2, "Name too short"),
+  email: yup.string().email("Invalid email").required("Email is required"),
+  phoneNo: yup
+    .string()
+    .matches(/^\d{10}$/, "Must be 10 digits")
+    .required("Phone number is required"),
+  password: yup
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required")
+});
+
+// Slot validation schema (groundId और capacity की validation हटा दी है)
+const slotValidationSchema = yup.object({
+  slotDate: yup.string().required("Date is required"),
+  startTime: yup.string().required("Start time is required"),
+  endTime: yup.string().required("End time is required")
+});
+
+export default function AdminDashboard() {
+  const theme = useTheme();
+  
+  // Captain states
+  const [captains, setCaptains] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedCaptain, setSelectedCaptain] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success"
+  });
+  const [stats, setStats] = useState({
+    total: 0,
+    paid: 0,
+    pending: 0
+  });
+  
+  // Team details states
+  const [captainTeams, setCaptainTeams] = useState([]);
+  const [teamsLoading, setTeamsLoading] = useState(false);
+  const [teamPlayers, setTeamPlayers] = useState([]);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [teamTabValue, setTeamTabValue] = useState(0);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // Slot states
+  const [slots, setSlots] = useState([]);
+  const [slotLoading, setSlotLoading] = useState(false);
+  const [slotDialogOpen, setSlotDialogOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [activeTab, setActiveTab] = useState(0); // 0: Captains, 1: Slots
+
+  // Bulk slot states
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [disableDateDialog, setDisableDateDialog] = useState(false);
+
+  const [bulkSlotData, setBulkSlotData] = useState({
+    startDate: "",
+    endDate: "",
+    timeSlots: [
+      { startTime: "09:00", endTime: "10:00" }
+    ]
+  });
+
+  const [disableDate, setDisableDate] = useState({
+    slotDate: ""
+  });
+
+  // Formik for captain form
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      email: "",
+      phoneNo: "",
+      password: ""
+    },
+    validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      await createCaptain(values, resetForm);
+    }
+  });
+
+  // Formik for slot form - capacity हटा दी है और groundId हटा दी है
+  const slotFormik = useFormik({
+    initialValues: {
+      slotDate: "",
+      startTime: "09:00",
+      endTime: "10:00",
+      isDisabled: false
+    },
+    validationSchema: slotValidationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      // Backend में हमेशा capacity 2 भेजेंगे
+      const slotData = {
+        ...values,
+        capacity: 2 // हमेशा 2 सेट करें
+      };
+      await saveSlot(slotData, resetForm);
+    }
+  });
+
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState("");
+
+  /* ================= LOGOUT FUNCTION ================= */
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("adminToken");
+    window.location.href = "/login";
+  };
+
+  /* ================= STATS CALCULATION ================= */
+  const calculateStats = (data) => {
+    const total = data.length;
+    const paid = data.filter(c => c.paymentStatus === "Paid").length;
+    const pending = total - paid;
+    setStats({ total, paid, pending });
+  };
+
+  /* ================= FETCH CAPTAINS ================= */
+  const fetchCaptains = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/admin/myTeamCaptains");
+      const captainsData = res.data.captains || [];
+      setCaptains(captainsData);
+      calculateStats(captainsData);
+    } catch (err) {
+      showSnackbar("Failed to fetch captains", "error");
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= FETCH SLOTS ================= */
+  const fetchSlots = async () => {
+    try {
+      setSlotLoading(true);
+      const res = await API.get("/admin/slots");
+      setSlots(res.data.data || []);
+    } catch (err) {
+      showSnackbar("Failed to fetch slots", "error");
+    } finally {
+      setSlotLoading(false);
+    }
+  };
+
+  /* ================= SAVE SLOT ================= */
+  const saveSlot = async (values, resetForm) => {
+    try {
+      // Backend में capacity 2 और groundId नहीं भेजेंगे
+      const slotData = {
+        slotDate: values.slotDate,
+        startTime: values.startTime,
+        endTime: values.endTime,
+        capacity: 2, // हमेशा 2
+        isDisabled: values.isDisabled
+      };
+      
+      if (editingSlot) {
+        await API.put(`/admin/slots/${editingSlot._id}`, slotData);
+        showSnackbar("Slot updated successfully!");
+      } else {
+        await API.post("/admin/slots", slotData);
+        showSnackbar("Slot created successfully!");
+      }
+      fetchSlots();
+      resetForm();
+      setSlotDialogOpen(false);
+      setEditingSlot(null);
+    } catch (err) {
+      showSnackbar(err?.response?.data?.message || "Failed to save slot", "error");
+    }
+  };
+
+  /* ================= TOGGLE SLOT STATUS ================= */
+  const toggleSlotStatus = async (slotId) => {
+    try {
+      await API.patch(`/admin/slots/toggle/${slotId}`);
+      showSnackbar("Slot status updated!");
+      fetchSlots();
+    } catch (err) {
+      showSnackbar("Failed to update slot status", "error");
+    }
+  };
+
+  /* ================= DELETE SLOT ================= */
+  const deleteSlot = async (slotId) => {
+    if (window.confirm("Are you sure you want to delete this slot?")) {
+      try {
+        await API.delete(`/admin/slots/${slotId}`);
+        showSnackbar("Slot deleted successfully");
+        fetchSlots();
+      } catch (err) {
+        showSnackbar("Failed to delete slot", "error");
+      }
+    }
+  };
+
+  /* ================= GENERATE FUTURE SLOTS ================= */
+  const generateFutureSlots = async () => {
+    try {
+      // Bulk slots के लिए भी capacity 2 भेजेंगे
+      const bulkData = {
+        ...bulkSlotData,
+        capacity: 2 // हमेशा 2
+      };
+      
+      await API.post("/admin/slots/generate-future", bulkData);
+      showSnackbar("Future slots generated successfully");
+      setBulkDialogOpen(false);
+      fetchSlots();
+      
+      // Reset bulk slot data
+      setBulkSlotData({
+        startDate: "",
+        endDate: "",
+        timeSlots: [
+          { startTime: "09:00", endTime: "10:00" }
+        ]
+      });
+    } catch (err) {
+      showSnackbar(err?.response?.data?.message || "Failed to generate slots", "error");
+    }
+  };
+
+  /* ================= DISABLE SLOTS BY DATE ================= */
+  const disableSlotsByDate = async () => {
+    try {
+      await API.post("/admin/slots/disable-by-date", disableDate);
+      showSnackbar(`Slots disabled for ${disableDate.slotDate}`);
+      setDisableDateDialog(false);
+      fetchSlots();
+      
+      // Reset disable date data
+      setDisableDate({
+        slotDate: ""
+      });
+    } catch (err) {
+      showSnackbar(err?.response?.data?.message || "Failed to disable slots", "error");
+    }
+  };
+
+  useEffect(() => {
+    fetchCaptains();
+    fetchSlots();
+  }, []);
+
+  /* ================= SNACKBAR HANDLER ================= */
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  /* ================= CREATE CAPTAIN ================= */
+  const createCaptain = async (formData, resetForm) => {
+    try {
+      setCreating(true);
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        data.append(key, value);
+      });
+      if (image) data.append("image", image);
+
+      await API.post("/admin/createTeamCaptain", data);
+
+      showSnackbar("Captain created successfully!");
+      resetForm();
+      setImage(null);
+      setPreview("");
+      fetchCaptains();
+      setOpenDialog(false);
+    } catch (err) {
+      showSnackbar(
+        err?.response?.data?.message || "Failed to create captain",
+        "error"
+      );
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  /* ================= PAYMENT HANDLER ================= */
+  const markPaid = async (captain) => {
+    try {
+      const id = captain._id || captain.id || captain.userId;
+      
+      if (!id) {
+        showSnackbar("Cannot update payment: No valid ID found for captain", "error");
+        return;
+      }
+      
+      await API.put(`/admin/updatePayment/${id}`, { status: "Paid" });
+      showSnackbar("Payment status updated to Paid");
+      fetchCaptains();
+    } catch (err) {
+      const errorMsg = err?.response?.data?.message || 
+                       err?.message || 
+                       "Failed to update payment status";
+      showSnackbar(errorMsg, "error");
+    }
+  };
+
+  /* ================= DELETE HANDLER ================= */
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this captain?")) {
+      try {
+        await API.delete(`/admin/deleteCaptain/${id}`);
+        showSnackbar("Captain deleted successfully");
+        fetchCaptains();
+      } catch (err) {
+        showSnackbar("Failed to delete captain", "error");
+      }
+    }
+  };
+
+  /* ================= VIEW DETAILS ================= */
+  const viewDetails = async (captain) => {
+    try {
+      setSelectedCaptain(captain);
+      setTeamsLoading(true);
+      setDetailsDialogOpen(true);
+      
+      const res = await API.get(`/admin/captain/${captain._id}/team`);
+      
+      if (res.data.team) {
+        setCaptainTeams([
+          {
+            ...res.data.team,
+            players: res.data.members || []
+          }
+        ]);
+      } else {
+        setCaptainTeams([]);
+      }
+      
+    } catch (err) {
+      showSnackbar("Failed to fetch team details", "error");
+      console.error("Fetch teams error:", err);
+    } finally {
+      setTeamsLoading(false);
+    }
+  };
+
+  /* ================= FILTER & PAGINATION ================= */
+  const filtered = captains.filter(
+    c =>
+      c.name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()) ||
+      c.phoneNo?.includes(search)
+  );
+
+  const paginated = filtered.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => setPage(1), [search]);
+
+  /* ================= STATS CARDS ================= */
+  const StatCard = ({ title, value, icon, color, index }) => (
+    <motion.div
+      variants={itemVariants}
+      initial="hidden"
+      animate="visible"
+      custom={index}
+    >
+      <Card
+        sx={{
+          height: "100%",
+          background: `linear-gradient(135deg, ${color}20, ${color}40)`,
+          borderLeft: `4px solid ${color}`,
+          transition: "transform 0.3s, box-shadow 0.3s",
+          "&:hover": {
+            transform: "translateY(-4px)",
+            boxShadow: theme.shadows[8]
+          }
+        }}
+      >
+        <CardContent>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box>
+              <Typography color="textSecondary" gutterBottom variant="overline">
+                {title}
+              </Typography>
+              <Typography variant="h4" component="div" fontWeight="bold">
+                {value}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                backgroundColor: `${color}20`,
+                borderRadius: "50%",
+                p: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              {icon}
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+
+  /* ================= MAIN RENDER ================= */
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* CUSTOM HEADER */}
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          boxShadow: theme.shadows[3],
+          mb: 4
+        }}
+      >
+        <Toolbar>
+          {/* Left: Logo */}
+          <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
+            <Box
+              component="div"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '8px 16px',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                mr: 2
+              }}
+            >
+              <img src={logo} alt="Logo" style={{ width: "100px" }} />
+            </Box>
+          </Box>
+
+          {/* Center: Tournament Title */}
+          <Box sx={{ 
+            flexGrow: 1, 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center'
+          }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 800,
+                letterSpacing: 1,
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                background: 'linear-gradient(45deg, #fbbf24, #f59e0b)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              CDS Premier League
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                opacity: 0.9,
+                mt: 0.5,
+                letterSpacing: 0.5,
+                fontWeight: 500,
+                color: 'white'
+              }}
+            >
+              Admin Management Portal
+            </Typography>
+          </Box>
+
+          {/* Right: Logout Button */}
+          <Box sx={{ flexGrow: 0 }}>
+            <Button
+              variant="outlined"
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+              sx={{
+                color: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                '&:hover': {
+                  borderColor: 'white',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
+            >
+              Logout
+            </Button>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {/* MAIN CONTENT */}
+      <Container maxWidth="xl">
+        <Box p={3}>
+          {/* DASHBOARD HEADER & TABS */}
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Box mb={4}>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Admin Dashboard
+              </Typography>
+              <Typography variant="body1" color="textSecondary" mb={3}>
+                Manage captains, slots, and ground bookings
+              </Typography>
+              
+              {/* Navigation Tabs */}
+              <Paper sx={{ mb: 4, borderRadius: 2 }}>
+                <Tabs 
+                  value={activeTab} 
+                  onChange={(e, newValue) => setActiveTab(newValue)}
+                  variant="fullWidth"
+                  sx={{
+                    '& .MuiTab-root': {
+                      py: 2,
+                      fontWeight: 600,
+                      fontSize: '1rem'
+                    }
+                  }}
+                >
+                  <Tab 
+                    icon={<GroupIcon />} 
+                    iconPosition="start" 
+                    label="Team Captains" 
+                  />
+                  <Tab 
+                    icon={<ScheduleIcon />} 
+                    iconPosition="start" 
+                    label="Ground Slots" 
+                  />
+                </Tabs>
+              </Paper>
+            </Box>
+          </motion.div>
+
+          {/* TEAM CAPTAINS TAB CONTENT */}
+          {activeTab === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* STATS CARDS */}
+              <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                <Grid container spacing={3} mb={4}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <StatCard
+                      title="Total Captains"
+                      value={stats.total}
+                      icon={<GroupIcon sx={{ color: theme.palette.primary.main }} />}
+                      color={theme.palette.primary.main}
+                      index={0}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <StatCard
+                      title="Paid"
+                      value={stats.paid}
+                      icon={<PaidIcon sx={{ color: theme.palette.success.main }} />}
+                      color={theme.palette.success.main}
+                      index={1}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <StatCard
+                      title="Pending Payment"
+                      value={stats.pending}
+                      icon={<FilterIcon sx={{ color: theme.palette.warning.main }} />}
+                      color={theme.palette.warning.main}
+                      index={2}
+                    />
+                  </Grid>
+                </Grid>
+              </motion.div>
+
+              {/* CREATE BUTTON & SEARCH */}
+              <Card sx={{ mb: 3, borderRadius: 2 }}>
+                <CardContent>
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        variant="outlined"
+                        placeholder="Search captains by name, email, or phone"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        InputProps={{
+                          startAdornment: <SearchIcon sx={{ mr: 1, color: "action.active" }} />
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6} display="flex" justifyContent="flex-end" gap={2}>
+                      <Tooltip title="Refresh Data">
+                        <IconButton onClick={fetchCaptains}>
+                          <RefreshIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setOpenDialog(true)}
+                        sx={{
+                          px: 4,
+                          py: 1,
+                          borderRadius: 2,
+                          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                          "&:hover": {
+                            transform: "scale(1.05)",
+                            boxShadow: theme.shadows[6]
+                          }
+                        }}
+                      >
+                        Add New Captain
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+
+              {/* CAPTAINS TABLE */}
+              <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: theme.shadows[3] }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
+                      <TableCell><Typography fontWeight="bold">Captain</Typography></TableCell>
+                      <TableCell><Typography fontWeight="bold">Contact</Typography></TableCell>
+                      <TableCell><Typography fontWeight="bold">Payment Status</Typography></TableCell>
+                      <TableCell align="center"><Typography fontWeight="bold">Actions</Typography></TableCell>
+                    </TableRow>
+                  </TableHead>
+
+                  <TableBody>
+                    <AnimatePresence>
+                      {loading ? (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
+                            <CircularProgress size={50} />
+                            <Typography variant="body2" color="textSecondary" mt={2}>
+                              Loading captains...
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : paginated.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
+                            <GroupIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
+                            <Typography variant="h6" color="textSecondary" gutterBottom>
+                              No captains found
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginated.map((c, index) => (
+                          <motion.tr
+                            key={c._id || index}
+                            variants={tableRowVariants}
+                            initial="hidden"
+                            animate="visible"
+                            custom={index}
+                            whileHover={{ backgroundColor: alpha(theme.palette.primary.light, 0.05) }}
+                          >
+                            <TableCell>
+                              <Box display="flex" alignItems="center">
+                                <Avatar src={c.image} sx={{ mr: 2, bgcolor: theme.palette.primary.main }}>
+                                  {c.name?.charAt(0)}
+                                </Avatar>
+                                <Box>
+                                  <Typography fontWeight="bold">{c.name}</Typography>
+                                  <Typography variant="caption" color="textSecondary">
+                                    ID: {(c._id || "N/A").toString().substring(0, 8)}...
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Typography>{c.email}</Typography>
+                              <Typography variant="body2" color="textSecondary">{c.phoneNo}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={c.paymentStatus || "Pending"}
+                                color={c.paymentStatus === "Paid" ? "success" : "warning"}
+                                variant="outlined"
+                                sx={{ fontWeight: "bold" }}
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <Box display="flex" gap={1} justifyContent="center">
+                                <Tooltip title="Mark as Paid">
+                                  <IconButton
+                                    color="success"
+                                    disabled={c.paymentStatus === "Paid"}
+                                    onClick={() => markPaid(c)}
+                                    size="small"
+                                  >
+                                    <PaidIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="View Details">
+                                  <IconButton color="info" onClick={() => viewDetails(c)} size="small">
+                                    <ViewIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete">
+                                  <IconButton 
+                                    color="error"
+                                    onClick={() => handleDelete(c._id)}
+                                    size="small"
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            </TableCell>
+                          </motion.tr>
+                        ))
+                      )}
+                    </AnimatePresence>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              {/* PAGINATION */}
+              {filtered.length > ITEMS_PER_PAGE && (
+                <Box display="flex" justifyContent="center" mt={3}>
+                  <Pagination
+                    count={Math.ceil(filtered.length / ITEMS_PER_PAGE)}
+                    page={page}
+                    onChange={(e, v) => setPage(v)}
+                    color="primary"
+                    size="large"
+                  />
+                </Box>
+              )}
+            </motion.div>
+          )}
+
+          {/* GROUND SLOTS TAB CONTENT */}
+          {activeTab === 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* SLOTS STATS */}
+              <Grid container spacing={3} mb={4}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Total Slots"
+                    value={slots.length}
+                    icon={<EventIcon sx={{ color: theme.palette.primary.main }} />}
+                    color={theme.palette.primary.main}
+                    index={0}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Active Slots"
+                    value={slots.filter(s => !s.isDisabled).length}
+                    icon={<CheckCircleIcon sx={{ color: theme.palette.success.main }} />}
+                    color={theme.palette.success.main}
+                    index={1}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Disabled Slots"
+                    value={slots.filter(s => s.isDisabled).length}
+                    icon={<DeleteIcon sx={{ color: theme.palette.error.main }} />}
+                    color={theme.palette.error.main}
+                    index={2}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <StatCard
+                    title="Total Bookings"
+                    value={slots.reduce((sum, slot) => sum + (slot.bookingsCount || 0), 0)}
+                    icon={<CalendarIcon sx={{ color: theme.palette.info.main }} />}
+                    color={theme.palette.info.main}
+                    index={3}
+                  />
+                </Grid>
+              </Grid>
+
+              {/* SLOTS TABLE */}
+              <Card sx={{ mb: 4 }}>
+                <CardHeader
+                  title="Ground Slots Management"
+                 
+                  action={
+                    <Box display="flex" gap={2}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setDisableDateDialog(true)}
+                      >
+                        Disable Date
+                      </Button>
+
+                      <Button
+                        variant="outlined"
+                        onClick={() => setBulkDialogOpen(true)}
+                      >
+                        Generate Future Slots
+                      </Button>
+
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          setEditingSlot(null);
+                          slotFormik.resetForm();
+                          slotFormik.setValues({
+                            slotDate: new Date().toISOString().split('T')[0],
+                            startTime: "09:00",
+                            endTime: "10:00",
+                            isDisabled: false
+                          });
+                          setSlotDialogOpen(true);
+                        }}
+                      >
+                        Add Slot
+                      </Button>
+                    </Box>
+                  }
+                />
+                <Divider />
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
+                        <TableCell><Typography fontWeight="bold">Date</Typography></TableCell>
+                        <TableCell><Typography fontWeight="bold">Time</Typography></TableCell>
+                        {/* Ground ID और Capacity की column हटा दी है */}
+                        <TableCell><Typography fontWeight="bold">Bookings</Typography></TableCell>
+                        <TableCell><Typography fontWeight="bold">Status</Typography></TableCell>
+                        <TableCell align="center"><Typography fontWeight="bold">Actions</Typography></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {slotLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                            <CircularProgress />
+                          </TableCell>
+                        </TableRow>
+                      ) : slots.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                            <ScheduleIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
+                            <Typography>No slots found</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        slots.map((slot) => (
+                          <TableRow key={slot._id} hover>
+                            <TableCell>{new Date(slot.slotDate).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Typography fontWeight="medium">
+                                {slot.startTime} - {slot.endTime}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>{slot.bookingsCount || 0}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={slot.isDisabled ? "Disabled" : "Active"}
+                                color={slot.isDisabled ? "error" : "success"}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell align="center">
+                              <Box display="flex" gap={1} justifyContent="center">
+                                <Tooltip title="Edit">
+                                  <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() => {
+                                      setEditingSlot(slot);
+                                      slotFormik.setValues({
+                                        slotDate: slot.slotDate,
+                                        startTime: slot.startTime,
+                                        endTime: slot.endTime,
+                                        isDisabled: slot.isDisabled
+                                      });
+                                      setSlotDialogOpen(true);
+                                    }}
+                                  >
+                                    <EditIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={slot.isDisabled ? "Enable" : "Disable"}>
+                                  <IconButton
+                                    size="small"
+                                    color={slot.isDisabled ? "success" : "warning"}
+                                    onClick={() => toggleSlotStatus(slot._id)}
+                                  >
+                                    {slot.isDisabled ? <CheckCircleIcon /> : <DeleteIcon />}
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete">
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => deleteSlot(slot._id)}
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Card>
+
+              {/* CALENDAR PLACEHOLDER */}
+              <Card>
+                <CardHeader
+                  title="Calendar View"
+                  subheader="Interactive calendar will be available soon"
+                />
+                <Divider />
+                <CardContent sx={{ textAlign: 'center', py: 8 }}>
+                  <CalendarIcon sx={{ fontSize: 80, color: theme.palette.primary.main, mb: 3 }} />
+                  <Typography variant="h5" color="textPrimary" gutterBottom>
+                    Calendar Feature Coming Soon
+                  </Typography>
+                  <Typography variant="body1" color="textSecondary" sx={{ maxWidth: 600, mx: 'auto', mb: 3 }}>
+                    The interactive calendar view for visualizing all ground slots will be available in the next update.
+                    For now, please use the table view above to manage your slots.
+                  </Typography>
+                  <Button 
+                    variant="outlined" 
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setEditingSlot(null);
+                      slotFormik.resetForm();
+                      slotFormik.setValues({
+                        slotDate: new Date().toISOString().split('T')[0],
+                        startTime: "09:00",
+                        endTime: "10:00",
+                        isDisabled: false
+                      });
+                      setSlotDialogOpen(true);
+                    }}
+                  >
+                    Add New Slot
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* CREATE CAPTAIN DIALOG */}
+          <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="h6">Create New Captain</Typography>
+                <IconButton onClick={() => setOpenDialog(false)} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <form onSubmit={formik.handleSubmit}>
+                <Grid container spacing={2}>
+                  {["name", "email", "phoneNo", "password"].map((field) => (
+                    <Grid item xs={12} key={field}>
+                      <TextField
+                        fullWidth
+                        name={field}
+                        label={field.charAt(0).toUpperCase() + field.slice(1)}
+                        type={field === "password" ? "password" : "text"}
+                        value={formik.values[field]}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched[field] && Boolean(formik.errors[field])}
+                        helperText={formik.touched[field] && formik.errors[field]}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </form>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+              <Button
+                variant="contained"
+                onClick={formik.submitForm}
+                disabled={creating}
+              >
+                {creating ? "Creating..." : "Create Captain"}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* CREATE/EDIT SLOT DIALOG */}
+          <Dialog open={slotDialogOpen} onClose={() => setSlotDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>
+              {editingSlot ? "Edit Slot" : "Create New Slot"}
+            </DialogTitle>
+            <DialogContent dividers>
+              <form onSubmit={slotFormik.handleSubmit}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      type="date"
+                      label="Slot Date"
+                      name="slotDate"
+                      InputLabelProps={{ shrink: true }}
+                      value={slotFormik.values.slotDate}
+                      onChange={slotFormik.handleChange}
+                      onBlur={slotFormik.handleBlur}
+                      error={slotFormik.touched.slotDate && Boolean(slotFormik.errors.slotDate)}
+                      helperText={slotFormik.touched.slotDate && slotFormik.errors.slotDate}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="time"
+                      label="Start Time"
+                      name="startTime"
+                      InputLabelProps={{ shrink: true }}
+                      value={slotFormik.values.startTime}
+                      onChange={slotFormik.handleChange}
+                      onBlur={slotFormik.handleBlur}
+                      error={slotFormik.touched.startTime && Boolean(slotFormik.errors.startTime)}
+                      helperText={slotFormik.touched.startTime && slotFormik.errors.startTime}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="time"
+                      label="End Time"
+                      name="endTime"
+                      InputLabelProps={{ shrink: true }}
+                      value={slotFormik.values.endTime}
+                      onChange={slotFormik.handleChange}
+                      onBlur={slotFormik.handleBlur}
+                      error={slotFormik.touched.endTime && Boolean(slotFormik.errors.endTime)}
+                      helperText={slotFormik.touched.endTime && slotFormik.errors.endTime}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={slotFormik.values.isDisabled}
+                          onChange={(e) => slotFormik.setFieldValue('isDisabled', e.target.checked)}
+                        />
+                      }
+                      label="Disable this slot"
+                    />
+                  </Grid>
+                </Grid>
+              </form>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSlotDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" onClick={slotFormik.submitForm}>
+                {editingSlot ? "Update Slot" : "Create Slot"}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* DISABLE DATE DIALOG */}
+          <Dialog open={disableDateDialog} onClose={() => setDisableDateDialog(false)} maxWidth="xs" fullWidth>
+            <DialogTitle>Disable Slots for Date</DialogTitle>
+            <DialogContent dividers>
+              <TextField
+                type="date"
+                fullWidth
+                label="Date"
+                InputLabelProps={{ shrink: true }}
+                value={disableDate.slotDate}
+                onChange={(e) => setDisableDate({ ...disableDate, slotDate: e.target.value })}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDisableDateDialog(false)}>Cancel</Button>
+              <Button variant="contained" color="error" onClick={disableSlotsByDate}>
+                Disable
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* GENERATE FUTURE SLOTS DIALOG */}
+          <Dialog open={bulkDialogOpen} onClose={() => setBulkDialogOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Generate Future Slots</DialogTitle>
+            <DialogContent dividers>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <TextField
+                    type="date"
+                    label="Start Date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.startDate}
+                    onChange={(e) => setBulkSlotData({ ...bulkSlotData, startDate: e.target.value })}
+                  />
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    type="date"
+                    label="End Date"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.endDate}
+                    onChange={(e) => setBulkSlotData({ ...bulkSlotData, endDate: e.target.value })}
+                  />
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    type="time"
+                    label="Start Time"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.timeSlots[0].startTime}
+                    onChange={(e) =>
+                      setBulkSlotData({
+                        ...bulkSlotData,
+                        timeSlots: [{ ...bulkSlotData.timeSlots[0], startTime: e.target.value }]
+                      })
+                    }
+                  />
+                </Grid>
+
+                <Grid item xs={6}>
+                  <TextField
+                    type="time"
+                    label="End Time"
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    value={bulkSlotData.timeSlots[0].endTime}
+                    onChange={(e) =>
+                      setBulkSlotData({
+                        ...bulkSlotData,
+                        timeSlots: [{ ...bulkSlotData.timeSlots[0], endTime: e.target.value }]
+                      })
+                    }
+                  />
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
+              <Button variant="contained" onClick={generateFutureSlots}>
+                Generate
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* SNACKBAR */}
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={3000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <Alert
+              onClose={handleCloseSnackbar}
+              severity={snackbar.severity}
+              variant="filled"
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Box>
+      </Container>
+    </motion.div>
+  );
+}
+
+
+
+
+iska view button pe ye api call hoti h
+http://localhost:4000/api/admin/captain/69578f34c7591543e7eb49b0/team
+
+
+captain
+: 
+{id: "69578f34c7591543e7eb49b0", name: "Testing 2", email: "captain2@gmail.com", phoneNo: "9876543210",…}
+createdAt
+: 
+"2026-01-02T09:26:12.323Z"
+email
+: 
+"captain2@gmail.com"
+id
+: 
+"69578f34c7591543e7eb49b0"
+name
+: 
+"Testing 2"
+paymentDueDate
+: 
+null
+paymentStatus
+: 
+"Paid"
+phoneNo
+: 
+"9876543210"
+members
+: 
+[]
+success
+: 
+true
+team
+: 
+null
+totalMembers
+: 
+0
+
+
+
+ye resons aaata h to 
+view button pe click krte hi ek pop aaye or ye sara ka sara data show ho jaye
