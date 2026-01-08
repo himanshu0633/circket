@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Calendar, Clock, MapPin, Users, CalendarDays, Loader2, Download, Grid, List, AlertCircle, User, LogOut, Home } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, CalendarDays, Loader2, Download, Grid, List, AlertCircle, User, LogOut, Home, AlertTriangle } from 'lucide-react';
 import API from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import '../booking/Booking.css';
@@ -24,8 +24,9 @@ const SlotBooking = () => {
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
 
-  // Use refs to track loading state and prevent infinite loops
+  // Use refs to track loading state
   const isFetchingTeamData = useRef(false);
   const isFetchingBookings = useRef(false);
 
@@ -33,17 +34,30 @@ const SlotBooking = () => {
   useEffect(() => {
     console.log('🔄 [FRONTEND] Step 1: Getting current user from localStorage');
     const user = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    
+    console.log(`🔑 Token exists: ${!!token}`);
+    console.log(`👤 User exists: ${!!user}`);
     
     if (user) {
       try {
         const parsedUser = JSON.parse(user);
-        console.log('👤 [FRONTEND] Parsed user data:', parsedUser);
+        console.log('👤 [FRONTEND] Parsed user data:', {
+          id: parsedUser._id,
+          name: parsedUser.name,
+          email: parsedUser.email,
+          role: parsedUser.role
+        });
         setCurrentUser(parsedUser);
       } catch (error) {
         console.error('❌ [FRONTEND] Error parsing user data:', error);
+        showNotification('error', 'Error loading user data. Please login again.');
+        handleLogout();
       }
     } else {
       console.warn('⚠️ [FRONTEND] No user found in localStorage');
+      showNotification('error', 'Please login to access booking');
+      setTimeout(() => navigate('/login'), 1000);
     }
   }, []);
 
@@ -56,58 +70,78 @@ const SlotBooking = () => {
     }, 4000);
   }, []);
 
-  // Fetch team bookings - FIXED VERSION (no dependency on team)
+  // Test captain existence function
+  const testCaptainExistence = useCallback(async () => {
+    if (!currentUser?._id) return;
+    
+    try {
+      console.log('🔍 [FRONTEND] Testing captain existence for:', currentUser._id);
+      const res = await API.get(`/bookings/test-captain/${currentUser._id}`);
+      console.log('✅ [FRONTEND] Test result:', res.data);
+      
+      if (res.data.exists) {
+        console.log(`🎯 Captain verified: ${res.data.user.name}`);
+        return true;
+      } else {
+        console.warn('⚠️ Captain not found in database');
+        showNotification('error', 'Your account was not found in database. Please contact support.');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ [FRONTEND] Test failed:', error);
+      return false;
+    }
+  }, [currentUser, showNotification]);
+
+  // Fetch team bookings
   const fetchTeamBookings = useCallback(async (teamId) => {
     if (isFetchingBookings.current) {
       console.log('⏸️ [FRONTEND] Bookings fetch already in progress');
       return;
     }
 
-    console.log('🔄 [FRONTEND] Step 4: Fetching team bookings');
+    console.log('🔄 [FRONTEND] Fetching team bookings for team:', teamId);
     
     try {
       isFetchingBookings.current = true;
+      setLoadingBookings(true);
       
       if (!teamId) {
         console.warn('⚠️ [FRONTEND] No team ID provided');
         return;
       }
       
-      console.log(`🌐 [FRONTEND] Making API call: GET /bookings/team/${teamId}`);
-      setLoadingBookings(true);
       const res = await API.get(`/bookings/team/${teamId}`);
-      console.log('✅ [FRONTEND] Bookings API response:', res.data);
+      console.log(`✅ [FRONTEND] Found ${res.data.bookings?.length || 0} bookings`);
       
       if (res.data.success) {
-        console.log(`📅 [FRONTEND] Team bookings count: ${res.data.bookings?.length || 0}`);
         setTeamBookings(res.data.bookings || []);
       }
     } catch (err) {
       console.error("❌ [FRONTEND] Failed to fetch bookings:", err);
       if (err.response?.status === 401) {
+        showNotification('error', 'Session expired. Please login again.');
         handleLogout();
       }
     } finally {
-      console.log('🏁 [FRONTEND] Bookings fetch completed');
       setLoadingBookings(false);
       isFetchingBookings.current = false;
     }
-  }, []); // No dependencies to prevent re-renders
+  }, [showNotification]);
 
-  // Fetch team data - FIXED VERSION
+  // Fetch team data
   const fetchTeamData = useCallback(async () => {
     if (isFetchingTeamData.current) {
       console.log('⏸️ [FRONTEND] Team data fetch already in progress');
       return;
     }
 
-    console.log('🔄 [FRONTEND] Step 2: Fetching team data');
+    console.log('🔄 [FRONTEND] Fetching team data');
     
     try {
       isFetchingTeamData.current = true;
       setLoading(true);
       
-      console.log('🌐 [FRONTEND] Making API call: GET /team/my-team');
       const response = await API.get('/team/my-team');
       console.log('✅ [FRONTEND] Team API response:', response.data);
       
@@ -116,43 +150,46 @@ const SlotBooking = () => {
         setTeam(response.data.team);
         setMembers(response.data.members || []);
         
-        // Fetch team bookings if team exists
+        // Fetch team bookings
         if (response.data.team?._id) {
           console.log('🆔 [FRONTEND] Team ID found:', response.data.team._id);
-          // Call fetchTeamBookings directly with team ID
           fetchTeamBookings(response.data.team._id);
         }
+      } else {
+        console.warn('⚠️ [FRONTEND] Team API returned success: false');
+        showNotification('error', response.data.message || 'Failed to load team data');
       }
     } catch (error) {
       console.error('❌ [FRONTEND] Error fetching team:', error);
+      
       if (error.response?.status === 401) {
+        showNotification('error', 'Session expired. Please login again.');
         handleLogout();
       } else {
         showNotification('error', 
           error.response?.data?.message || 
-          error.response?.data?.error || 
-          'Failed to fetch team data'
+          'Failed to fetch team data. Please try again.'
         );
       }
     } finally {
-      console.log('🏁 [FRONTEND] Team fetch completed');
       setLoading(false);
       isFetchingTeamData.current = false;
     }
-  }, [showNotification, fetchTeamBookings]);
+  }, [fetchTeamBookings, showNotification]);
 
   // Initial data fetch
   useEffect(() => {
     console.log('🚀 [FRONTEND] Initial data fetch');
-    fetchTeamData();
-  }, []); // Empty dependency array - run only once on mount
+    if (currentUser) {
+      fetchTeamData();
+    }
+  }, [currentUser, fetchTeamData]);
 
-  // Fetch slots by date - SIMPLIFIED VERSION
+  // Fetch slots by date
   const fetchSlotsByDate = useCallback(async (date) => {
     console.log(`🔄 [FRONTEND] Fetching slots for date: ${date}`);
     
     try {
-      console.log(`🌐 [FRONTEND] Making API call: GET /slots/by-date?date=${date}`);
       const res = await API.get(`/slots/by-date?date=${date}`);
       
       if (res.data.success) {
@@ -165,54 +202,69 @@ const SlotBooking = () => {
       }
     } catch (err) {
       console.error('❌ [FRONTEND] Error fetching slots:', err);
+      
       if (err.response?.status === 401) {
+        showNotification('error', 'Session expired. Please login again.');
         handleLogout();
       } else {
-        showNotification("error", "Failed to load slots");
+        showNotification("error", "Failed to load slots. Please try again.");
       }
     }
   }, [showNotification]);
 
   // Fetch slots when date changes
   useEffect(() => {
-    fetchSlotsByDate(selectedDate);
-  }, [selectedDate]);
+    if (currentUser) {
+      fetchSlotsByDate(selectedDate);
+    }
+  }, [selectedDate, currentUser, fetchSlotsByDate]);
 
-  // Book slot function
+  // Book slot function - FIXED VERSION
   const handleBookSlot = async (slotId) => {
-    console.log(`🔄 [FRONTEND] Booking slot: ${slotId}`);
+    console.log(`🔄 [FRONTEND] Starting booking for slot: ${slotId}`);
     
+    // Pre-flight checks
+    if (!currentUser) {
+      showNotification("error", "Please login as team captain");
+      return;
+    }
+
+    if (!team?._id) {
+      showNotification("error", "Create team first");
+      navigate('/team');
+      return;
+    }
+
+    if (members.length < 7) {
+      showNotification("error", "Need at least 7 players to book a slot");
+      return;
+    }
+
+    // Check captain existence before booking
+    const captainVerified = await testCaptainExistence();
+    if (!captainVerified) {
+      showNotification('error', 'Cannot verify your account. Please contact support.');
+      return;
+    }
+
+    setBookingLoading(prev => ({ ...prev, [slotId]: true }));
+
     try {
-      if (!currentUser) {
-        showNotification("error", "Please login as team captain");
-        return;
-      }
-
-      if (!team?._id) {
-        showNotification("error", "Create team first");
-        return;
-      }
-
-      if (members.length < 7) {
-        showNotification("error", "Need at least 7 players to book a slot");
-        return;
-      }
-
-      setBookingLoading(prev => ({ ...prev, [slotId]: true }));
-
+      // Prepare booking data
       const bookingData = {
-        teamId: team._id,
-        captainId: currentUser._id
+        teamId: team._id
+        // captainId is now taken from token in backend
       };
       
       console.log('📦 [FRONTEND] Booking payload:', bookingData);
+      console.log('👤 [FRONTEND] Current user ID (from token):', currentUser._id);
       
-      const res = await API.post(
-        `/bookings/book/${slotId}`,
-        bookingData
-      );
+      // Make API call
+      const res = await API.post(`/bookings/book/${slotId}`, bookingData);
+      console.log('✅ [FRONTEND] Booking API response:', res.data);
 
       if (res.data.success) {
+        console.log('🎉 [FRONTEND] Booking successful!');
         showNotification("success", "Slot booked successfully!");
         
         // Update local slots state
@@ -234,7 +286,7 @@ const SlotBooking = () => {
           })
         );
         
-        // Refresh data after delay
+        // Refresh data
         setTimeout(() => {
           fetchSlotsByDate(selectedDate);
           if (team?._id) {
@@ -242,43 +294,99 @@ const SlotBooking = () => {
           }
         }, 1000);
 
+      } else {
+        // Handle backend error message
+        const errorMsg = res.data.message || "Booking failed";
+        console.warn('⚠️ [FRONTEND] Booking API success false:', errorMsg);
+        
+        let userFriendlyMessage = errorMsg;
+        if (errorMsg.includes('Captain not found')) {
+          userFriendlyMessage = "Your account was not found. Please login again.";
+          setTimeout(() => handleLogout(), 2000);
+        } else if (errorMsg.includes('already booked')) {
+          userFriendlyMessage = "Your team has already booked this slot";
+        } else if (errorMsg.includes('Slot is already full')) {
+          userFriendlyMessage = "This slot is already full";
+        } else if (errorMsg.includes('Only team captain can book')) {
+          userFriendlyMessage = "Only team captain can book slots";
+        }
+        
+        showNotification("error", userFriendlyMessage);
       }
 
     } catch (err) {
       console.error('❌ [FRONTEND] Booking error:', err);
+      console.error('📊 [FRONTEND] Error response:', err.response?.data);
+      console.error('🔢 [FRONTEND] Error status:', err.response?.status);
       
-      let errorMessage = "Booking failed";
+      let errorMessage = "Booking failed. Please try again.";
+      
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
+        
+        if (errorMessage.includes('Captain not found')) {
+          errorMessage = "Your account was not found. Please login again.";
+          setTimeout(() => handleLogout(), 2000);
+        } else if (errorMessage.includes('already booked')) {
+          errorMessage = "Your team has already booked this slot";
+        } else if (errorMessage.includes('Slot is already full')) {
+          errorMessage = "This slot is already full";
+        }
       }
       
       showNotification("error", errorMessage);
       
     } finally {
+      console.log('🏁 [FRONTEND] Booking process completed');
       setBookingLoading(prev => ({ ...prev, [slotId]: false }));
     }
   };
 
-  // Cancel booking
+  // Cancel booking - FIXED VERSION
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    console.log(`🔄 [FRONTEND] Starting cancellation for booking: ${bookingId}`);
+    
+    if (!window.confirm('Are you sure you want to cancel this booking?')) {
+      console.log('❌ [FRONTEND] Cancellation cancelled by user');
+      return;
+    }
 
     try {
       const res = await API.delete(`/bookings/cancel/${bookingId}`);
+      console.log('✅ [FRONTEND] Cancel API response:', res.data);
       
       if (res.data.success) {
+        console.log('✅ [FRONTEND] Booking cancelled successfully');
         showNotification("success", "Booking cancelled successfully!");
+        
+        // Refresh data
         fetchSlotsByDate(selectedDate);
         if (team?._id) {
           fetchTeamBookings(team._id);
         }
+      } else {
+        // Handle backend error
+        showNotification("error", res.data.message || "Cancellation failed");
       }
+      
     } catch (err) {
       console.error('❌ [FRONTEND] Cancel booking error:', err);
-      showNotification(
-        "error",
-        err.response?.data?.message || "Cancellation failed"
-      );
+      console.error('📊 [FRONTEND] Error response:', err.response?.data);
+      console.error('🔢 [FRONTEND] Error status:', err.response?.status);
+      
+      let errorMessage = "Cancellation failed. Please try again.";
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+        
+        if (errorMessage.includes('not authorized')) {
+          errorMessage = "You are not authorized to cancel this booking";
+        } else if (errorMessage.includes('Booking not found')) {
+          errorMessage = "Booking not found or already cancelled";
+        }
+      }
+      
+      showNotification("error", errorMessage);
     }
   };
 
@@ -304,6 +412,7 @@ const SlotBooking = () => {
 
   // Logout function
   const handleLogout = () => {
+    console.log('🔒 [FRONTEND] Logging out...');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     showNotification('info', 'Logged out successfully');
@@ -312,7 +421,7 @@ const SlotBooking = () => {
     }, 1000);
   };
 
-  // Export bookings to PDF (same as before)
+  // Export bookings to PDF
   const exportBookingsToPDF = () => {
     if (!team || teamBookings.length === 0) {
       showNotification('error', 'No bookings available to export');
@@ -326,25 +435,23 @@ const SlotBooking = () => {
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       
+      // Header
       doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(30, 58, 138);
       doc.text('Team Bookings Report', pageWidth / 2, 25, { align: 'center' });
       
+      // Team info
       doc.setFontSize(14);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(75, 85, 99);
       doc.text(team.teamName, pageWidth / 2, 35, { align: 'center' });
       
+      // Generated date
       doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}`, pageWidth / 2, 42, { align: 'center' });
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 42, { align: 'center' });
       
+      // Team information section
       let yPos = 55;
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
@@ -363,7 +470,7 @@ const SlotBooking = () => {
         ['Team Name:', team.teamName],
         ['Total Players:', team.totalPlayers],
         ['Active Bookings:', teamBookings.length],
-        ['Captain:', currentUser?.name || currentUser?.email || 'You']
+        ['Captain:', currentUser?.name || 'You']
       ];
       
       teamInfo.forEach(([label, value]) => {
@@ -374,6 +481,7 @@ const SlotBooking = () => {
         yPos += 8;
       });
       
+      // Booking history table
       yPos += 10;
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
@@ -408,34 +516,20 @@ const SlotBooking = () => {
         styles: {
           fontSize: 9,
           cellPadding: 4,
-          textColor: [51, 65, 85],
-          lineColor: [229, 231, 235],
-          lineWidth: 0.5
-        },
-        alternateRowStyles: {
-          fillColor: [249, 250, 251]
-        },
-        margin: { left: 20, right: 20 },
-        tableWidth: 'auto',
-        didDrawPage: function(data) {
-          const pageCount = doc.internal.getNumberOfPages();
-          doc.setFontSize(9);
-          doc.setTextColor(107, 114, 128);
-          doc.text(
-            `Page ${data.pageNumber} of ${pageCount}`,
-            pageWidth / 2,
-            pageHeight - 10,
-            { align: 'center' }
-          );
+          textColor: [51, 65, 85]
         }
       });
       
+      // Footer
       const finalY = doc.internal.pageSize.getHeight() - 20;
       doc.setFontSize(9);
       doc.setTextColor(156, 163, 175);
-      doc.text('Generated by Team Management System', pageWidth / 2, finalY, { align: 'center' });
+      doc.text('Generated by SportsHub Booking System', pageWidth / 2, finalY, { align: 'center' });
       
-      doc.save(`${team.teamName.replace(/\s+/g, '_')}_Bookings_Report_${new Date().getTime()}.pdf`);
+      // Save PDF
+      const fileName = `${team.teamName.replace(/\s+/g, '_')}_Bookings_${new Date().getTime()}.pdf`;
+      doc.save(fileName);
+      
       showNotification('success', 'Bookings PDF exported successfully!');
       
     } catch (error) {
@@ -483,6 +577,22 @@ const SlotBooking = () => {
               title="Team Management"
             >
               My Team
+            </button>
+            {debugMode && (
+              <button 
+                className="btn-header btn-debug"
+                onClick={testCaptainExistence}
+                title="Test Captain Verification"
+              >
+                Test Captain
+              </button>
+            )}
+            <button 
+              className="btn-header btn-debug-toggle"
+              onClick={() => setDebugMode(!debugMode)}
+              title="Toggle Debug Mode"
+            >
+              {debugMode ? '🔧 Debug ON' : '🔧 Debug'}
             </button>
             <button 
               className="btn-header btn-logout"
@@ -540,7 +650,8 @@ const SlotBooking = () => {
               <div 
                 className="meter-fill"
                 style={{ 
-                  width: `${(bookedCount / slot.capacity) * 100}%` 
+                  width: `${(bookedCount / slot.capacity) * 100}%`,
+                  backgroundColor: slot.isFull ? '#ef4444' : '#10b981'
                 }}
               ></div>
             </div>
@@ -576,7 +687,7 @@ const SlotBooking = () => {
             </button>
           ) : slot.isFull ? (
             <button className="btn btn-danger" disabled>
-              ❌ Fully Booked
+              <AlertTriangle size={16} /> Fully Booked
             </button>
           ) : isSlotBookable ? (
             <button 
@@ -678,6 +789,22 @@ const SlotBooking = () => {
         </div>
       )}
 
+      {/* Debug Info (only in debug mode) */}
+      {debugMode && currentUser && (
+        <div className="debug-info">
+          <div className="debug-content">
+            <h4>🔧 Debug Information</h4>
+            <p><strong>User ID:</strong> {currentUser._id}</p>
+            <p><strong>User Name:</strong> {currentUser.name}</p>
+            <p><strong>User Role:</strong> {currentUser.role}</p>
+            <p><strong>Team:</strong> {team ? team.teamName : 'No team'}</p>
+            <p><strong>Members:</strong> {members.length} (Need: 7+)</p>
+            <p><strong>Bookings:</strong> {teamBookings.length}</p>
+            <p><strong>Slots Available:</strong> {slots.length}</p>
+          </div>
+        </div>
+      )}
+
       {/* Loading overlay for PDF export */}
       {isExporting && (
         <div className="export-loading-overlay">
@@ -698,9 +825,7 @@ const SlotBooking = () => {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                }}
+                onChange={(e) => setSelectedDate(e.target.value)}
                 min={new Date().toISOString().split("T")[0]}
                 max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
               />
@@ -794,6 +919,13 @@ const SlotBooking = () => {
           <div className="your-bookings-section">
             <div className="section-header">
               <h3>Your Bookings ({teamBookings.length})</h3>
+              <button 
+                className="btn btn-sm btn-secondary"
+                onClick={() => fetchTeamBookings(team._id)}
+                disabled={loadingBookings}
+              >
+                {loadingBookings ? 'Refreshing...' : 'Refresh'}
+              </button>
             </div>
             <div className="bookings-container">
               {loadingBookings ? (
@@ -814,7 +946,15 @@ const SlotBooking = () => {
         <div className="available-slots-section">
           <div className="section-header">
             <h3>Available Slots for {formatSlotDate(selectedDate)}</h3>
-            <span className="slots-count">{slots.length} slots available</span>
+            <div className="slots-header-right">
+              <span className="slots-count">{slots.length} slots available</span>
+              <button 
+                className="btn btn-sm btn-secondary"
+                onClick={() => fetchSlotsByDate(selectedDate)}
+              >
+                Refresh Slots
+              </button>
+            </div>
           </div>
           <div className={`slots-container ${slotView}`}>
             {slots.length === 0 ? (
