@@ -1,19 +1,33 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:4000/api"
+  baseURL: "http://localhost:4000/api",
+  headers: {
+    "Content-Type": "application/json"
+  }
 });
 
 /* ================= TOKEN AUTO ATTACH ================= */
 API.interceptors.request.use(
-  (req) => {
+  (config) => {
     const token = localStorage.getItem("token");
     if (token) {
-      req.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return req;
+    return config;
   },
+  (error) => Promise.reject(error)
+);
+
+/* ================= AUTO LOGOUT ON 401 ================= */
+API.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
     return Promise.reject(error);
   }
 );

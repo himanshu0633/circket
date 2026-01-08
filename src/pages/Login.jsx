@@ -47,61 +47,74 @@ export default function Login() {
   }, []);
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setMsg("");
-    
-    if (!email || !password) {
-      setMsg("Please fill in all fields");
-      setBounceAnimation(true);
-      setTimeout(() => setBounceAnimation(false), 1000);
-      return;
+  e.preventDefault();
+  setMsg("");
+
+  if (!email || !password) {
+    setMsg("Please fill in all fields");
+    setBounceAnimation(true);
+    setTimeout(() => setBounceAnimation(false), 1000);
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res = await API.post("/auth/login", { email, password });
+
+    /* ===============================
+       ✅ LOCAL STORAGE SAVE (NEW)
+    =============================== */
+
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("role", res.data.role);
+    localStorage.setItem("paymentStatus", res.data.paymentStatus);
+
+    // 👤 FULL USER DATA
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+    // Remember Me
+    if (rememberMe) {
+      localStorage.setItem("cricket_login_email", email);
+    } else {
+      localStorage.removeItem("cricket_login_email");
     }
-    
-    setLoading(true);
 
-    try {
-      const res = await API.post("/auth/login", { email, password });
-
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", res.data.role);
-      
-      if (rememberMe) {
-        localStorage.setItem("cricket_login_email", email);
-      } else {
-        localStorage.removeItem("cricket_login_email");
+    /* ===============================
+       🎉 EXISTING UI ANIMATION (SAME)
+    =============================== */
+    if (formRef.current) {
+      formRef.current.classList.add("success");
+      if (ballRef.current) {
+        ballRef.current.classList.add("hit");
       }
 
-      // Add success class for animation
-      if (formRef.current) {
-        formRef.current.classList.add('success');
-        if (ballRef.current) {
-          ballRef.current.classList.add('hit');
-        }
-        
-        setTimeout(() => {
-          if (res.data.role === "admin") navigate("/admin");
-          else navigate("/captain");
-        }, 1500);
-      }
-      
-    } catch (err) {
-      setMsg(err?.response?.data?.message || "Login failed");
-      if (formRef.current) {
-        formRef.current.classList.add('error');
-        if (ballRef.current) {
-          ballRef.current.classList.add('shake');
-          setTimeout(() => {
-            ballRef.current.classList.remove('shake');
-          }, 500);
-        }
-        setTimeout(() => {
-          formRef.current.classList.remove('error');
-        }, 1500);
-      }
-    } finally {
-      setLoading(false);
+      setTimeout(() => {
+        if (res.data.user.role === "admin") navigate("/admin");
+        else navigate("/captain");
+      }, 1500);
     }
-  };
+
+  } catch (err) {
+    setMsg(err?.response?.data?.message || "Login failed");
+
+    if (formRef.current) {
+      formRef.current.classList.add("error");
+      if (ballRef.current) {
+        ballRef.current.classList.add("shake");
+        setTimeout(() => {
+          ballRef.current.classList.remove("shake");
+        }, 500);
+      }
+      setTimeout(() => {
+        formRef.current.classList.remove("error");
+      }, 1500);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="login-container" ref={containerRef}>

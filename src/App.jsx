@@ -1,41 +1,49 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import "./App.css";
-// new pages
+
+// pages
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import CaptainDashboard from "./pages/captain/CaptainDashboard";
+import Gallery from "./pages/Gallery";
 
 // protected route
 import ProtectedRoute from "./pages/components/ProtectedRoute";
 
+// common components
+import Header from "./pages/components/header";
+import Footer from "./pages/components/footer";
+
 function App() {
   return (
     <>
+      {/* Header har page par */}
+      <Header />
+
       <Routes>
         {/* Public Pages */}
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-
-        {/* Auth */}
+        <Route path="/gallery" element={<Gallery />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Admin Routes */}
+        {/* Admin Protected Route */}
         <Route
-          path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Team Captain Routes */}
-        <Route
-          path="/captain" element={<ProtectedRoute role="teamCaptain"> <CaptainDashboard /></ProtectedRoute>}/>
-
-        {/* Fallback */}
+        {/* 404 Page */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {/* Footer har page par */}
+      <Footer />
     </>
   );
 }

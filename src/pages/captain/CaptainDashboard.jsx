@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logo from '../../assets/logo.png';
-import { Calendar, Clock, MapPin, Users, ChevronRight, CalendarDays, Loader2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, ChevronRight, CalendarDays, Loader2, LogOut, User, Shield } from 'lucide-react';
+import API from '../../api/axios';
 
-const API_BASE_URL = 'http://localhost:4000/api';
 
 const TeamManagement = () => {
   // State declarations
@@ -35,137 +35,233 @@ const TeamManagement = () => {
     new Date().toISOString().split("T")[0]
   );
   const [bookingLoading, setBookingLoading] = useState({});
-  const [activeTab, setActiveTab] = useState('team'); // 'team' or 'bookings'
-  const [slotView, setSlotView] = useState('grid'); // 'grid' or 'list'
-  const [showSlotModal, setShowSlotModal] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [activeTab, setActiveTab] = useState('team');
+  const [slotView, setSlotView] = useState('grid');
   const [teamBookings, setTeamBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [authChecking, setAuthChecking] = useState(true);
 
   const roles = ['Batsman', 'Bowler', 'All-rounder', 'Wicket-keeper', 'Captain'];
 
-  // Get authorization token
-  const getAuthToken = () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      showNotification('error', 'Please login first');
-      return null;
-    }
-    return token;
-  };
 
-  // Get current user from localStorage
-  const getCurrentUser = () => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
+  const user = localStorage.getItem('user');
+  useEffect(() => {
+    if (user) {
       try {
-        return JSON.parse(userData);
+        const parsedUser = JSON.parse(user);
+        setCurrentUser(parsedUser);
       } catch (error) {
         console.error('Error parsing user data:', error);
-        return null;
       }
     }
-    return null;
-  };
+  }, [user]);
 
-  // Show notification function
-  const showNotification = (type, message) => {
+  // Enhanced token validation
+  // const validateAuth = async () => {
+  //   const token = localStorage.getItem('token');
+  //   const userData = localStorage.getItem('user');
+    
+  //   if (!token || !userData) {
+  //     showNotification('error', 'Session expired. Please login again.');
+  //     setTimeout(() => {
+  //       window.location.href = '/login';
+  //     }, 2000);
+  //     return false;
+  //   }
+
+  //   try {
+  //     // Verify token with backend
+  //     const response = await axios.get(`${API}/auth/verify`, {
+  //       headers: { 'Authorization': `Bearer ${token}` }
+  //     });
+
+  //     if (!response.data.success) {
+  //       throw new Error('Invalid token');
+  //     }
+
+  //     return true;
+  //   } catch (error) {
+  //     console.error('Auth validation failed:', error);
+  //     localStorage.removeItem('token');
+  //     localStorage.removeItem('user');
+  //     showNotification('error', 'Session expired. Please login again.');
+  //     setTimeout(() => {
+  //       window.location.href = '/login';
+  //     }, 2000);
+  //     return false;
+  //   }
+  // };
+
+  // Get authorization token with validation
+  // const getAuthToken = async () => {
+  //   const token = localStorage.getItem('token');
+  //   if (!token) {
+  //     showNotification('error', 'Please login first');
+  //     setTimeout(() => {
+  //       window.location.href = '/login';
+  //     }, 1500);
+  //     return null;
+  //   }
+
+  //   // const isValid = await validateAuth();
+  //   return isValid ? token : null;
+  // };
+
+  // Get current user with validation
+  // const getCurrentUser = () => {
+  //   const userData = localStorage.getItem('user');
+  //   if (userData) {
+  //     try {
+  //       const user = JSON.parse(userData);
+  //       // Ensure user has required fields
+  //       if (!user._id || !user.email) {
+  //         throw new Error('Invalid user data');
+  //       }
+  //       return user;
+  //     } catch (error) {
+  //       console.error('Error parsing user data:', error);
+  //       handleLogout();
+  //       return null;
+  //     }
+  //   }
+  //   return null;
+  // };
+
+  // Enhanced notification function
+  const showNotification = useCallback((type, message) => {
     setNotification({ show: true, type, message });
     setTimeout(() => {
       setNotification({ show: false, type: '', message: '' });
     }, 4000);
-  };
+  }, []);
+
+  // Initialize user and auth
+  // useEffect(() => {
+  //   const initAuth = async () => {
+  //     try {
+  //       setAuthChecking(true);
+  //       const user =  localStorage.getItem('user');
+  //       if (!user) {
+  //         window.location.href = '/login';
+  //         return;
+  //       }
+
+  //       const isValid = await validateAuth();
+  //       if (!isValid) {
+  //         window.location.href = '/login';
+  //         return;
+  //       }
+
+  //       setCurrentUser(user);
+  //       setAuthChecking(false);
+  //     } catch (error) {
+  //       console.error('Auth initialization failed:', error);
+  //       handleLogout();
+  //     }
+  //   };
+
+  //   initAuth();
+  // }, [showNotification]);
 
   // Fetch team data
-  const fetchTeamData = async () => {
+  const fetchTeamData = useCallback(async () => {
     try {
       setLoading(true);
-      const token = getAuthToken();
-      if (!token) return;
-
-      const response = await axios.get(`${API_BASE_URL}/team/my-team`, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+    
+      const response = await ;
       
       if (response.data.success) {
         setTeam(response.data.team);
         setMembers(response.data.members || []);
         
-        // Set current user
-        const user = getCurrentUser();
-        setCurrentUser(user);
-        
-        // Since captain logs in, fetch team bookings
-        fetchTeamBookings();
+        // Fetch team bookings if team exists
+        if (response.data.team?._id) {
+          fetchTeamBookings();
+        }
       }
     } catch (error) {
       console.error('Error fetching team:', error);
-      showNotification('error', 
-        error.response?.data?.message || 
-        error.response?.data?.error || 
-        'Failed to fetch team data'
-      );
+      if (error.response?.status === 401) {
+        handleLogout();
+      } else {
+        showNotification('error', 
+          error.response?.data?.message || 
+          error.response?.data?.error || 
+          'Failed to fetch team data'
+        );
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [showNotification]);
 
   useEffect(() => {
-    fetchTeamData();
-  }, []);
+    // if (!authChecking) {
+      fetchTeamData();
+    // }
+  }, [fetchTeamData, authChecking]);
 
   // Fetch slots by date
-  const fetchSlotsByDate = async (date) => {
+  const fetchSlotsByDate = useCallback(async (date) => {
     try {
-      const token = getAuthToken();
-      if (!token) return;
+    
 
-      const res = await axios.get(
-        `${API_BASE_URL}/slots/by-date?date=${date}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const res = await API.get(`/slots/by-date?date=${date}`);
+
 
       if (res.data.success) {
-        setSlots(res.data.data || []);
+        // Calculate remaining slots for each slot
+        const slotsWithRemaining = res.data.data.map(slot => ({
+          ...slot,
+          remaining: slot.capacity - (slot.bookedCount || 0)
+        }));
+        setSlots(slotsWithRemaining);
       }
     } catch (err) {
-      showNotification("error", "Failed to load slots");
+      console.error('Error fetching slots:', err);
+      if (err.response?.status === 401) {
+        handleLogout();
+      } else {
+        showNotification("error", "Failed to load slots");
+      }
     }
-  };
+  }, [showNotification]);
 
   // Fetch team bookings
-  const fetchTeamBookings = async () => {
+  const fetchTeamBookings = useCallback(async () => {
     try {
+      if (!team?._id) return;
+      
       setLoadingBookings(true);
-      const token = getAuthToken();
-      if (!token || !team?._id) return;
+    
+     const res = await API.get(`/bookings/team/${team._id}`);
 
-      const res = await axios.get(
-        `${API_BASE_URL}/bookings/team/${team._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
 
       if (res.data.success) {
         setTeamBookings(res.data.bookings || []);
       }
     } catch (err) {
       console.error("Failed to fetch bookings:", err);
+      if (err.response?.status === 401) {
+        handleLogout();
+      }
     } finally {
       setLoadingBookings(false);
     }
-  };
+  }, [team, showNotification]);
 
-  // Book slot function - UPDATED for real-time updates
+  // Enhanced book slot function with proper error handling
   const handleBookSlot = async (slotId) => {
     try {
-      const token = getAuthToken();
-      if (!token) return;
+      // Validate auth first
+    
+
+      // Check if user is captain
+      if (!currentUser) {
+        showNotification("error", "Please login as team captain");
+        return;
+      }
 
       // Check if team exists
       if (!team?._id) {
@@ -182,23 +278,23 @@ const TeamManagement = () => {
       // Set loading state for this specific slot
       setBookingLoading(prev => ({ ...prev, [slotId]: true }));
 
-      const res = await axios.post(
-        `${API_BASE_URL}/bookings/book/${slotId}`,
-        { teamId: team._id },
-        { headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        } }
-      );
+      const res = await API.post(
+  `/bookings/book/${slotId}`,
+  {
+    teamId: team._id,
+    captainId: currentUser._id
+  }
+);
+
 
       if (res.data.success) {
         showNotification("success", "Slot booked successfully!");
         
-        // IMMEDIATELY UPDATE LOCAL STATE for real-time effect
+        // Update local state immediately
         setSlots(prevSlots => 
           prevSlots.map(slot => {
             if (slot._id === slotId) {
-              const newBookedCount = slot.bookedCount + 1;
+              const newBookedCount = (slot.bookedCount || 0) + 1;
               const newRemaining = slot.capacity - newBookedCount;
               const newIsFull = newRemaining <= 0;
               
@@ -214,7 +310,7 @@ const TeamManagement = () => {
           })
         );
         
-        // Also refresh from server to ensure data consistency
+        // Refresh data from server
         setTimeout(() => {
           fetchSlotsByDate(selectedDate);
           fetchTeamBookings();
@@ -222,10 +318,32 @@ const TeamManagement = () => {
       }
 
     } catch (err) {
-      showNotification(
-        "error",
-        err.response?.data?.message || "Booking failed"
-      );
+      console.error('Booking error:', err);
+      
+      let errorMessage = "Booking failed";
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+        
+        // Handle specific errors
+        if (err.response.data.message.includes('captain not found')) {
+          errorMessage = "Your account was not found. Please login again.";
+          setTimeout(() => {
+            handleLogout();
+          }, 2000);
+        } else if (err.response.data.message.includes('Slot not available')) {
+          errorMessage = "This slot is no longer available";
+        } else if (err.response.data.message.includes('already booked')) {
+          errorMessage = "Your team has already booked this slot";
+        } else if (err.response.data.message.includes('already full')) {
+          errorMessage = "This slot is already full";
+        }
+      }
+      
+      showNotification("error", errorMessage);
+      
+      // Refresh slots to get updated data
+      fetchSlotsByDate(selectedDate);
+      
     } finally {
       setBookingLoading(prev => ({ ...prev, [slotId]: false }));
     }
@@ -236,13 +354,10 @@ const TeamManagement = () => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
 
     try {
-      const token = getAuthToken();
-      if (!token) return;
+     
 
-      const res = await axios.delete(
-        `${API_BASE_URL}/bookings/cancel/${bookingId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const res = await API.delete(`/bookings/cancel/${bookingId}`);
+
 
       if (res.data.success) {
         showNotification("success", "Booking cancelled successfully!");
@@ -250,6 +365,7 @@ const TeamManagement = () => {
         fetchTeamBookings();
       }
     } catch (err) {
+      console.error('Cancel booking error:', err);
       showNotification(
         "error",
         err.response?.data?.message || "Cancellation failed"
@@ -261,19 +377,16 @@ const TeamManagement = () => {
   const handleCreateTeam = async (e) => {
     e.preventDefault();
     try {
-      const token = getAuthToken();
-      if (!token) return;
+     
+      // Ensure captain is set
+      const captainId = currentUser?._id;
+      if (!captainId) {
+        showNotification('error', 'Cannot identify captain. Please login again.');
+        return;
+      }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/team/create-team`, 
-        formData, 
-        {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await API.get('/team/my-team');
+
 
       if (response.data.success) {
         setTeam(response.data.team);
@@ -296,7 +409,7 @@ const TeamManagement = () => {
   const handleAddPlayers = async (e) => {
     e.preventDefault();
     try {
-      const token = getAuthToken();
+      const token = await getAuthToken();
       if (!token) return;
 
       if (!team || !team._id) {
@@ -311,19 +424,8 @@ const TeamManagement = () => {
         return;
       }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/team/add-players`, 
-        {
-          teamId: team._id,
-          players: playerData
-        }, 
-        {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+const response = await API.get('/team/my-team');
+
 
       if (response.data.success) {
         await fetchTeamData();
@@ -350,7 +452,7 @@ const TeamManagement = () => {
   const handleUpdateMember = async (e) => {
     e.preventDefault();
     try {
-      const token = getAuthToken();
+      const token = await getAuthToken();
       if (!token) return;
 
       // Validate required fields
@@ -358,17 +460,11 @@ const TeamManagement = () => {
         showNotification('error', 'Name and Mobile are required');
         return;
       }
+const response = await API.put(
+  `/team/member/${editMember._id}`,
+  editMember
+);
 
-      const response = await axios.put(
-        `${API_BASE_URL}/team/member/${editMember._id}`, 
-        editMember, 
-        {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
 
       if (response.data.success) {
         await fetchTeamData();
@@ -391,18 +487,13 @@ const TeamManagement = () => {
     if (!window.confirm('Are you sure you want to delete this member?')) return;
 
     try {
-      const token = getAuthToken();
+      const token = await getAuthToken();
       if (!token) return;
 
-      const response = await axios.delete(
-        `${API_BASE_URL}/team/member/${memberId}`, 
-        {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await API.delete(
+  `/team/member/${memberId}`
+);
+
 
       if (response.data.success) {
         await fetchTeamData();
@@ -479,7 +570,10 @@ const TeamManagement = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    showNotification('info', 'Logged out successfully');
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 1000);
   };
 
   // Export to PDF
@@ -540,7 +634,8 @@ const TeamManagement = () => {
         ['Players Added:', members.length],
         ['Available Slots:', team.totalPlayers - members.length],
         ['Status:', team.status || 'Pending'],
-        ['Created Date:', formatDate(team.createdAt)]
+        ['Created Date:', formatDate(team.createdAt)],
+        ['Captain:', currentUser?.name || currentUser?.email || 'You']
       ];
       
       teamInfo.forEach(([label, value]) => {
@@ -660,7 +755,8 @@ const TeamManagement = () => {
       const teamData = {
         team: team,
         members: members,
-        exportedAt: new Date().toISOString()
+        exportedAt: new Date().toISOString(),
+        captain: currentUser
       };
       
       const dataStr = JSON.stringify(teamData, null, 2);
@@ -691,6 +787,8 @@ const TeamManagement = () => {
       !slot.bookedTeams?.includes(team?.teamName);
 
     const isAlreadyBooked = slot.bookedTeams?.includes(team?.teamName);
+    const bookedCount = slot.bookedCount || 0;
+    const remaining = slot.remaining || (slot.capacity - bookedCount);
 
     return (
       <div className={`slot-card ${slot.isFull ? 'full' : ''} ${isAlreadyBooked ? 'booked' : ''}`}>
@@ -709,7 +807,7 @@ const TeamManagement = () => {
           <div className="slot-info">
             <div className="info-item">
               <MapPin size={14} />
-              <span>Main Ground</span>
+              <span>{slot.groundId?.name || "Main Ground"}</span>
             </div>
             <div className="info-item">
               <Users size={14} />
@@ -722,13 +820,13 @@ const TeamManagement = () => {
               <div 
                 className="meter-fill"
                 style={{ 
-                  width: `${(slot.bookedCount / slot.capacity) * 100}%` 
+                  width: `${(bookedCount / slot.capacity) * 100}%` 
                 }}
               ></div>
             </div>
             <div className="availability-info">
-              <span className="booked-count">{slot.bookedCount} booked</span>
-              <span className="remaining">{slot.remaining} available</span>
+              <span className="booked-count">{bookedCount} booked</span>
+              <span className="remaining">{remaining} available</span>
             </div>
           </div>
           
@@ -736,11 +834,16 @@ const TeamManagement = () => {
             <div className="booked-teams">
               <p className="teams-label">Booked by:</p>
               <div className="team-tags">
-                {slot.bookedTeams.map((teamName, idx) => (
+                {slot.bookedTeams.slice(0, 3).map((teamName, idx) => (
                   <span key={idx} className={`team-tag ${teamName === team?.teamName ? 'my-team' : ''}`}>
                     {teamName}
                   </span>
                 ))}
+                {slot.bookedTeams.length > 3 && (
+                  <span className="team-tag more-teams">
+                    +{slot.bookedTeams.length - 3} more
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -834,6 +937,15 @@ const TeamManagement = () => {
     );
   };
 
+  // if (authChecking) {
+  //   return (
+  //     <div className="loading-container">
+  //       <div className="spinner"></div>
+  //       <p>Verifying your session...</p>
+  //     </div>
+  //   );
+  // }
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -866,19 +978,26 @@ const TeamManagement = () => {
       <div className="team-header">
         <div className="header-left">
           <div className="logo-container">
-            <img src={logo} alt="Logo" />
+            <img src={logo} alt="Logo" className="header-logo" />
+          </div>
+          <div className="tournament-info">
+            <h1 className="tournament-title">CDS Premier League</h1>
+            <p className="tournament-subtitle">Team Management Portal</p>
           </div>
         </div>
         
         <div className="header-center">
-          <h1 className="tournament-title">CDS Premier League</h1>
-          <p className="tournament-subtitle">Team Management Portal</p>
           {currentUser && (
-            <div className="user-info">
-              <span className="user-name">{currentUser.name || currentUser.email}</span>
-              <span className="user-role captain-badge-header">
-                👑 Team Captain
-              </span>
+            <div className="user-info-card">
+              <div className="user-avatar">
+                <User size={24} />
+              </div>
+              <div className="user-details">
+                <span className="user-name">{currentUser.name || currentUser.email}</span>
+                <span className="user-role captain-badge-header">
+                  <Shield size={14} /> Team Captain
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -889,7 +1008,7 @@ const TeamManagement = () => {
             onClick={handleLogout}
             disabled={isExporting}
           >
-            <span className="logout-icon">🚪</span>
+            <LogOut size={18} />
             Logout
           </button>
         </div>
@@ -905,7 +1024,7 @@ const TeamManagement = () => {
           🏏 Team Management
         </button>
         
-        {/* ALWAYS SHOW BOOK SLOTS TAB - Captain hi login karta hai */}
+        {/* Show Book Slots tab only if user has a team */}
         {team && (
           <button 
             className={`tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
@@ -936,13 +1055,25 @@ const TeamManagement = () => {
                 </button>
               ) : (
                 <>
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => setShowAddPlayersModal(true)}
-                    disabled={isExporting}
-                  >
-                    Add Players
-                  </button>
+                  <div className="action-group">
+                    <button 
+                      className="btn btn-secondary"
+                      onClick={() => setShowAddPlayersModal(true)}
+                      disabled={isExporting}
+                    >
+                      Add Players
+                    </button>
+                    <button 
+                      className="btn btn-info"
+                      onClick={() => {
+                        setActiveTab('bookings');
+                        fetchSlotsByDate(selectedDate);
+                      }}
+                      disabled={isExporting}
+                    >
+                      Book Slots
+                    </button>
+                  </div>
                   <div className="export-buttons">
                     <button 
                       className="btn btn-primary"
@@ -1016,7 +1147,6 @@ const TeamManagement = () => {
                         onClick={() => setViewMode('table')}
                         disabled={isExporting}
                       >
-                        <span className="view-icon">📊</span>
                         Table
                       </button>
                       <button 
@@ -1024,7 +1154,6 @@ const TeamManagement = () => {
                         onClick={() => setViewMode('cards')}
                         disabled={isExporting}
                       >
-                        <span className="view-icon">🃏</span>
                         Cards
                       </button>
                     </div>
@@ -1218,6 +1347,7 @@ const TeamManagement = () => {
                       fetchSlotsByDate(e.target.value);
                     }}
                     min={new Date().toISOString().split("T")[0]}
+                    max={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
                   />
                 </div>
                 <div className="view-toggle">
@@ -1239,12 +1369,20 @@ const TeamManagement = () => {
               </div>
             </div>
 
-            {/* Team Info */}
+            {/* Team Info Banner */}
             {team && (
               <div className="team-info-banner">
                 <div className="team-banner-content">
                   <h3>📋 Booking for: <span className="team-name-highlight">{team.teamName}</span></h3>
                   <p>You are booking slots as the team captain</p>
+                  <div className="team-stats">
+                    <span className="stat-item">
+                      <strong>{members.length}</strong> players
+                    </span>
+                    <span className="stat-item">
+                      <strong>{teamBookings.length}</strong> active bookings
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -1254,6 +1392,12 @@ const TeamManagement = () => {
               <div className="warning-alert">
                 ⚠️ You need at least <strong>7 players</strong> in your team to book a slot. 
                 Currently you have {members.length} players.
+                <button 
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setShowAddPlayersModal(true)}
+                >
+                  Add Players
+                </button>
               </div>
             )}
 
@@ -1297,7 +1441,6 @@ const TeamManagement = () => {
                 )}
               </div>
             </div>
- 
           </div>
         )}
       </div>
@@ -1386,7 +1529,7 @@ const TeamManagement = () => {
                       {index > 0 && (
                         <button
                           type="button"
-                          className="btn btn-danger"
+                          className="btn btn-danger btn-sm"
                           onClick={() => removePlayerRow(index)}
                           disabled={isExporting}
                         >
