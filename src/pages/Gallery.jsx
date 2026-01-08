@@ -1,20 +1,15 @@
 import "./gallery.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-
+import Header from '../pages/components/header';
+import Footer from '../pages/components/footer';
 const Gallery = () => {
   const navigate = useNavigate();
-
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
 
-  // 🔹 Logo hover
-  const handleLogoHover = (e, isEnter) => {
-    e.currentTarget.style.transform = isEnter
-      ? "rotate(15deg)"
-      : "rotate(0deg)";
-  };
+  
 
   // 🔹 All images for navigation
   const allImages = [
@@ -109,7 +104,7 @@ const Gallery = () => {
     },
     {
       title: "Stadium Overview",
-      subtitle: "Yamuna Ground full view",
+      subtitle: "Yamunanagar Ground full view",
       images: [
         { src: "/image/stadium1.jpeg" },
         { src: "/image/stadium2.jpeg" },
@@ -138,8 +133,9 @@ const Gallery = () => {
   ];
 
   return (
+    <>
+    <Header/>
     <div className="home-container">
-      {/* 🔹 HEADER */}
       {/* 🔹 GALLERY */}
       <section className="gallery-page">
         <h1 className="page-title">Cricket Gallery</h1>
@@ -181,14 +177,13 @@ const Gallery = () => {
             <button className="nav-btn prev" onClick={prevImage}>❮</button>
             <button className="nav-btn next" onClick={nextImage}>❯</button>
 
-            <div className="zoom-controls">
-              <button onClick={zoomIn}>＋</button>
-              <button onClick={zoomOut}>－</button>
-            </div>
+           
           </div>
         </div>
       )}
     </div>
+    <Footer/>
+    </>
   );
 };
 

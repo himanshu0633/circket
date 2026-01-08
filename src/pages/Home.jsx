@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import './Home.css'; // We'll create this CSS file separately
 import { useNavigate } from "react-router-dom";
-
-
+import Header from '../pages/components/header';
+import Footer from '../pages/components/footer';
 const Home = () => {
   // Scroll animations
   useEffect(() => {
@@ -58,6 +58,8 @@ const Home = () => {
   
 
   return (
+    <>
+    <Header/>
     <div className="home-container">
       {/* Animated Background Pattern */}
       <div className="bg-pattern"></div>
@@ -356,6 +358,8 @@ const Home = () => {
       </div>
 
     </div>
+    <Footer/>
+    </>
   );
 };
 

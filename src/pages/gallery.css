@@ -159,8 +159,8 @@
 /* CLOSE BUTTON */
 .close-btn {
   position: absolute;
-  top: -15px;
-  right: -15px;
+  top: -25px;
+  right: 15px;
   background: white;
   border: none;
   border-radius: 50%;
@@ -191,23 +191,8 @@
 }
 
 /* ZOOM CONTROLS */
-.zoom-controls {
-  position: absolute;
-  bottom: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-}
 
-.zoom-controls button {
-  background: white;
-  border: none;
-  font-size: 20px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-}
+
 
 /* ANIMATIONS */
 @keyframes fadeIn {

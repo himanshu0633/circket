@@ -7,43 +7,39 @@ import "./App.css";
 // pages
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import CaptainDashboard from "./pages/captain/CaptainDashboard";
+import Booking from "./pages/booking/Booking.jsx";
 import Gallery from "./pages/Gallery";
-
 // protected route
 import ProtectedRoute from "./pages/components/ProtectedRoute";
 
 // common components
-import Header from "./pages/components/header";
-import Footer from "./pages/components/footer";
+
 
 function App() {
   return (
     <>
       {/* Header har page par */}
-      <Header />
+
 
       <Routes>
         {/* Public Pages */}
         <Route path="/" element={<Home />} />
-        <Route path="/gallery" element={<Gallery />} />
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
-
-        {/* Admin Protected Route */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* 404 Page */}
+        <Route path="/gallery" element={<Gallery />} />
+        {/* Admin Routes */}
+        <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+        {/* Team Captain Routes */}
+        {/* <Route path="/captain" element={<ProtectedRoute role="teamCaptain"> <CaptainDashboard /></ProtectedRoute>}/> */}
+        <Route path="/captain" element={<CaptainDashboard />} />
+        <Route path="/book-slots" element={<Booking />} />
+        {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
 
       {/* Footer har page par */}
-      <Footer />
+ 
     </>
   );
 }
