@@ -2,8 +2,8 @@ import axios from "axios";
 
 // Create axios instance
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
-  // baseURL: import.meta.env.VITE_API_URL || "https://j449fxt7-4000.inc1.devtunnels.ms/api",
+  // baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://j449fxt7-4000.inc1.devtunnels.ms/api",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
