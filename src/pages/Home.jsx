@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import './Home.css'; // We'll create this CSS file separately
 import { useNavigate } from "react-router-dom";
-
-
+import Header from '../pages/components/header';
+import Footer from '../pages/components/footer';
 const Home = () => {
   // Scroll animations
   useEffect(() => {
@@ -55,55 +55,15 @@ const Home = () => {
     }, 200);
   };
 
-  // Logo hover effect
-  const handleLogoHover = (e, isEnter) => {
-    if (isEnter) {
-      e.currentTarget.style.transform = 'rotate(15deg)';
-    } else {
-      e.currentTarget.style.transform = 'rotate(0deg)';
-    }
-  };
+  
 
   return (
+    <>
+    <Header/>
     <div className="home-container">
       {/* Animated Background Pattern */}
       <div className="bg-pattern"></div>
-      
-      {/* Header - White Navbar */}
-      <header className="header">
-        <div className="header-container">
-          <div className="logo-section">
-            <div 
-              className="logo"
-              onMouseEnter={(e) => handleLogoHover(e, true)}
-              onMouseLeave={(e) => handleLogoHover(e, false)}
-              
-            >
-              <img src="/image/cds-logo.jpeg" alt='CDS LOGO'  onClick={navigate("/")}/>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--cricket-blue)' }}>
-                CDS CRICKET LEAGUE
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--cricket-green)' }}>
-                Yamunanager Ground Stadium
-              </div>
-            </div>
-          </div>
-          
-          <div className="title-section">
-            <div className="main-title">CDS PREMIER CRICKET LEAGUE</div>
-            <div className="sub-title">Daily Professional Cricket Tournament</div>
-          </div>
-          
-          <div>
-     <button onClick={() => navigate("/login")} className="login-btn">
-  Register
-</button>
-
-          </div>
-        </div>
-      </header>
+     
 
       {/* Hero Section */}
       <section className="hero">
@@ -126,7 +86,7 @@ const Home = () => {
         <section className="info-section reveal">
           <h2 className="section-title">TOURNAMENT DETAILS & FEATURES</h2>
           <p className="section-subtitle">Professional cricket league organized by CDS at Yamunanagar Ground Stadium with world-class facilities</p>
-
+          
           <div className="slot-cards">
             <div className="slot-card" onClick={handleSlotCardClick}>
               <div className="slot-icon"><i className="fas fa-trophy"></i></div>
@@ -266,7 +226,7 @@ const Home = () => {
       <div className="gallery-item auto-gallery">
         <div className="auto-track">
           <div className="auto-scroll">
-            <img src="/image/stadium4.jpeg" />
+            <img src="/image/stadium4.jpeg" /> 
             <img src="/image/stadium2.jpeg" />
             <img src="/image/stadium3.jpeg" />
              <img src="/image/stadium4.jpeg" />
@@ -373,7 +333,7 @@ const Home = () => {
           <b>Match 4 Highlights</b>
         </div>
       </div>
-
+             
     </div>
   </div>
 </section>
@@ -397,40 +357,9 @@ const Home = () => {
         </section>
       </div>
 
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-column">
-            <h3>CDS CRICKET PREMIER LEAGUE</h3>
-            <p>Premier cricket tournament in Yamunanagar organized by CDS for youth talent development. Professional setup at Yamunanagar Ground Stadium with daily matches and certified facilities.</p>
-            <p><i className="fas fa-map-marker-alt"></i> Yamunanagar Ground Cricket Stadium, Yamunanagar, Haryana</p>
-          </div>
-          
-          <div className="footer-column">
-            <h3>CONTACT INFORMATION</h3>
-            <ul className="contact-info">
-              <li><i className="fas fa-phone"></i> Tournament Helpline: +91 98765 43210</li>
-              <li><i className="fas fa-envelope"></i> Official Email: cricket@cdsleague.com</li>
-              <li><i className="fas fa-clock"></i> Match Hours: 6:30 AM - 11:30 PM Daily</li>
-              <li><i className="fas fa-user-tie"></i> Registration Office: 9:00 AM - 6:00 PM</li>
-            </ul>
-          </div>
-          
-          <div className="footer-column">
-            <h3>QUICK ACCESS LINKS</h3>
-            <p><a href="#stadium" style={{ color: '#aaa', textDecoration: 'none', transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--cricket-gold)'} onMouseLeave={(e) => e.target.style.color = '#aaa'}>Stadium Facilities</a></p>
-            <p><a href="#gallery" style={{ color: '#aaa', textDecoration: 'none', transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--cricket-gold)'} onMouseLeave={(e) => e.target.style.color = '#aaa'}>Match Gallery</a></p>
-            <p><a href="#register" style={{ color: '#aaa', textDecoration: 'none', transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--cricket-gold)'} onMouseLeave={(e) => e.target.style.color = '#aaa'}>Player Registration</a></p>
-            <p><a href="#" style={{ color: '#aaa', textDecoration: 'none', transition: 'color 0.3s ease' }} onMouseEnter={(e) => e.target.style.color = 'var(--cricket-gold)'} onMouseLeave={(e) => e.target.style.color = '#aaa'}>Tournament Rules & Guidelines</a></p>
-          </div>
-        </div>
-        
-        <div className="copyright">
-          <p>&copy; 2025-26 CDS Cricket Premier League. All Rights Reserved. | Organized by CIIS - Career Infowis IT Solutions Pvt Ltd</p>
-          <p style={{ marginTop: '5px' }}>Yamunanagar Ground Stadium, Yamunanagar | Play Hard, Play Fair, Play Cricket!</p>
-        </div>
-      </footer>
     </div>
+    <Footer/>
+    </>
   );
 };
 

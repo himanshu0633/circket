@@ -32,6 +32,7 @@ const TeamManagement = () => {
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
   const [isExporting, setIsExporting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [authChecking, setAuthChecking] = useState(true);
 
   const roles = ['Batsman', 'Bowler', 'All-rounder', 'Wicket-keeper', 'Captain'];
 

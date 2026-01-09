@@ -1,9 +1,10 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import "./App.css";
-// new pages
+
+// pages
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CaptainDashboard from "./pages/captain/CaptainDashboard";
@@ -12,9 +13,15 @@ import Gallery from "./pages/Gallery";
 // protected route
 import ProtectedRoute from "./pages/components/ProtectedRoute";
 
+// common components
+
+
 function App() {
   return (
     <>
+      {/* Header har page par */}
+
+
       <Routes>
         {/* Public Pages */}
         <Route path="/" element={<Home />} />
@@ -30,6 +37,9 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {/* Footer har page par */}
+ 
     </>
   );
 }

@@ -24,6 +24,12 @@ API.interceptors.request.use(
 
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+/* ================= AUTO LOGOUT ON 401 ================= */
+API.interceptors.response.use(
+  (response) => response,
   (error) => {
     console.error("❌ [AXIOS] Request interceptor error:", error);
     return Promise.reject(error);
