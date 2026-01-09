@@ -221,126 +221,56 @@ const SlotBooking = () => {
 
   // Book slot function - FIXED VERSION
   const handleBookSlot = async (slotId) => {
-    console.log(`🔄 [FRONTEND] Starting booking for slot: ${slotId}`);
-    
-    // Pre-flight checks
-    if (!currentUser) {
-      showNotification("error", "Please login as team captain");
-      return;
-    }
+  try {
+    // 1️⃣ Create Razorpay Order
+    const orderRes = await API.post("/bookings/create-payment-order", {
+      slotId,
+      teamId: team._id
+    });
 
-    if (!team?._id) {
-      showNotification("error", "Create team first");
-      navigate('/team');
-      return;
-    }
+    const { order, razorpayKey } = orderRes.data;
 
-    if (members.length < 7) {
-      showNotification("error", "Need at least 7 players to book a slot");
-      return;
-    }
+    // 2️⃣ Open Razorpay
+    const options = {
+      key: razorpayKey,
+      amount: order.amount,
+      currency: "INR",
+      name: "SportsHub",
+      description: "Slot Booking Payment",
+      order_id: order.id,
+      handler: async function (response) {
+        // 3️⃣ Verify payment & book slot
+        const verifyRes = await API.post("/bookings/verify-payment", {
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+          slotId,
+          teamId: team._id
+        });
 
-    // Check captain existence before booking
-    const captainVerified = await testCaptainExistence();
-    if (!captainVerified) {
-      showNotification('error', 'Cannot verify your account. Please contact support.');
-      return;
-    }
-
-    setBookingLoading(prev => ({ ...prev, [slotId]: true }));
-
-    try {
-      // Prepare booking data
-      const bookingData = {
-        teamId: team._id
-        // captainId is now taken from token in backend
-      };
-      
-      console.log('📦 [FRONTEND] Booking payload:', bookingData);
-      console.log('👤 [FRONTEND] Current user ID (from token):', currentUser._id);
-      
-      // Make API call
-      const res = await API.post(`/bookings/book/${slotId}`, bookingData);
-      console.log('✅ [FRONTEND] Booking API response:', res.data);
-
-      if (res.data.success) {
-        console.log('🎉 [FRONTEND] Booking successful!');
-        showNotification("success", "Slot booked successfully!");
-        
-        // Update local slots state
-        setSlots(prevSlots => 
-          prevSlots.map(slot => {
-            if (slot._id === slotId) {
-              const newBookedCount = (slot.bookedCount || 0) + 1;
-              const newRemaining = slot.capacity - newBookedCount;
-              
-              return {
-                ...slot,
-                bookedTeams: [...(slot.bookedTeams || []), team.teamName],
-                bookedCount: newBookedCount,
-                remaining: newRemaining,
-                isFull: newRemaining <= 0
-              };
-            }
-            return slot;
-          })
-        );
-        
-        // Refresh data
-        setTimeout(() => {
+        if (verifyRes.data.success) {
+          showNotification("success", "Payment successful & slot booked!");
           fetchSlotsByDate(selectedDate);
-          if (team?._id) {
-            fetchTeamBookings(team._id);
-          }
-        }, 1000);
-
-      } else {
-        // Handle backend error message
-        const errorMsg = res.data.message || "Booking failed";
-        console.warn('⚠️ [FRONTEND] Booking API success false:', errorMsg);
-        
-        let userFriendlyMessage = errorMsg;
-        if (errorMsg.includes('Captain not found')) {
-          userFriendlyMessage = "Your account was not found. Please login again.";
-          setTimeout(() => handleLogout(), 2000);
-        } else if (errorMsg.includes('already booked')) {
-          userFriendlyMessage = "Your team has already booked this slot";
-        } else if (errorMsg.includes('Slot is already full')) {
-          userFriendlyMessage = "This slot is already full";
-        } else if (errorMsg.includes('Only team captain can book')) {
-          userFriendlyMessage = "Only team captain can book slots";
+          fetchTeamBookings(team._id);
         }
-        
-        showNotification("error", userFriendlyMessage);
-      }
+      },
+      prefill: {
+        name: currentUser.name,
+        email: currentUser.email,
+        contact: currentUser.mobile || ""
+      },
+      theme: { color: "#2563eb" }
+    };
 
-    } catch (err) {
-      console.error('❌ [FRONTEND] Booking error:', err);
-      console.error('📊 [FRONTEND] Error response:', err.response?.data);
-      console.error('🔢 [FRONTEND] Error status:', err.response?.status);
-      
-      let errorMessage = "Booking failed. Please try again.";
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-        
-        if (errorMessage.includes('Captain not found')) {
-          errorMessage = "Your account was not found. Please login again.";
-          setTimeout(() => handleLogout(), 2000);
-        } else if (errorMessage.includes('already booked')) {
-          errorMessage = "Your team has already booked this slot";
-        } else if (errorMessage.includes('Slot is already full')) {
-          errorMessage = "This slot is already full";
-        }
-      }
-      
-      showNotification("error", errorMessage);
-      
-    } finally {
-      console.log('🏁 [FRONTEND] Booking process completed');
-      setBookingLoading(prev => ({ ...prev, [slotId]: false }));
-    }
-  };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+
+  } catch (error) {
+    console.error("Payment failed:", error);
+    showNotification("error", "Payment failed. Try again.");
+  }
+};
+
 
   // Cancel booking - FIXED VERSION
   const handleCancelBooking = async (bookingId) => {
