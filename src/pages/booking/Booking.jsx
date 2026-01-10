@@ -235,7 +235,7 @@ const SlotBooking = () => {
       key: razorpayKey,
       amount: order.amount,
       currency: "INR",
-      name: "SportsHub",
+      name: "Yamunanager Ground Stadium",
       description: "Slot Booking Payment",
       order_id: order.id,
       handler: async function (response) {
@@ -426,7 +426,7 @@ const SlotBooking = () => {
         index + 1,
         formatDate(booking.slotId?.slotDate),
         `${booking.slotId?.startTime} - ${booking.slotId?.endTime}`,
-        booking.groundId?.name || "Main Ground",
+        booking.groundId?.name || "Yamunanager Ground Stadium",
         booking.bookingStatus,
         booking.paymentStatus,
         formatDate(booking.createdAt)
@@ -477,7 +477,7 @@ const SlotBooking = () => {
         <div className="header-left">
           <div className="logo" onClick={() => navigate('/dashboard')}>
             <Home size={28} />
-            <span className="logo-text">SportsHub</span>
+            <span className="logo-text">Yamunanager Ground Stadium</span>
           </div>
           <h1>Slot Booking</h1>
         </div>
@@ -567,7 +567,7 @@ const SlotBooking = () => {
           <div className="slot-info">
             <div className="info-item">
               <MapPin size={14} />
-              <span>{slot.groundId?.name || "Main Ground"}</span>
+              <span>{slot.groundId?.name || "Yamunanager Ground Stadium"}</span>
             </div>
             <div className="info-item">
               <Users size={14} />
@@ -666,7 +666,7 @@ const SlotBooking = () => {
           <div className="detail-row">
             <span className="detail-label">Ground:</span>
             <span className="detail-value">
-              {booking.groundId?.name || "Main Ground"}
+              {booking.groundId?.name || "Yamunanager Ground Stadium"}
             </span>
           </div>
           <div className="detail-row">
