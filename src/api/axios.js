@@ -3,7 +3,11 @@ import axios from "axios";
 // Create axios instance
 const API = axios.create({
   // baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
+<<<<<<< HEAD
   baseURL: import.meta.env.VITE_API_URL || "https://backend.cdspremierleague.com/api",
+=======
+  baseURL: import.meta.env.VITE_API_URL || "https://j449fxt7-4000.inc1.devtunnels.ms/api",
+>>>>>>> 99da184c320e1b9c41bfddcfddab7293892749da
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -24,6 +28,12 @@ API.interceptors.request.use(
 
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+/* ================= AUTO LOGOUT ON 401 ================= */
+API.interceptors.response.use(
+  (response) => response,
   (error) => {
     console.error("❌ [AXIOS] Request interceptor error:", error);
     return Promise.reject(error);
