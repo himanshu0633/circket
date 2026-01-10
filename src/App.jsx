@@ -7,6 +7,7 @@ import "./App.css";
 // pages
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import SlotsPage from './pages/Slots/SlotsPage.jsx';
 import CaptainDashboard from "./pages/captain/CaptainDashboard";
 import Booking from "./pages/booking/Booking.jsx";
 import Gallery from "./pages/Gallery";
@@ -30,6 +31,7 @@ function App() {
         <Route path="/gallery" element={<Gallery />} />
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/slots" element={<SlotsPage />} />
         {/* Team Captain Routes */}
         {/* <Route path="/captain" element={<ProtectedRoute role="teamCaptain"> <CaptainDashboard /></ProtectedRoute>}/> */}
         <Route path="/captain" element={<CaptainDashboard />} />
