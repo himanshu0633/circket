@@ -59,12 +59,17 @@ import {
   MoreVert as MoreIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  Person as PersonIcon,
+  Payment as PaymentIcon,
+  CalendarToday as CalendarIcon,
+  Groups as GroupsIcon,
+  AccessTime as AccessTimeIcon
 } from "@mui/icons-material";
 
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../components/footer";
-import ResponsiveHeader from "../components/AdminHeader"; // Import the new header
+import ResponsiveHeader from "../components/AdminHeader";
 
 const API_BASE_URL = "http://localhost:4000";
 const ITEMS_PER_PAGE = 5;
@@ -120,6 +125,383 @@ const validationSchema = yup.object({
     .required("Password is required")
 });
 
+// Captain Details Dialog Component
+const CaptainDetailsDialog = ({ 
+  open, 
+  onClose, 
+  captain, 
+  team, 
+  members, 
+  loading 
+}) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  if (!captain) return null;
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid': return 'success';
+      case 'pending': return 'warning';
+      case 'active': return 'success';
+      case 'inactive': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 2,
+          overflow: 'hidden'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        pb: 1, 
+        background: `linear-gradient(45deg, ${theme.palette.primary.main}20, ${theme.palette.secondary.main}20)`,
+        position: 'relative'
+      }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar 
+              src={captain.image} 
+              sx={{ 
+                width: 48, 
+                height: 48,
+                bgcolor: theme.palette.primary.main
+              }}
+            >
+              {captain.name?.charAt(0)}
+            </Avatar>
+            <Box>
+              <Typography variant="h5" fontWeight="bold">
+                {captain.name}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Team Captain
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+
+      <DialogContent dividers sx={{ p: { xs: 2, sm: 3 }, maxHeight: '70vh', overflow: 'auto' }}>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {/* Captain Details Section */}
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 3, borderRadius: 2, height: '100%' }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <PersonIcon /> Captain Information
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Box display="flex" alignItems="center" mb={1}>
+                      <EmailIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                      <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
+                        Email:
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {captain.email}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box display="flex" alignItems="center" mb={1}>
+                      <PhoneIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                      <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
+                        Phone:
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {captain.phoneNo}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box display="flex" alignItems="center" mb={1}>
+                      <PaymentIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                      <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
+                        Payment Status:
+                      </Typography>
+                      <Chip 
+                        label={captain.paymentStatus || 'Pending'} 
+                        size="small" 
+                        color={getStatusColor(captain.paymentStatus)}
+                        variant="outlined"
+                      />
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box display="flex" alignItems="center" mb={1}>
+                      <CalendarIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                      <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
+                        Due Date:
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {captain.paymentDueDate ? formatDate(captain.paymentDueDate) : 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box display="flex" alignItems="center">
+                      <AccessTimeIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                      <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
+                        Created:
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {formatDate(captain.createdAt)}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+
+            {/* Team Details Section */}
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 3, borderRadius: 2, height: '100%' }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <SportsIcon /> Team Details
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                
+                {team ? (
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
+                        {team.teamName}
+                      </Typography>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Box display="flex" alignItems="center" mb={1}>
+                        <SportsIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                        <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
+                          Sport:
+                        </Typography>
+                        <Typography variant="body1" fontWeight={500}>
+                          {team.sportType}
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <Box display="flex" alignItems="center" mb={1}>
+                        <GroupsIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                        <Typography variant="body2" color="textSecondary">
+                          Total Players:
+                        </Typography>
+                        <Typography variant="body1" fontWeight={500} sx={{ ml: 1 }}>
+                          {team.totalPlayers}
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <Box display="flex" alignItems="center" mb={1}>
+                        <PeopleIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                        <Typography variant="body2" color="textSecondary">
+                          Current:
+                        </Typography>
+                        <Typography variant="body1" fontWeight={500} sx={{ ml: 1 }}>
+                          {team.currentPlayers}
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box display="flex" alignItems="center">
+                          <Typography variant="body2" color="textSecondary" sx={{ mr: 1 }}>
+                            Status:
+                          </Typography>
+                          <Chip 
+                            label={team.status} 
+                            size="small" 
+                            color={getStatusColor(team.status)}
+                            variant="outlined"
+                          />
+                        </Box>
+                        <Typography variant="caption" color="textSecondary">
+                          Created: {formatDate(team.createdAt)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                ) : (
+                  <Box textAlign="center" py={4}>
+                    <GroupsIcon sx={{ fontSize: 60, color: 'grey.400', mb: 2 }} />
+                    <Typography variant="h6" color="textSecondary" gutterBottom>
+                      No Team Created
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      This captain hasn't created a team yet
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </Grid>
+
+            {/* Team Members Section */}
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3, borderRadius: 2 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PeopleIcon /> Team Members ({members?.length || 0})
+                  </Typography>
+                  {team && (
+                    <Chip 
+                      label={`${team.currentPlayers}/${team.totalPlayers} Players`}
+                      color="primary"
+                      variant="outlined"
+                      size="small"
+                    />
+                  )}
+                </Box>
+                <Divider sx={{ mb: 3 }} />
+
+                {members && members.length > 0 ? (
+                  <TableContainer sx={{ 
+                    borderRadius: 1,
+                    border: `1px solid ${theme.palette.divider}`,
+                    maxHeight: 300,
+                    overflow: 'auto'
+                  }}>
+                    <Table stickyHeader size={isMobile ? 'small' : 'medium'}>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
+                          <TableCell>Player Name</TableCell>
+                          <TableCell>Email</TableCell>
+                          <TableCell>Phone</TableCell>
+                          <TableCell>Role</TableCell>
+                          <TableCell>Joined Date</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {members.map((member, index) => (
+                          <TableRow 
+                            key={member._id} 
+                            hover
+                            sx={{ 
+                              '&:last-child td, &:last-child th': { border: 0 },
+                              backgroundColor: index % 2 === 0 ? 'transparent' : alpha(theme.palette.primary.light, 0.05)
+                            }}
+                          >
+                            <TableCell>
+                              <Box display="flex" alignItems="center">
+                                <Avatar 
+                                  sx={{ 
+                                    width: 32, 
+                                    height: 32, 
+                                    mr: 1,
+                                    bgcolor: theme.palette.primary.main,
+                                    fontSize: 14
+                                  }}
+                                >
+                                  {member.name?.charAt(0)}
+                                </Avatar>
+                                <Typography variant="body2">{member.name}</Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" noWrap>
+                                {member.email}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">{member.mobile}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip 
+                                label={member.role} 
+                                size="small"
+                                variant="outlined"
+                                sx={{ 
+                                  borderColor: theme.palette.primary.main,
+                                  color: theme.palette.primary.main
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="caption">
+                                {formatDate(member.createdAt)}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                ) : (
+                  <Box textAlign="center" py={4}>
+                    <PeopleIcon sx={{ fontSize: 60, color: 'grey.400', mb: 2 }} />
+                    <Typography variant="h6" color="textSecondary" gutterBottom>
+                      No Members Added
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {team ? 'This team has no members yet' : 'No team created yet'}
+                    </Typography>
+                  </Box>
+                )}
+              </Paper>
+            </Grid>
+          </Grid>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, background: theme.palette.grey[50] }}>
+        <Button 
+          onClick={onClose} 
+          variant="outlined"
+          size={isMobile ? "small" : "medium"}
+        >
+          Close
+        </Button>
+        {/* {team && (
+          <Button 
+            variant="contained"
+            size={isMobile ? "small" : "medium"}
+            onClick={() => {
+              console.log('Manage team clicked for:', team._id);
+            }}
+          >
+            Manage Team
+          </Button>
+        )} */}
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 export default function CaptainsPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -146,7 +528,10 @@ export default function CaptainsPage() {
   });
   
   // Team details states
-  const [captainTeams, setCaptainTeams] = useState([]);
+  const [teamData, setTeamData] = useState({
+    team: null,
+    members: []
+  });
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
@@ -258,15 +643,12 @@ export default function CaptainsPage() {
       
       const res = await API.get(`/admin/captain/${captain._id}/team`);
       
-      if (res.data.team) {
-        setCaptainTeams([
-          {
-            ...res.data.team,
-            players: res.data.members || []
-          }
-        ]);
-      } else {
-        setCaptainTeams([]);
+      if (res.data.success) {
+        setSelectedCaptain(res.data.captain);
+        setTeamData({
+          team: res.data.team,
+          members: res.data.members || []
+        });
       }
       
     } catch (err) {
@@ -535,7 +917,24 @@ export default function CaptainsPage() {
                     index={0}
                   />
                 </Grid>
-               
+                <Grid item xs={12} sm={6} md={4}>
+                  <StatCard
+                    title="Paid Captains"
+                    value={stats.paid}
+                    icon={<PaidIcon />}
+                    color={theme.palette.success.main}
+                    index={1}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <StatCard
+                    title="Pending Payments"
+                    value={stats.pending}
+                    icon={<FilterIcon />}
+                    color={theme.palette.warning.main}
+                    index={2}
+                  />
+                </Grid>
               </Grid>
             </motion.div>
 
@@ -877,6 +1276,16 @@ export default function CaptainsPage() {
                 </Button>
               </DialogActions>
             </Dialog>
+
+            {/* CAPTAIN DETAILS DIALOG */}
+            <CaptainDetailsDialog
+              open={detailsDialogOpen}
+              onClose={() => setDetailsDialogOpen(false)}
+              captain={selectedCaptain}
+              team={teamData.team}
+              members={teamData.members}
+              loading={teamsLoading}
+            />
 
             {/* ACTION MENU FOR MOBILE */}
             <Menu
