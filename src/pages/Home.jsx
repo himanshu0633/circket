@@ -351,8 +351,8 @@ const Home = () => {
           </button>
           
           <div style={{ marginTop: '2rem', color: 'var(--cricket-cream)', fontSize: '0.9rem' }}>
-            <p><i className="fas fa-phone"></i> Contact for Registration: +91 98765 43210</p>
-            <p style={{ marginTop: '5px' }}><i className="fas fa-envelope"></i> Email: register@cdscricketleague.com</p>
+            <p><i className="fas fa-phone"></i> Contact for Registration: +91 9896529577</p>
+            <p style={{ marginTop: '5px' }}><i className="fas fa-envelope"></i> Email: cdspremierleague@gmail.com</p>
           </div>
         </section>
       </div>

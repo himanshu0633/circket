@@ -483,6 +483,7 @@ export default function SlotsPage() {
                 p: isMobile ? 1 : 1.5,
                 display: "flex",
                 alignItems: "center",
+                marginLeft: 11.5,
                 justifyContent: "center"
               }}
             >

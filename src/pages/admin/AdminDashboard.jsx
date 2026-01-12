@@ -703,69 +703,76 @@ export default function CaptainsPage() {
 
   /* ================= RESPONSIVE COMPONENTS ================= */
   const StatCard = ({ title, value, icon, color, index }) => (
-    <motion.div
-      variants={itemVariants}
-      initial="hidden"
-      animate="visible"
-      custom={index}
+  <motion.div
+    variants={itemVariants}
+    initial="hidden"
+    animate="visible"
+    custom={index}
+    style={{ width: "100%" }}
+  >
+    <Card
+      sx={{
+        width: "100%",
+        minHeight: { xs: 90, sm: 100 },  
+        display: "flex",
+        alignItems: "center",
+        background: `linear-gradient(135deg, ${color}20, ${color}40)`,
+        borderLeft: `4px solid ${color}`,
+        borderRadius: 2,
+      }}
     >
-      <Card
-        sx={{
-          height: "100%",
-          minHeight: { xs: 120, sm: 140 },
-          background: `linear-gradient(135deg, ${color}20, ${color}40)`,
-          borderLeft: `4px solid ${color}`,
-          transition: "transform 0.3s, box-shadow 0.3s",
-          "&:hover": {
-            transform: { xs: "none", sm: "translateY(-4px)" },
-            boxShadow: { xs: theme.shadows[1], sm: theme.shadows[8] }
-          }
-        }}
-      >
-        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box>
-              <Typography 
-                color="textSecondary" 
-                gutterBottom 
-                variant="overline"
-                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
-              >
-                {title}
-              </Typography>
-              <Typography 
-                variant="h4" 
-                component="div" 
-                fontWeight="bold"
-                sx={{ fontSize: { xs: '1.75rem', sm: '2.125rem' } }}
-              >
-                {value}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                backgroundColor: `${color}20`,
-                borderRadius: "50%",
-                p: { xs: 1, sm: 1.5 },
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: { xs: 40, sm: 48 },
-                height: { xs: 40, sm: 48 }
-              }}
+      <CardContent sx={{ width: "100%", p: { xs: 1.5, sm: 2 } }}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          {/* LEFT TEXT */}
+          <Box>
+            <Typography
+              variant="overline"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.75rem" }, 
+              whiteSpace: "nowrap"
+            }}
+              color="textSecondary"
             >
-              {React.cloneElement(icon, { 
-                sx: { 
-                  fontSize: { xs: 20, sm: 24 },
-                  color: color 
-                } 
-              })}
-            </Box>
+              {title}
+            </Typography>
+
+            <Typography
+              fontWeight="bold"
+              sx={{ fontSize: { xs: "1.2rem", sm: "1.4rem" } }}
+            >
+              {value}
+            </Typography>
           </Box>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
+
+          {/* RIGHT ICON */}
+          <Box
+            sx={{
+              width: { xs: 40, sm: 50 },
+              height: { xs: 40, sm: 50 },
+              borderRadius: "50%",
+              backgroundColor: `${color}30`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,          // ✅ icon never shrink
+            }}
+          >
+            {React.cloneElement(icon, {
+              sx: {
+                fontSize: { xs: 20, sm: 26 },
+                color,
+              },
+            })}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  </motion.div>
+);
+
 
   const MobileCaptainCard = ({ captain, index }) => (
     <motion.div
@@ -939,71 +946,80 @@ export default function CaptainsPage() {
             </motion.div>
 
             {/* CREATE BUTTON & SEARCH */}
-            <Card sx={{ 
-              mb: 3, 
-              borderRadius: { xs: 1, sm: 2 },
-              boxShadow: { xs: theme.shadows[1], sm: theme.shadows[3] }
-            }}>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      variant="outlined"
-                      size={isMobile ? "small" : "medium"}
-                      placeholder="Search captains..."
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      InputProps={{
-                        startAdornment: <SearchIcon sx={{ mr: 1, color: "action.active" }} />
-                      }}
-                      sx={{ 
-                        '& .MuiInputBase-root': {
-                          borderRadius: { xs: 1, sm: 2 }
-                        }
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Stack 
-                      direction={{ xs: 'column', sm: 'row' }} 
-                      spacing={2} 
-                      justifyContent="flex-end"
-                      alignItems={{ xs: 'stretch', sm: 'center' }}
+            <Card
+                sx={{ 
+                  mb: 3,
+                  borderRadius: { xs: 1, sm: 2 },
+                  boxShadow: { xs: theme.shadows[1], sm: theme.shadows[3] }
+                }}
+              >
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    wrap={{ xs: "nowrap", sm: "wrap" }}   // ⭐ KEY FIX
+                  >
+
+                    {/* SEARCH */}
+                    <Grid
+                      item
+                      xs={12}
+                      ml={2}                             // ⭐ desktop width control
+                      sx={{ flexGrow: { xs: 1, sm: 0 } }}
                     >
-                      <Tooltip title="Refresh Data">
-                        <IconButton 
-                          onClick={fetchCaptains}
-                          size={isMobile ? "small" : "medium"}
-                        >
-                          <RefreshIcon />
-                        </IconButton>
-                      </Tooltip>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Search captains..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <SearchIcon sx={{ mr: 1, color: "action.active" }} />
+                          )
+                        }}
+                      />
+                    </Grid>
+
+                    {/* ADD BUTTON */}
+                    <Grid item>
                       <Button
                         variant="contained"
+                        size="small"
                         startIcon={<AddIcon />}
                         onClick={() => setOpenDialog(true)}
-                        fullWidth={isMobile}
                         sx={{
-                          px: { xs: 2, sm: 4 },
-                          py: { xs: 1, sm: 1.5 },
-                          borderRadius: 2,
-                          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                          "&:hover": {
-                            transform: { xs: "none", sm: "scale(1.05)" },
-                            boxShadow: { xs: theme.shadows[4], sm: theme.shadows[6] }
-                          }
+                          whiteSpace: "nowrap",
+                          px: 2,
+                          height: 40
                         }}
                       >
-                        <Typography variant={isMobile ? "body2" : "body1"}>
-                          Add New Captain
-                        </Typography>
+                        Add
                       </Button>
-                    </Stack>
+                    </Grid>
+
+                    {/* REFRESH */}
+                    <Grid item>
+                      <IconButton
+                        onClick={fetchCaptains}
+                        size="small"
+                        sx={{
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 1
+                        }}
+                      >
+                        <RefreshIcon />
+                      </IconButton>
+                    </Grid>
+
                   </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+
+
 
             {/* DESKTOP TABLE VIEW */}
             {!isMobile && (
