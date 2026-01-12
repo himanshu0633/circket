@@ -456,18 +456,12 @@ const TeamManagement = () => {
 
       {/* Main Content */}
       <div className="main-content">
-        {/* Header Actions */}
-        <div className="header-actions">
-          {!team ? (
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowCreateTeamModal(true)}
-              disabled={isExporting}
-            >
-              Create Team
-            </button>
-          ) : (
-            <>
+        {/* Team Info Card */}
+        {team && (
+          <div className="team-info-card">
+            <div className="team-info-header">
+              <h2>{team.teamName}</h2>
+
               <div className="action-group">
                 <button 
                   className="btn btn-secondary"
@@ -476,8 +470,8 @@ const TeamManagement = () => {
                 >
                   Add Players
                 </button>
-              </div>
-              <div className="export-buttons">
+
+                <div className="export-buttons">
                 <button 
                   className="btn btn-primary"
                   onClick={exportToPDF}
@@ -487,19 +481,9 @@ const TeamManagement = () => {
                 </button>
               
               </div>
-            </>
-          )}
-        </div>
-
-        {/* Team Info Card */}
-        {team && (
-          <div className="team-info-card">
-            <div className="team-info-header">
-              <h2>{team.teamName}</h2>
-              <span className={`status-badge ${team.status?.toLowerCase() || 'pending'}`}>
-                {team.status || 'Pending'}
-              </span>
+              </div>
             </div>
+            
             <div className="team-info-details">
               <div className="info-item">
                 <span className="label">Team Name:</span>
@@ -538,7 +522,6 @@ const TeamManagement = () => {
               <h3>Team Members ({members.length})</h3>
               {members.length > 0 && (
                 <div className="view-toggle">
-                  <span className="toggle-label">View:</span>
                   <button 
                     className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
                     onClick={() => setViewMode('table')}
@@ -660,9 +643,6 @@ const TeamManagement = () => {
                               </span>
                             </div>
                           </div>
-                          <span className={`status-badge ${member.status?.toLowerCase() || 'pending'}`}>
-                            {member.status || 'Pending'}
-                          </span>
                         </div>
                         
                         <div className="card-details">

@@ -782,28 +782,7 @@ const SlotBooking = () => {
               >
                 <List size={16} />
                 List
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Team Info Banner */}
-        {team ? (
-          <div className="team-info-banner">
-            <div className="team-banner-content">
-              <h3>📋 Booking for: <span className="team-name-highlight">{team.teamName}</span></h3>
-              <p>You are booking slots as the team captain</p>
-              <div className="team-stats">
-                <span className="stat-item">
-                  <strong>{members.length}</strong> players
-                </span>
-                <span className="stat-item">
-                  <strong>{teamBookings.length}</strong> active bookings
-                </span>
-                <span className="stat-item">
-                  <strong>7</strong> players required
-                </span>
-              </div>
+              </button>     
               {teamBookings.length > 0 && (
                 <button 
                   className="btn btn-primary btn-export"
@@ -813,9 +792,40 @@ const SlotBooking = () => {
                   <Download size={18} />
                   {isExporting ? 'Exporting...' : 'Export Bookings PDF'}
                 </button>
-              )}
+              )}         
             </div>
           </div>
+        </div>
+
+        {/* Team Info Banner */}
+        {team ? (
+          <div className="team-info-banner">
+  <div className="team-banner-content">
+
+    <div className="team-header-row">
+      <h3>
+        📋 Booking for: 
+        <span className="team-name-highlight">{team.teamName}</span>
+      </h3>
+
+      <div className="team-stats">
+        <span className="stat-item">
+          <strong>{members.length}</strong> players
+        </span>
+        <span className="stat-item">
+          <strong>{teamBookings.length}</strong> active
+        </span>
+        <span className="stat-item">
+          <strong>7</strong> Required
+        </span>
+      </div>
+    </div>
+
+    <p>You are booking slots as the team captain</p>
+
+  </div>
+</div>
+
         ) : (
           <div className="no-team-banner">
             <div className="no-team-content">
