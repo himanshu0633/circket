@@ -66,7 +66,7 @@ const Header = ({ currentUser, onLogout, isExporting }) => {
             <div className="top-bar-content">
               {/* Left: Logo and Tournament Info */}
               <div className="header-left">
-                <div className="tournament-info" onClick={() => navigate('/team')} style={{cursor: 'pointer'}}>
+                <div className="tournament-info" onClick={() => navigate('/captain')} style={{cursor: 'pointer'}}>
                   <div className="tournament-logo">
                     <img src={logo} alt="CDS Premier League" className="header-logo" />
                     <div className="logo-glow"></div>
