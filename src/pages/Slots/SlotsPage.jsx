@@ -483,8 +483,8 @@ export default function SlotsPage() {
                 p: isMobile ? 1 : 1.5,
                 display: "flex",
                 alignItems: "center",
-                marginLeft: 11.5,
-                justifyContent: "center"
+                marginLeft: 9,
+                justifyContent: "center",
               }}
             >
               {React.cloneElement(icon, { fontSize: isMobile ? "small" : "medium" })}
@@ -678,45 +678,79 @@ export default function SlotsPage() {
 
           {/* SLOTS STATS - RESPONSIVE GRID */}
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            <Grid container spacing={{ xs: 1, sm: 2, md: 3 }} mb={{ xs: 2, sm: 3, md: 4 }}>
-              <Grid item xs={6} sm={6} md={3}>
-                <StatCard
-                  title="Total Dates"
-                  value={[...new Set(slots.map(slot => new Date(slot.slotDate).toISOString().split('T')[0]))].length}
-                  icon={<CalendarIcon sx={{ color: theme.palette.primary.main }} />}
-                  color={theme.palette.primary.main}
-                  index={0}
-                />
-              </Grid>
-              <Grid item xs={6} sm={6} md={3}>
-                <StatCard
-                  title="Total Slots"
-                  value={slots.filter(s => !isDateBeforeToday(s.slotDate)).length}
-                  icon={<EventIcon sx={{ color: theme.palette.info.main }} />}
-                  color={theme.palette.info.main}
-                  index={1}
-                />
-              </Grid>
-              <Grid item xs={6} sm={6} md={3}>
-                <StatCard
-                  title="Active Slots"
-                  value={slots.filter(s => !s.isDisabled && !isDateBeforeToday(s.slotDate)).length}
-                  icon={<CheckCircleIcon sx={{ color: theme.palette.success.main }} />}
-                  color={theme.palette.success.main}
-                  index={2}
-                />
-              </Grid>
-              <Grid item xs={6} sm={6} md={3}>
-                <StatCard
-                  title="Total Bookings"
-                  value={slots.reduce((sum, slot) => sum + (slot.bookedCount || 0), 0)}
-                  icon={<GroupsIcon sx={{ color: theme.palette.warning.main }} />}
-                  color={theme.palette.warning.main}
-                  index={3}
-                />
-              </Grid>
-            </Grid>
-          </motion.div>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { 
+                    xs: 'repeat(2, 1fr)',
+                    sm: 'repeat(2, 1fr)',  
+                    md: 'repeat(4, 1fr)'
+                  },
+                  gap: { xs: 0.75, sm: 1.5, md: 2.5 }, // Smaller gap
+                  mb: { xs: 1.5, sm: 2.5, md: 3.5 }
+                }}
+              >
+                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                  <StatCard
+                    title="Total "
+                    value={[...new Set(slots.map(slot => new Date(slot.slotDate).toISOString().split('T')[0]))].length}
+                    icon={<CalendarIcon sx={{ color: theme.palette.primary.main }} />}
+                    color={theme.palette.primary.main}
+                    index={0}
+                    sx={{
+                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
+                        p: { xs: 0.1, sm: 1, md: 1 },              // 👈 less padding
+                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
+                      }}
+                  />
+                </Box>
+                
+                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                  <StatCard
+                    title="Total "
+                    value={slots.filter(s => !isDateBeforeToday(s.slotDate)).length}
+                    icon={<EventIcon sx={{ color: theme.palette.info.main }} />}
+                    color={theme.palette.info.main}
+                    index={1}
+                    sx={{
+                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
+                        p: { xs: 0.1, sm: 1, md: 1 },              // 👈 less padding
+                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
+                      }}
+                  />
+                </Box>
+                
+                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                  <StatCard
+                    title="Active "
+                    value={slots.filter(s => !s.isDisabled && !isDateBeforeToday(s.slotDate)).length}
+                    icon={<CheckCircleIcon sx={{ color: theme.palette.success.main }} />}
+                    color={theme.palette.success.main}
+                    index={2}
+                    sx={{
+                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
+                        p: { xs: 0.1, sm: 1, md: 1 },                // 👈 less padding
+                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
+                      }}
+                  />
+                </Box>
+                
+                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                  <StatCard
+                    title="Bookings"
+                    value={slots.reduce((sum, slot) => sum + (slot.bookedCount || 0), 0)}
+                    icon={<GroupsIcon sx={{ color: theme.palette.warning.main }} />}
+                    color={theme.palette.warning.main}
+                    index={3}
+                    sx={{
+                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
+                        p: { xs: 0.5, sm: 1.25, md: 1.75 },                // 👈 less padding
+                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
+                      }}
+                  />
+                </Box>
+              </Box>
+            </motion.div>
 
           {/* MAIN CALENDAR AND SLOTS VIEW */}
           <Card sx={{ 
@@ -727,26 +761,42 @@ export default function SlotsPage() {
           }}>
             <CardHeader
               title={
-                <Box display="flex" alignItems="center">
+               <Box display="flex" alignItems="center">
                   {showDateSlots && (
                     <IconButton onClick={handleBackToCalendar} sx={{ mr: 2 }}>
                       <ArrowBackIcon />
                     </IconButton>
                   )}
-                  {showDateSlots 
-                    ? `Slots for ${selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { 
+                  {showDateSlots ? (
+                    <Typography 
+                      sx={{ 
+                        fontSize: { xs: '0.9rem', sm: '1rem' }, // Mobile पर 0.9rem, tablet/desktop पर 1rem
+                        fontWeight: 500 
+                      }}
+                    >
+                      Slots for {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { 
                         weekday: 'long', 
                         year: 'numeric', 
                         month: 'long', 
                         day: 'numeric' 
-                      }) : ''}`
-                    : "Calendar View - Click on any date"
-                  }
+                      }) : ''}
+                    </Typography>
+                  ) : (
+                    <Typography 
+                      sx={{ 
+                        fontSize: { xs: '1.400rem', sm: '1.500rem' }, // Mobile पर थोड़ा और छोटा
+                        fontWeight: 400,
+                        color: 'text.secondary'
+                      }}
+                    >
+                      Calendar View - Click on any date
+                    </Typography>
+                  )}
                 </Box>
               }
               action={
                 !showDateSlots && !isMobile && (
-                  <Box display="flex" gap={2}>
+                  <Box display="flex" gap={2} >
                     <Tooltip title="Refresh">
                       <IconButton onClick={fetchSlots}>
                         <RefreshIcon />
@@ -768,7 +818,7 @@ export default function SlotsPage() {
                     >
                       Generate Slots
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="contained"
                       onClick={() => {
                         setEditingSlot(null);
@@ -779,7 +829,7 @@ export default function SlotsPage() {
                       size={isTablet ? "small" : "medium"}
                     >
                       Add Slot
-                    </Button>
+                    </Button> */}
                   </Box>
                 )
               }
@@ -789,9 +839,7 @@ export default function SlotsPage() {
             {/* MOBILE ACTION BUTTONS */}
             {!showDateSlots && isMobile && (
               <Box sx={{ p: 2, display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <IconButton onClick={fetchSlots} size="small">
-                  <RefreshIcon />
-                </IconButton>
+                
                 <Button
                   variant="outlined"
                   onClick={() => setDisableDateDialog(true)}
@@ -808,7 +856,10 @@ export default function SlotsPage() {
                 >
                   Generate
                 </Button>
-                <Button
+                <IconButton onClick={fetchSlots} size="small">
+                  <RefreshIcon />
+                </IconButton>
+                {/* <Button
                   variant="contained"
                   onClick={() => {
                     setEditingSlot(null);
@@ -819,7 +870,7 @@ export default function SlotsPage() {
                   size="small"
                 >
                   Add Slot
-                </Button>
+                </Button> */}
               </Box>
             )}
 
@@ -828,88 +879,110 @@ export default function SlotsPage() {
               <Box sx={{ p: { xs: 0, sm: 1, md: 2 } }}>
                 {/* Calendar */}
                 <FullCalendar
-  plugins={[dayGridPlugin, interactionPlugin]}
-  initialView="dayGridMonth"
-  headerToolbar={{
-    left: 'prev,next today',
-    center: 'title',
-    right: isMobile ? '' : 'dayGridMonth,dayGridWeek'
-  }}
-  events={calendarEvents}
-  dateClick={(info) => {
-    const clickedDate = new Date(info.dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (clickedDate < today) {
-      showSnackbar("Cannot view slots for past dates", "warning");
-      return;
-    }
-    handleDateClick(info);
-  }}
-  eventClick={(info) => {
-    const clickedDate = new Date(info.event.extendedProps.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (clickedDate < today) {
-      showSnackbar("Cannot view slots for past dates", "warning");
-      return;
-    }
-    handleEventClick(info);
-  }}
-  height="auto"
-  editable={false}
-  selectable={true}
-  weekends={true}
-  dayMaxEvents={3}
-  // Disable past dates in calendar
-  validRange={{
-    start: new Date().toISOString().split('T')[0]
-  }}
-  // Custom styling for past dates
-  dayCellClassNames={(arg) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const cellDate = new Date(arg.date);
-    cellDate.setHours(0, 0, 0, 0);
-    
-    if (cellDate < today) {
-      return ['fc-past-date-disabled'];
-    }
-    return [];
-  }}
-  eventContent={(eventInfo) => {
-    const eventDate = new Date(eventInfo.event.startStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (eventDate < today) {
-      return null; // Don't show events for past dates
-    }
-    
-    return (
-      <Box sx={{ p: 1 }}>
-        <Box sx={{ 
-          textAlign: 'center',
-          p: 0.5,
-          borderRadius: 1,
-          backgroundColor: eventInfo.event.backgroundColor,
-          color: 'white'
-        }}>
-          <Typography variant="caption" sx={{ fontWeight: 'bold', fontSize: isMobile ? '0.6rem' : '0.75rem' }}>
-            {eventInfo.event.extendedProps.activeSlots} slots
-          </Typography>
-          {eventInfo.event.extendedProps.bookedCount > 0 && (
-            <Typography variant="caption" display="block" sx={{ fontSize: isMobile ? '0.5rem' : '0.65rem' }}>
-              {eventInfo.event.extendedProps.bookedCount} bookings
-            </Typography>
-          )}
-        </Box>
-      </Box>
-    );
-  }}
-/>
+                  plugins={[dayGridPlugin, interactionPlugin]}
+                  initialView="dayGridMonth"  
+                  headerToolbar={{
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: isMobile ? '' : 'dayGridMonth,dayGridWeek'
+                  }}
+                  events={calendarEvents}
+                  dateClick={(info) => {
+                    const clickedDate = new Date(info.dateStr);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (clickedDate < today) {
+                      showSnackbar("Cannot view slots for past dates", "warning");
+                      return;
+                    }
+                    handleDateClick(info);
+                  }}
+                  eventClick={(info) => {
+                    const clickedDate = new Date(info.event.extendedProps.date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (clickedDate < today) {
+                      showSnackbar("Cannot view slots for past dates", "warning");
+                      return;
+                    }
+                    handleEventClick(info);
+                  }}
+                  height="auto"
+                  editable={false}
+                  selectable={true}
+                  weekends={true}
+                  dayMaxEvents={3}
+                  // Disable past dates in calendar
+                  validRange={{
+                    start: new Date().toISOString().split('T')[0]
+                  }}
+                  // Custom styling for past dates
+                  dayCellClassNames={(arg) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const cellDate = new Date(arg.date);
+                    cellDate.setHours(0, 0, 0, 0);
+                    
+                    if (cellDate < today) {
+                      return ['fc-past-date-disabled'];
+                    }
+                    return [];
+                  }}
+                  eventContent={(eventInfo) => {
+                    const eventDate = new Date(eventInfo.event.startStr);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (eventDate < today) {
+                      return null; // Don't show events for past dates
+                    }
+                    
+                    const hasBookings = eventInfo.event.extendedProps.bookedCount > 0;
+                    
+                    return (
+                      <Box sx={{ p: 1 }}>
+                        <Box
+                          sx={{
+                            textAlign: 'center',
+                            p: 0.5,
+                            borderRadius: 1,
+                            backgroundColor: hasBookings ? '#1976d2' : '#4caf50',
+                            color: 'white',
+                            minHeight: isMobile ? '20px' : 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                    {isMobile ? (
+                      // Mobile view: सिर्फ number
+                      <Typography
+                        sx={{
+                          fontWeight: 'bold',
+                          fontSize: '0.7rem'
+                        }}
+                      >
+                        {eventInfo.event.extendedProps.bookedCount || 0}
+                      </Typography>
+                    ) : (
+                      // Desktop view: number + "bookings" text
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        {eventInfo.event.extendedProps.bookedCount || 0} bookings
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+                    );
+                  }}
+                />
                 
                 {/* Calendar Legend */}
                 <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>

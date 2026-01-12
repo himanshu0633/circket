@@ -904,7 +904,7 @@
                       index={0}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
+                  {/* <Grid item xs={12} sm={6} md={4}>
                     <StatCard
                       title="Paid Captains"
                       value={stats.paid}
@@ -921,7 +921,7 @@
                       color={theme.palette.warning.main}
                       index={2}
                     />
-                  </Grid>
+                  </Grid> */}
                 </Grid>
               </motion.div>
 
