@@ -1,4 +1,4 @@
-/* Enhanced Header Styles */
+/* Captain.header.css */
 .captain-header {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: white;
@@ -32,13 +32,17 @@
 .header-left {
   display: flex;
   align-items: center;
+  gap: 1rem;
 }
+
 
 .tournament-info {
   display: flex;
   align-items: center;
   gap: 1rem;
   transition: transform 0.2s ease;
+  cursor: pointer;
+  flex: 1;
 }
 
 .tournament-info:hover {
@@ -222,9 +226,9 @@
   font-weight: 700;
 }
 
-/* Right Section */
+/* Right Section (Currently hidden but keeping structure) */
 .header-right {
-  display: none;
+  display: flex;
   justify-content: flex-end;
 }
 
@@ -232,507 +236,6 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.action-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.action-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.notification-btn {
-  position: relative;
-}
-
-.notification-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #0f172a;
-}
-
-/* User Profile Dropdown */
-.user-profile-dropdown {
-  position: relative;
-  margin-left: 0.5rem;
-}
-
-.user-profile-card {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.user-profile-card:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-.user-avatar-wrapper {
-  position: relative;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.online-status {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 10px;
-  height: 10px;
-  background: #10b981;
-  border-radius: 50%;
-  border: 2px solid #0f172a;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.user-name {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: white;
-}
-
-.user-role {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: #94a3b8;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.5rem;
-  background: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 0.5rem;
-  min-width: 200px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.2s ease;
-  z-index: 1000;
-}
-
-.user-profile-dropdown:hover .dropdown-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: none;
-  border: none;
-  color: #cbd5e1;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.dropdown-item:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.dropdown-item:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dropdown-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 0.5rem;
-}
-
-.logout-item {
-  color: #f87171;
-}
-
-.logout-item:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.mobile-menu-toggle {
-  display: none;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mobile-menu-toggle:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: rotate(90deg);
-}
-
-/* Notifications Panel */
-.notifications-panel {
-  position: absolute;
-  top: 100%;
-  right: 2rem;
-  background: rgba(30, 41, 59, 0.98);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  width: 320px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  z-index: 1001;
-  animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.notifications-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.notifications-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-}
-
-.clear-btn {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.clear-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.notifications-list {
-  padding: 0.5rem;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.notification-item {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: 8px;
-  transition: background 0.2s ease;
-  cursor: pointer;
-}
-
-.notification-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.notification-item.unread {
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.notification-icon {
-  width: 32px;
-  height: 32px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.notification-content {
-  flex: 1;
-}
-
-.notification-title {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: white;
-}
-
-.notification-time {
-  margin: 0;
-  font-size: 0.75rem;
-  color: #94a3b8;
-}
-
-.notifications-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.view-all-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.view-all-btn:hover {
-  background: rgba(59, 130, 246, 0.2);
-}
-
-/* Mobile Navigation */
-.mobile-navigation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #0f172a;
-  z-index: 2000;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.mobile-nav-header {
-  padding: 1.5rem;
-  background: rgba(30, 41, 59, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.mobile-user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.mobile-user-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.mobile-nav-content {
-  padding: 1rem;
-  padding-bottom: 8rem;
-}
-
-.mobile-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  padding: 1rem;
-  background: none;
-  border: none;
-  color: #cbd5e1;
-  border-radius: 12px;
-  margin-bottom: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.mobile-nav-item:hover:not(:disabled),
-.mobile-nav-item.active {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.mobile-nav-item:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.mobile-nav-icon {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mobile-notification-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #ef4444;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #0f172a;
-}
-
-.mobile-nav-text {
-  flex: 1;
-  text-align: left;
-}
-
-.mobile-nav-title {
-  display: block;
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
-}
-
-.mobile-nav-subtitle {
-  display: block;
-  font-size: 0.75rem;
-  color: #94a3b8;
-}
-
-.mobile-nav-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 1rem;
-}
-
-.mobile-nav-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1.5rem;
-  background: rgba(15, 23, 42, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.tournament-mobile-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.tournament-logo-small {
-  width: 40px;
-  height: 40px;
-}
-
-.tournament-logo-small img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.tournament-mobile-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.tournament-mobile-title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: white;
-}
-
-.tournament-mobile-season {
-  font-size: 0.75rem;
-  color: #94a3b8;
 }
 
 /* Responsive Design */
@@ -765,15 +268,311 @@
     display: none;
   }
   
-  .header-actions .action-btn:not(.mobile-menu-toggle) {
+  .tournament-meta {
     display: none;
   }
   
-  .mobile-menu-toggle {
-    display: flex;
+  .tournament-premier {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .header-left {
+    margin-left: -10px;
   }
   
-  .user-profile-card {
+}
+
+.header-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+.logout-btn .logout-text {
+  display: inline;
+}
+
+/* Responsive Design - Add to existing media queries */
+@media (max-width: 768px) {
+  .logout-btn .logout-text {
+    display: none;
+  }
+  
+  .logout-btn {
+    padding: 0.75rem;
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-actions {
+    gap: 0.5rem;
+  }
+  
+  .logout-btn {
+    padding: 0.5rem;
+  }
+}
+
+/* Add to Captain.header.css */
+
+/* Hamburger Menu Button */
+.hamburger-menu {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  margin-left: 1rem;
+  transition: all 0.2s ease;
+  margin-right: 0.5rem;
+}
+
+.hamburger-menu:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile Sidebar */
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  z-index: 2000;
+  transition: left 0.3s ease;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-sidebar.open {
+  left: 0;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.user-role {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+.sidebar-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.sidebar-nav-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  transform: translateX(5px);
+}
+
+.sidebar-nav-item.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+}
+
+.nav-label {
+  flex: 1;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Overlay */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive Design Updates */
+@media (max-width: 1024px) {
+  .hamburger-menu {
+    display: block;
+     order: -1;
+  }
+  
+  .header-center {
+    display: none;
+  }
+
+  .tournament-info {
+    margin-left: 0; /* Remove left margin */
+  }
+  
+  .top-bar-content {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .breadcrumb-nav {
     display: none;
   }
   
@@ -790,13 +589,27 @@
   .container {
     padding: 0 0.75rem;
   }
-  
-  .tournament-text {
-    display: none;
+  .hamburger-menu {
+    margin-left: 0;
+    margin-right: 0.5rem; 
+  }
+
+  .header-left {
+    gap: 0.5rem; 
+  }
+
+  .tournament-logo {
+    width: 40px;
+    height: 40px;
   }
   
-  .notifications-panel {
-    right: 0.75rem;
-    width: calc(100vw - 1.5rem);
+  .tournament-name {
+    font-size: 1.25rem;
+  }
+  
+  .mobile-sidebar {
+    width: 250px;
   }
 }
+
+/* Existing responsive styles remain... */
