@@ -30,9 +30,9 @@ function Header() {
           </div>
 
           <div>
-            <div style={{ fontWeight: "bolder", fontSize: "0.9rem", color: " #00308F" }}>
+            {/* <div style={{ fontWeight: "bolder", fontSize: "0.9rem", color: " #00308F" }}>
               CDS CRICKET LEAGUE
-            </div>
+            </div> */}
             <div style={{ fontSize: "0.75rem" }}>
              
             </div>
@@ -46,6 +46,10 @@ function Header() {
         </div>
 
         {/* RIGHT */}
+        <button className="login-btn login-bnt-padnig" onClick={() => navigate("/playerRegistration")}>
+          Register As Player
+        </button>
+        
         <button className="login-btn" onClick={() => navigate("/login")}>
           Register
         </button>

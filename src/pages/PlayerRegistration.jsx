@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import API from '../api/axios';
+import { useNavigate } from "react-router-dom";
 
 const CricketPlayerRegistration = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -44,7 +46,8 @@ const CricketPlayerRegistration = () => {
       background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
       color: 'white',
       padding: '40px',
-      textAlign: 'center'
+      textAlign: 'center',
+      position: 'relative'
     },
     logoContainer: {
       display: 'flex',
@@ -56,6 +59,24 @@ const CricketPlayerRegistration = () => {
     cricketLogo: {
       fontSize: '48px',
       animation: 'bounce 2s infinite'
+    },
+    dashboardButton: {
+      position: 'absolute',
+      left: '30px',
+      top: '30px',
+      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+      color: 'white',
+      border: 'none',
+      padding: '12px 24px',
+      borderRadius: '50px',
+      fontSize: '0.95rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      boxShadow: '0 4px 15px rgba(79, 70, 229, 0.3)'
     },
     title: {
       fontSize: '2.5rem',
@@ -225,46 +246,6 @@ const CricketPlayerRegistration = () => {
         fontWeight: 'bold'
       }
     },
-    paymentSteps: {
-      background: 'white',
-      border: '2px solid #e2e8f0',
-      padding: '30px',
-      borderRadius: '15px'
-    },
-    stepsTitle: {
-      color: '#1e293b',
-      marginBottom: '25px',
-      fontSize: '1.5rem'
-    },
-    step: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '15px',
-      marginBottom: '20px',
-      paddingBottom: '20px',
-      borderBottom: '1px solid #f1f5f9',
-      '&:last-child': {
-        marginBottom: '0',
-        paddingBottom: '0',
-        borderBottom: 'none'
-      }
-    },
-    stepNumber: {
-      background: '#4f46e5',
-      color: 'white',
-      width: '36px',
-      height: '36px',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontWeight: '600',
-      flexShrink: '0'
-    },
-    stepText: {
-      color: '#475569',
-      fontWeight: '500'
-    },
     contactInfo: {
       background: '#f0f9ff',
       padding: '25px',
@@ -286,23 +267,8 @@ const CricketPlayerRegistration = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("=== CRICKET PLAYER REGISTRATION COMPONENT MOUNTED ===");
-    console.log("🔍 CHECKING ENVIRONMENT VARIABLES:");
-    console.log("import.meta exists:", !!import.meta);
-    if (import.meta) {
-      console.log("import.meta.env exists:", !!import.meta.env);
-      console.log("VITE_RAZORPAY_KEY_ID:", import.meta.env?.VITE_RAZORPAY_KEY_ID || "NOT FOUND");
-      // Log all Vite env variables (they all start with VITE_)
-      const viteEnvVars = Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'));
-      console.log("All Vite env variables:", viteEnvVars);
-    }
-    console.log("=== END ENV CHECK ===\n");
-  }, []);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`📝 Form field changed: ${name} = ${value}`);
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -311,10 +277,7 @@ const CricketPlayerRegistration = () => {
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
-      console.log("📦 Loading Razorpay script...");
-      
       if (window.Razorpay) {
-        console.log("✅ Razorpay script already loaded in window.Razorpay");
         return resolve(true);
       }
       
@@ -322,133 +285,78 @@ const CricketPlayerRegistration = () => {
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       
       script.onload = () => {
-        console.log("✅ Razorpay script loaded successfully");
-        console.log("window.Razorpay now available:", !!window.Razorpay);
-        console.log("window.Razorpay type:", typeof window.Razorpay);
         resolve(true);
       };
       
-      script.onerror = (error) => {
-        console.error("❌ Failed to load Razorpay script:", error);
+      script.onerror = () => {
         resolve(false);
       };
       
       document.body.appendChild(script);
-      console.log("📦 Razorpay script tag appended to document.body");
     });
   };
 
   const validateForm = () => {
-    console.log("🔍 Validating form data:", formData);
     const { name, email, phone, profileLink } = formData;
     
     if (!name.trim()) {
-      console.error("❌ Validation failed: Full Name is required");
       throw new Error('Full Name is required');
     }
     
     if (!email.trim()) {
-      console.error("❌ Validation failed: Email is required");
       throw new Error('Email is required');
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      console.error("❌ Validation failed: Invalid email format");
       throw new Error('Please enter a valid email address');
     }
     
     if (!phone.trim()) {
-      console.error("❌ Validation failed: Phone number is required");
       throw new Error('Phone number is required');
     }
     
     const phoneRegex = /^[0-9]{10}$/;
     const cleanedPhone = phone.replace(/\D/g, '');
-    console.log("📱 Phone cleaned:", cleanedPhone);
     if (!phoneRegex.test(cleanedPhone)) {
-      console.error("❌ Validation failed: Invalid phone number format");
       throw new Error('Please enter a valid 10-digit phone number');
     }
     
     if (!profileLink.trim()) {
-      console.error("❌ Validation failed: Profile link is required");
       throw new Error('Profile link is required');
     }
     
-    console.log("✅ All form validations passed");
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("\n🚀 ===== SUBMIT FORM STARTED ===== 🚀");
-    console.log("📋 Form Data:", formData);
     
     setLoading(true);
     setPaymentStatus(null);
 
     try {
-      // 1. Validate form
-      console.log("\n📝 STEP 1: FORM VALIDATION");
       validateForm();
 
-      // 2. Load Razorpay script
-      console.log("\n📦 STEP 2: LOAD RAZORPAY SCRIPT");
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        console.error("❌ Razorpay script failed to load");
         throw new Error('Failed to load payment gateway. Please check your internet connection.');
       }
 
-      // 3. Create payment order
-      console.log("\n💰 STEP 3: CREATE PAYMENT ORDER");
-      console.log("Sending request to /player/create-order with amount: 50000 paise (₹500)");
-      
       const orderResponse = await API.post('/player/create-order', {
-        amount: 50000, // ₹500 in paise
+        amount: 50000,
         currency: 'INR'
       });
 
-      console.log("Order API Response:", orderResponse.data);
-
       if (!orderResponse.data.success) {
-        console.error("❌ Order creation failed:", orderResponse.data.message);
         throw new Error(orderResponse.data.message || 'Failed to create payment order');
       }
 
       const orderData = orderResponse.data.order;
       setOrderId(orderData.id);
-      console.log("✅ Order created successfully");
-      console.log("Order ID:", orderData.id);
-      console.log("Order Amount:", orderData.amount);
-      console.log("Order Currency:", orderData.currency);
 
-      // 4. Get Razorpay key - FOR VITE ONLY
-      console.log("\n🔑 STEP 4: GET RAZORPAY KEY");
-      console.log("=== CHECKING VITE ENVIRONMENT VARIABLE ===");
-      
-      const viteKey = import.meta.env?.VITE_RAZORPAY_KEY_ID;
-      const fallbackKey = 'rzp_test_RpQ1JwSJEy6yAw'; // Default test key
-      
-      console.log("1. Vite key (import.meta.env?.VITE_RAZORPAY_KEY_ID):", viteKey || "NOT FOUND");
-      console.log("2. Fallback key:", fallbackKey);
-      
-      const razorpayKey = viteKey || fallbackKey;
-      
-      console.log("\n✅ FINAL KEY SELECTED:", razorpayKey);
-      console.log("Key length:", razorpayKey.length);
-      console.log("Key format check - starts with 'rzp_':", razorpayKey.startsWith('rzp_'));
-      console.log("Key format check - contains 'test' or 'live':", 
-        razorpayKey.includes('test') ? 'TEST KEY' : 
-        razorpayKey.includes('live') ? 'LIVE KEY' : 'UNKNOWN FORMAT');
-      
-      if (!razorpayKey.startsWith('rzp_')) {
-        console.warn("⚠️ WARNING: Razorpay key doesn't start with 'rzp_' - this may cause issues!");
-      }
+      const razorpayKey = import.meta.env?.VITE_RAZORPAY_KEY_ID || 'rzp_test_RpQ1JwSJEy6yAw';
 
-      // 5. Configure Razorpay options
-      console.log("\n⚙️ STEP 5: CONFIGURE RAZORPAY OPTIONS");
       const options = {
         key: razorpayKey,
         amount: orderData.amount,
@@ -457,13 +365,6 @@ const CricketPlayerRegistration = () => {
         description: `Registration for ${formData.role}`,
         order_id: orderData.id,
         handler: async (response) => {
-          console.log("\n🎯 RAZORPAY PAYMENT SUCCESS CALLBACK FIRED!");
-          console.log("Payment Response:", response);
-          console.log("razorpay_payment_id:", response.razorpay_payment_id);
-          console.log("razorpay_order_id:", response.razorpay_order_id);
-          console.log("razorpay_signature:", response.razorpay_signature ? "Present" : "Missing");
-          
-          // Payment successful, now verify and save
           await verifyPaymentAndSavePlayer(response);
         },
         prefill: {
@@ -476,7 +377,6 @@ const CricketPlayerRegistration = () => {
         },
         modal: {
           ondismiss: () => {
-            console.log("\n❌ RAZORPAY MODAL DISMISSED BY USER");
             setLoading(false);
             setPaymentStatus({
               type: 'info',
@@ -486,61 +386,25 @@ const CricketPlayerRegistration = () => {
         }
       };
 
-      console.log("Razorpay Options Configured:");
-      console.log("- Key:", options.key.substring(0, 10) + "..."); // Show only first 10 chars
-      console.log("- Amount:", options.amount);
-      console.log("- Currency:", options.currency);
-      console.log("- Order ID:", options.order_id);
-      console.log("- Description:", options.description);
-
-      // 6. Open Razorpay checkout
-      console.log("\n🪟 STEP 6: OPEN RAZORPAY CHECKOUT");
-      
       if (!window.Razorpay) {
-        console.error("❌ CRITICAL ERROR: window.Razorpay is not defined!");
         throw new Error('Payment gateway initialization failed. Please refresh the page and try again.');
       }
       
-      console.log("window.Razorpay constructor available:", typeof window.Razorpay);
+      const rzp = new window.Razorpay(options);
       
-      try {
-        const rzp = new window.Razorpay(options);
-        console.log("✅ Razorpay instance created successfully");
-        
-        // Add error handler
-        rzp.on('payment.failed', function (response) {
-          console.error("\n❌ RAZORPAY PAYMENT FAILED:", response.error);
-          console.log("Error code:", response.error.code);
-          console.log("Error description:", response.error.description);
-          console.log("Error source:", response.error.source);
-          console.log("Error step:", response.error.step);
-          console.log("Error reason:", response.error.reason);
-          
-          setPaymentStatus({
-            type: 'error',
-            message: `Payment failed: ${response.error.description || 'Unknown error'}`
-          });
-          setLoading(false);
+      rzp.on('payment.failed', function (response) {
+        setPaymentStatus({
+          type: 'error',
+          message: `Payment failed: ${response.error.description || 'Unknown error'}`
         });
-        
-        console.log("🪟 Opening Razorpay checkout modal...");
-        rzp.open();
-        console.log("✅ Razorpay checkout opened successfully");
-        
-      } catch (rzpError) {
-        console.error("❌ Error creating Razorpay instance:", rzpError);
-        throw new Error(`Failed to initialize payment: ${rzpError.message}`);
-      }
+        setLoading(false);
+      });
+      
+      rzp.open();
 
     } catch (error) {
-      console.error('\n❌ ===== SUBMIT FORM ERROR ===== ❌');
-      console.error("Error Type:", error.constructor.name);
-      console.error("Error Message:", error.message);
-      console.error("Error Stack:", error.stack);
-      
       let userMessage = error.message;
       
-      // Provide more user-friendly messages for common errors
       if (error.message.includes('Network Error')) {
         userMessage = 'Network error. Please check your internet connection.';
       } else if (error.message.includes('timeout')) {
@@ -554,43 +418,23 @@ const CricketPlayerRegistration = () => {
         message: userMessage
       });
       setLoading(false);
-      
-      console.log("✅ Error handled, loading set to false");
     }
   };
 
   const verifyPaymentAndSavePlayer = async (razorpayResponse) => {
-    console.log("\n🔍 ===== PAYMENT VERIFICATION STARTED ===== 🔍");
-    console.log("Received Razorpay Response:", razorpayResponse);
-    
     try {
-      // 1. Verify payment first
-      console.log("\n📡 STEP 1: VERIFY PAYMENT WITH BACKEND");
-      console.log("Sending verification request to /player/verify-payment");
-      
       const verificationPayload = {
         razorpay_order_id: razorpayResponse.razorpay_order_id,
         razorpay_payment_id: razorpayResponse.razorpay_payment_id,
         razorpay_signature: razorpayResponse.razorpay_signature
       };
       
-      console.log("Verification Payload:", verificationPayload);
-      
       const verificationResponse = await API.post('/player/verify-payment', verificationPayload);
       
-      console.log("Verification API Response:", verificationResponse.data);
-
       if (!verificationResponse.data.success) {
-        console.error("❌ Payment verification failed:", verificationResponse.data.message);
         throw new Error(verificationResponse.data.message || 'Payment verification failed');
       }
 
-      console.log("✅ Payment verified successfully by backend");
-
-      // 2. Save player data after successful payment
-      console.log("\n💾 STEP 2: SAVE PLAYER DATA");
-      console.log("Saving player data to /player/save-player");
-      
       const playerPayload = {
         name: formData.name,
         email: formData.email,
@@ -602,27 +446,17 @@ const CricketPlayerRegistration = () => {
         razorpay_signature: razorpayResponse.razorpay_signature
       };
       
-      console.log("Player Payload:", playerPayload);
-      
       const playerResponse = await API.post('/player/save-player', playerPayload);
       
-      console.log("Player Save API Response:", playerResponse.data);
-
       if (playerResponse.data.success) {
         const playerId = playerResponse.data.playerId || 'N/A';
         const successMessage = `🎉 Registration Successful! Payment verified and profile created. Your player ID: ${playerId}`;
-        
-        console.log("\n🎊 ===== REGISTRATION COMPLETE ===== 🎊");
-        console.log("Player ID:", playerId);
-        console.log("Success Message:", successMessage);
         
         setPaymentStatus({
           type: 'success',
           message: successMessage
         });
         
-        // Clear form
-        console.log("🧹 Clearing form data...");
         setFormData({
           name: '',
           email: '',
@@ -631,21 +465,13 @@ const CricketPlayerRegistration = () => {
           role: 'Batsman'
         });
         
-        // Reset order ID
         setOrderId(null);
-        console.log("✅ Form cleared and order ID reset");
         
       } else {
-        console.error("❌ Player save failed:", playerResponse.data.message);
         throw new Error(playerResponse.data.message || 'Profile creation failed');
       }
 
     } catch (error) {
-      console.error('\n❌ ===== PAYMENT VERIFICATION ERROR ===== ❌');
-      console.error("Error Type:", error.constructor.name);
-      console.error("Error Message:", error.message);
-      console.error("Error Stack:", error.stack);
-      
       setPaymentStatus({
         type: 'error',
         message: error.message || 'Registration failed. Please contact support with your payment ID.'
@@ -653,11 +479,9 @@ const CricketPlayerRegistration = () => {
       
     } finally {
       setLoading(false);
-      console.log("✅ Process completed, loading set to false");
     }
   };
 
-  // Inline style tag for animations
   const styleTag = `
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
@@ -681,6 +505,11 @@ const CricketPlayerRegistration = () => {
       box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
     
+    .dashboard-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+    }
+    
     @media (max-width: 992px) {
       .content-wrapper {
         grid-template-columns: 1fr !important;
@@ -694,6 +523,18 @@ const CricketPlayerRegistration = () => {
       h1 {
         font-size: 2rem !important;
       }
+      
+      .dashboard-btn {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        margin-bottom: 20px !important;
+        align-self: center !important;
+      }
+      
+      .logo-container {
+        flex-direction: column !important;
+      }
     }
     
     @media (max-width: 576px) {
@@ -705,7 +546,7 @@ const CricketPlayerRegistration = () => {
         padding: 20px !important;
       }
       
-      .form-section, .info-card, .payment-steps, .contact-info {
+      .form-section, .info-card, .contact-info {
         padding: 20px !important;
       }
       
@@ -714,18 +555,39 @@ const CricketPlayerRegistration = () => {
         text-align: center !important;
         gap: 10px !important;
       }
+      
+      .dashboard-btn {
+        padding: 10px 20px !important;
+        font-size: 0.9rem !important;
+      }
     }
   `;
-
-  // Check if we're in development mode (Vite specific)
-  const isDevelopment = import.meta.env?.MODE === 'development';
 
   return (
     <>
       <style>{styleTag}</style>
       <div style={styles.appContainer}>
         <div style={styles.registrationContainer}>
+          
           <div style={styles.headerSection}>
+            {/* Dashboard Button - Now positioned at top-left */}
+            <button 
+              className="dashboard-btn"
+              style={styles.dashboardButton}
+              onClick={() => navigate("/")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(79, 70, 229, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(79, 70, 229, 0.3)';
+              }}
+            >
+              <span>←</span>
+              <span>Dashboard</span>
+            </button>
+            
             <div style={styles.logoContainer}>
               <div style={styles.cricketLogo}>🏏</div>
               <h1 style={styles.title}>Cricket Player Registration</h1>
@@ -826,13 +688,6 @@ const CricketPlayerRegistration = () => {
                       Order ID: {orderId}
                     </p>
                   )}
-                  {isDevelopment && (
-                    <div style={{marginTop: '10px', padding: '10px', background: '#fef3c7', borderRadius: '6px'}}>
-                      <p style={{...styles.paymentNote, color: '#92400e', fontSize: '0.8rem', margin: 0}}>
-                        <strong>🔧 Debug Mode:</strong> Check browser console for detailed logs
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 <button 
@@ -855,7 +710,6 @@ const CricketPlayerRegistration = () => {
                       e.currentTarget.style.boxShadow = 'none';
                     }
                   }}
-                  onClick={() => console.log("🖱️ Submit button clicked - Starting payment process...")}
                 >
                   {loading ? (
                     <>
@@ -918,44 +772,16 @@ const CricketPlayerRegistration = () => {
                 </ul>
               </div>
 
-              <div style={styles.paymentSteps}>
-                <h3 style={styles.stepsTitle}>Payment Security</h3>
-                <div style={styles.step}>
-                  <span style={styles.stepNumber}>🔒</span>
-                  <p style={styles.stepText}>
-                    <strong>Secure Payment:</strong> Razorpay (PCI-DSS compliant)
-                  </p>
-                </div>
-                <div style={styles.step}>
-                  <span style={styles.stepNumber}>🛡️</span>
-                  <p style={styles.stepText}>
-                    <strong>Data Protection:</strong> Your information is encrypted
-                  </p>
-                </div>
-                <div style={styles.step}>
-                  <span style={styles.stepNumber}>💰</span>
-                  <p style={styles.stepText}>
-                    <strong>Refund Policy:</strong> 100% refund if registration fails
-                  </p>
-                </div>
-                <div style={styles.step}>
-                  <span style={styles.stepNumber}>⚡</span>
-                  <p style={styles.stepText}>
-                    <strong>Instant Activation:</strong> Profile ready in 2 minutes
-                  </p>
-                </div>
-              </div>
-
               <div style={styles.contactInfo}>
                 <h3 style={styles.contactTitle}>Need Assistance?</h3>
                 <p style={styles.contactText}>
-                  <strong>Email:</strong> cricket@cdsleague.com
+                  <strong>Email:</strong> cdspremierleague@gmail.com
                 </p>
                 <p style={styles.contactText}>
-                  <strong>Phone:</strong> +91-9876543210 (10 AM - 6 PM)
+                  <strong>Phone:</strong> +91-98765 43210 (10 AM - 6 PM)
                 </p>
                 <p style={styles.contactText}>
-                  <strong>WhatsApp:</strong> +91-9876543210
+                  <strong>WhatsApp:</strong> +91-98765 43210
                 </p>
                 <p style={{...styles.contactText, fontSize: '0.9rem', color: '#64748b'}}>
                   Response time: Within 30 minutes
