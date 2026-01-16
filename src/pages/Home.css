@@ -23,6 +23,218 @@
     line-height: 1.6;
     overflow-x: hidden;
     position: relative;
+}/* Add these styles to your existing Home.css file */
+
+/* Hero Slideshow Styles */
+.hero-slideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hero-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.hero-slide::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent 60%, rgba(0, 48, 143, 0.1) 100%);
+  pointer-events: none;
+}
+
+/* Hero Slideshow Dots */
+.hero .slideshow-dots {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 3;
+}
+
+/* Stadium Slideshow Styles */
+.stadium-slideshow {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+  position: relative;
+  height: 380px;
+}
+
+.stadium-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.stadium-slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.stadium-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Slideshow Navigation Buttons */
+.slideshow-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: all 0.3s ease;
+}
+
+.slideshow-nav:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.slideshow-nav.prev {
+  left: 15px;
+}
+
+.slideshow-nav.next {
+  right: 15px;
+}
+
+/* Slideshow Dots */
+.slideshow-dots {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.dot.active {
+  background: var(--cricket-gold);
+  border-color: var(--cricket-gold);
+  transform: scale(1.2);
+}
+
+.stadium-slideshow .slideshow-dots .dot {
+  border-color: white;
+}
+
+.stadium-slideshow .slideshow-dots .dot.active {
+  background: var(--cricket-gold);
+  border-color: var(--cricket-gold);
+}
+
+/* Update existing hero styles */
+.hero {
+  height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  padding: 0 20px;
+  margin-top: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content {
+  max-width: 850px;
+  z-index: 2;
+  animation: fadeInUp 1.5s ease;
+}
+
+/* Update stadium content styles */
+.stadium-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  padding: 0px 20px;
+}
+
+/* Responsive Design for Slideshows */
+@media (max-width: 768px) {
+  .stadium-content {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+  }
+  
+  .stadium-slideshow {
+    height: 300px;
+  }
+  
+  .hero-slide {
+    background-attachment: scroll;
+  }
+}
+
+@media (max-width: 480px) {
+  .stadium-slideshow {
+    height: 250px;
+  }
+  
+  .slideshow-nav {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .dot {
+    width: 10px;
+    height: 10px;
+  }
 }
 
 /* Animated Background Pattern */
@@ -561,7 +773,7 @@
 
 .video-gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
     margin-top: 2rem;
 }

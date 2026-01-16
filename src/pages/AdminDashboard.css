@@ -969,16 +969,18 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 .modal-header {
-  padding: 20px 30px;
+  padding: 10px 25px;
   border-bottom: 1px solid #edf2f7;
   text-align: center;
 }
 
 .modal-title {
-  margin: 0;
+  margin-left: 20vh;
+  margin-top: 25px;
   color: #2d3748;
   font-size: 1.1rem;
   font-weight: 600;
+
 }
 
 
@@ -1092,6 +1094,8 @@
   gap: 10px;
   justify-content: flex-end;
   flex-wrap: wrap;
+  margin-right: 10vh;
+  margin-bottom: 25px;
 }
 
 .modal-btn {
@@ -1510,6 +1514,22 @@
 .payment-cell {
     display: none !important;
 }
+.modal-title {
+    margin-left: 10vh;
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.status-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
 
 .timeline-cell {
     display: none !important;
