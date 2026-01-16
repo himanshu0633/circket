@@ -12,6 +12,7 @@ import CaptainDashboard from "./pages/captain/CaptainDashboard";
 import Booking from "./pages/booking/Booking.jsx";
 import Gallery from "./pages/Gallery";
 import CricketPlayerRegistration from "./pages/PlayerRegistration.jsx"
+import AdminDashboardd from "./pages/AdminDashboard.jsx"
 // protected route
 import ProtectedRoute from "./pages/components/ProtectedRoute";
 import  ContactUs  from "./pages/contact/contact_us.jsx";
@@ -37,10 +38,12 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/slots" element={<SlotsPage />} />
+        <Route path="/trophyPlayer" element={<AdminDashboardd/>}/>
         {/* Team Captain Routes */}
         {/* <Route path="/captain" element={<ProtectedRoute role="teamCaptain"> <CaptainDashboard /></ProtectedRoute>}/> */}
         <Route path="/captain" element={<CaptainDashboard />} />
         <Route path="/book-slots" element={<Booking />} />
+
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
         <Route path="/playerRegistration" element={<CricketPlayerRegistration/>} />
@@ -48,6 +51,7 @@ function App() {
         <Route path="/privacy" element={< PrivacyPolicy/>}/>
         <Route path="/refund" element={< RefundPolicy/>}/>
         <Route path="/terms" element={< TermsAndConditions/>}/>
+
       </Routes>
 
       {/* Footer har page par */}
