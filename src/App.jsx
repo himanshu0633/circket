@@ -11,8 +11,13 @@ import SlotsPage from './pages/Slots/SlotsPage.jsx';
 import CaptainDashboard from "./pages/captain/CaptainDashboard";
 import Booking from "./pages/booking/Booking.jsx";
 import Gallery from "./pages/Gallery";
+import CricketPlayerRegistration from "./pages/PlayerRegistration.jsx"
 // protected route
 import ProtectedRoute from "./pages/components/ProtectedRoute";
+import  ContactUs  from "./pages/contact/contact_us.jsx";
+import  PrivacyPolicy  from "./pages/contact/privacy_policy.jsx";
+import  RefundPolicy  from "./pages/contact/refund_policy.jsx";
+import  TermsAndConditions  from "./pages/contact/terms_and_conditions.jsx";
 
 // common components
 
@@ -38,6 +43,11 @@ function App() {
         <Route path="/book-slots" element={<Booking />} />
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
+        <Route path="/playerRegistration" element={<CricketPlayerRegistration/>} />
+        <Route path="/contact" element={< ContactUs/>}/>
+        <Route path="/privacy" element={< PrivacyPolicy/>}/>
+        <Route path="/refund" element={< RefundPolicy/>}/>
+        <Route path="/terms" element={< TermsAndConditions/>}/>
       </Routes>
 
       {/* Footer har page par */}

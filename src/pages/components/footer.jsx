@@ -38,7 +38,7 @@ function Footer() {
 
               <li>
                 <i className="fas fa-envelope"></i>
-                {" "}Official Email: cricket@cdsleague.com
+                {" "}Official Email: cdspremierleague@gmail.com
               </li>
 
               <li>
