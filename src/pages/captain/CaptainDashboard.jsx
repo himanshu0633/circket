@@ -4,6 +4,7 @@ import autoTable from 'jspdf-autotable';
 import CaptainHeader from '../../component/Captain.header';
 import API from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../components/footer';
 import '../../pages/captain/CaptainDashboard.css'; 
 
 const TeamManagement = () => {
@@ -964,6 +965,7 @@ const TeamManagement = () => {
         </div>
       )}
     </div>
+    <Footer />
     </>
   );
 };

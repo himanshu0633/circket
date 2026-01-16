@@ -6,6 +6,7 @@ import API from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import '../booking/Booking.css';
 import CaptainHeader from '../../component/Captain.header';
+import Footer from '../components/footer';
 const SlotBooking = () => {
   const navigate = useNavigate();
   
@@ -804,7 +805,7 @@ const SlotBooking = () => {
 
     <div className="team-header-row">
       <h3>
-        📋 Booking for: 
+        📋 Booking for :  
         <span className="team-name-highlight">{team.teamName}</span>
       </h3>
 
@@ -922,8 +923,11 @@ const SlotBooking = () => {
         </div>
       </div>
     </div>
+    <Footer />
     </>
   );
+  
+  
 };
 
 export default SlotBooking;
