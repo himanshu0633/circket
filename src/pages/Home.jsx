@@ -5,8 +5,44 @@ import Header from '../pages/components/header';
 import Footer from '../pages/components/footer';
 
 const Home = () => {
-  const [popupImage, setPopupImage] = useState(null);
-  const navigate = useNavigate();
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
+  const [stadiumImageIndex, setStadiumImageIndex] = useState(0);
+  
+  // Hero section images
+  const heroImages = [
+    '/image/stadium4.jpeg',
+    '/image/stadium5.jpeg',
+    '/image/stadium7.jpeg',
+    '/image/stadium3.jpeg',
+    '/image/stadium6.jpeg' 
+  ];
+  
+  // Stadium section images
+  const stadiumImages = [
+    '/image/stadium7.jpeg',
+    '/image/stadium1.jpeg',
+    '/image/stadium2.jpeg',
+    '/image/stadium8.jpeg',
+    '/image/stadium6.jpeg' 
+  ];
+
+  // Hero image slideshow
+  useEffect(() => {
+    const heroInterval = setInterval(() => {
+      setHeroImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
+    }, 3000);
+
+    return () => clearInterval(heroInterval);
+  }, [heroImages.length]);
+
+  // Stadium image slideshow
+  useEffect(() => {
+    const stadiumInterval = setInterval(() => {
+      setStadiumImageIndex((prevIndex) => (prevIndex + 1) % stadiumImages.length);
+    }, 3000);
+
+    return () => clearInterval(stadiumInterval);
+  }, [stadiumImages.length]);
 
   // Scroll animations
   useEffect(() => {
@@ -26,11 +62,12 @@ const Home = () => {
     window.addEventListener('scroll', revealOnScroll);
     revealOnScroll(); // Initial check
     
-    // Cleanup
     return () => {
       window.removeEventListener('scroll', revealOnScroll);
     };
   }, []);
+
+  const navigate = useNavigate();
 
   // Register now function
   const handleRegister = () => {
@@ -46,63 +83,45 @@ const Home = () => {
     }, 200);
   };
 
-  // Handle image click in gallery
-  const handleGalleryClick = (imgSrc) => {
-    setPopupImage(imgSrc);
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when popup is open
+  // Gallery item click effect
+  const handleGalleryClick = (e) => {
+    e.currentTarget.style.transform = 'scale(0.98)';
+    setTimeout(() => {
+      e.currentTarget.style.transform = '';
+      alert("Check our social media for more match photos and videos!");
+    }, 200);
   };
-
-  // Close popup
-  const closePopup = () => {
-    setPopupImage(null);
-    document.body.style.overflow = 'auto'; // Re-enable scrolling
-  };
-
-  // Close popup when clicking outside the image
-  const handlePopupClick = (e) => {
-    if (e.target.classList.contains('image-popup-overlay')) {
-      closePopup();
-    }
-  };
-
-  // Add event listener for escape key
-  useEffect(() => {
-    const handleEscapeKey = (e) => {
-      if (e.key === 'Escape' && popupImage) {
-        closePopup();
-      }
-    };
-
-    window.addEventListener('keydown', handleEscapeKey);
-    return () => {
-      window.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [popupImage]);
 
   return (
     <>
-      <Header />
+      <Header/>
       <div className="home-container">
-        {/* Animated Background Pattern */}
         <div className="bg-pattern"></div>
 
-        {/* Image Popup Modal - FIXED */}
-        {popupImage && (
-          <div className="image-popup-overlay" onClick={handlePopupClick}>
-            <div className="image-popup-content">
-              <button className="close-popup-btn" onClick={closePopup}>
-                <i className="fas fa-times"></i>
-              </button>
-              <img src={popupImage} alt="Popup" className="popup-image" />
-              <div className="popup-close-hint">
-                Click outside or press ESC to close
-              </div>
+        {/* Hero Section with Slideshow */}
+        <section className="hero">
+          {/* Hero Slideshow Container */}
+          <div className="hero-slideshow">
+            {heroImages.map((img, index) => (
+              <div 
+                key={index}
+                className={`hero-slide ${index === heroImageIndex ? 'active' : ''}`}
+                style={{ backgroundImage: `linear-gradient(rgba(10, 10, 10, 0.7), rgba(0, 0, 0, 0.567)), url('${img}')` }}
+              />
+            ))}
+            
+            {/* Slideshow Dots */}
+            <div className="slideshow-dots">
+              {heroImages.map((_, index) => (
+                <button
+                  key={index}
+                  className={`dot ${index === heroImageIndex ? 'active' : ''}`}
+                  onClick={() => setHeroImageIndex(index)}
+                />
+              ))}
             </div>
           </div>
-        )}
-
-        {/* Hero Section */}
-        <section className="hero">
+          
           <div className="hero-content">
             <h1>JOIN THE CRICKET REVOLUTION AT YAMUNANAGAR GROUND</h1>
             <p>Experience professional cricket at our state-of-the-art stadium. Daily matches with certified umpires, advanced facilities, and a perfect platform to showcase your talent. Register now for CDS Cricket Premier League 2025-26!</p>
@@ -150,11 +169,43 @@ const Home = () => {
             </div>
           </section>
 
-          {/* Stadium Section */}
+          {/* Stadium Section with Slideshow */}
           <section className="stadium-section reveal" id="stadium">
             <div className="stadium-content">
-              <div className="stadium-image">
-                <img src="/image/stadium4.jpeg" alt="Cricket Match at Yamunanagar Ground Stadium" />
+              <div className="stadium-slideshow">
+                {stadiumImages.map((img, index) => (
+                  <div 
+                    key={index}
+                    className={`stadium-slide ${index === stadiumImageIndex ? 'active' : ''}`}
+                  >
+                    <img src={img} alt={`Stadium view ${index + 1}`} />
+                  </div>
+                ))}
+                
+                {/* Slideshow Navigation */}
+                <button 
+                  className="slideshow-nav prev"
+                  onClick={() => setStadiumImageIndex((prev) => (prev - 1 + stadiumImages.length) % stadiumImages.length)}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                <button 
+                  className="slideshow-nav next"
+                  onClick={() => setStadiumImageIndex((prev) => (prev + 1) % stadiumImages.length)}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+                
+                {/* Slideshow Dots */}
+                <div className="slideshow-dots">
+                  {stadiumImages.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`dot ${index === stadiumImageIndex ? 'active' : ''}`}
+                      onClick={() => setStadiumImageIndex(index)}
+                    />
+                  ))}
+                </div>
               </div>
               
               <div className="stadium-details">
@@ -220,12 +271,12 @@ const Home = () => {
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/batting1.jpeg" onClick={() => handleGalleryClick("/image/batting1.jpeg")} alt="Batting action 1" />
-                      <img src="/image/batting2.jpeg" onClick={() => handleGalleryClick("/image/batting2.jpeg")} alt="Batting action 2" />
-                      <img src="/image/batting3.jpeg" onClick={() => handleGalleryClick("/image/batting3.jpeg")} alt="Batting action 3" />
-                      <img src="/image/batting1.jpeg" onClick={() => handleGalleryClick("/image/batting1.jpeg")} alt="Batting action 1" />
-                      <img src="/image/batting2.jpeg" onClick={() => handleGalleryClick("/image/batting2.jpeg")} alt="Batting action 2" />
-                      <img src="/image/batting3.jpeg" onClick={() => handleGalleryClick("/image/batting3.jpeg")} alt="Batting action 3" />
+                      <img src="/image/batting1.jpeg" />
+                      <img src="/image/batting2.jpeg" />
+                      <img src="/image/batting3.jpeg" />
+                      <img src="/image/batting1.jpeg" />
+                      <img src="/image/batting2.jpeg" />
+                      <img src="/image/batting3.jpeg" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -238,14 +289,14 @@ const Home = () => {
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/team1.jpeg" onClick={() => handleGalleryClick("/image/team1.jpeg")} alt="Team celebration 1" />
-                      <img src="/image/team2.jpeg" onClick={() => handleGalleryClick("/image/team2.jpeg")} alt="Team celebration 2" />
-                      <img src="/image/team3.jpeg" onClick={() => handleGalleryClick("/image/team3.jpeg")} alt="Team celebration 3" />
-                      <img src="/image/team4.jpeg" onClick={() => handleGalleryClick("/image/team4.jpeg")} alt="Team celebration 4" />
-                      <img src="/image/team1.jpeg" onClick={() => handleGalleryClick("/image/team1.jpeg")} alt="Team celebration 1" />
-                      <img src="/image/team2.jpeg" onClick={() => handleGalleryClick("/image/team2.jpeg")} alt="Team celebration 2" />
-                      <img src="/image/team3.jpeg" onClick={() => handleGalleryClick("/image/team3.jpeg")} alt="Team celebration 3" />
-                      <img src="/image/team4.jpeg" onClick={() => handleGalleryClick("/image/team4.jpeg")} alt="Team celebration 4" />
+                      <img src="/image/team1.jpeg" />
+                      <img src="/image/team2.jpeg" />
+                      <img src="/image/team3.jpeg" />
+                      <img src="/image/team4.jpeg" />
+                      <img src="/image/team1.jpeg" />
+                      <img src="/image/team2.jpeg" />
+                      <img src="/image/team3.jpeg" />
+                      <img src="/image/team4.jpeg" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -258,14 +309,14 @@ const Home = () => {
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/stadium4.jpeg" onClick={() => handleGalleryClick("/image/stadium4.jpeg")} alt="Stadium view 1" />
-                      <img src="/image/stadium2.jpeg" onClick={() => handleGalleryClick("/image/stadium2.jpeg")} alt="Stadium view 2" />
-                      <img src="/image/stadium3.jpeg" onClick={() => handleGalleryClick("/image/stadium3.jpeg")} alt="Stadium view 3" />
-                      <img src="/image/stadium4.jpeg" onClick={() => handleGalleryClick("/image/stadium4.jpeg")} alt="Stadium view 1" />
-                      <img src="/image/stadium1.jpeg" onClick={() => handleGalleryClick("/image/stadium1.jpeg")} alt="Stadium view 4" />
-                      <img src="/image/stadium2.jpeg" onClick={() => handleGalleryClick("/image/stadium2.jpeg")} alt="Stadium view 2" />
-                      <img src="/image/stadium3.jpeg" onClick={() => handleGalleryClick("/image/stadium3.jpeg")} alt="Stadium view 3" />
-                      <img src="/image/stadium4.jpeg" onClick={() => handleGalleryClick("/image/stadium4.jpeg")} alt="Stadium view 1" />
+                      <img src="/image/stadium4.jpeg" /> 
+                      <img src="/image/stadium2.jpeg" />
+                      <img src="/image/stadium3.jpeg" />
+                      <img src="/image/stadium4.jpeg" />
+                      <img src="/image/stadium1.jpeg" />
+                      <img src="/image/stadium2.jpeg" />
+                      <img src="/image/stadium3.jpeg" />
+                      <img src="/image/stadium4.jpeg" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -278,18 +329,18 @@ const Home = () => {
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/award1.jpeg" onClick={() => handleGalleryClick("/image/award1.jpeg")} alt="Award ceremony 1" />
-                      <img src="/image/award2.jpeg" onClick={() => handleGalleryClick("/image/award2.jpeg")} alt="Award ceremony 2" />
-                      <img src="/image/award3.jpeg" onClick={() => handleGalleryClick("/image/award3.jpeg")} alt="Award ceremony 3" />
-                      <img src="/image/award4.jpeg" onClick={() => handleGalleryClick("/image/award4.jpeg")} alt="Award ceremony 4" />
-                      <img src="/image/award5.jpeg" onClick={() => handleGalleryClick("/image/award5.jpeg")} alt="Award ceremony 5" />
-                      <img src="/image/award6.jpeg" onClick={() => handleGalleryClick("/image/award6.jpeg")} alt="Award ceremony 6" />
-                      <img src="/image/award1.jpeg" onClick={() => handleGalleryClick("/image/award1.jpeg")} alt="Award ceremony 1" />
-                      <img src="/image/award2.jpeg" onClick={() => handleGalleryClick("/image/award2.jpeg")} alt="Award ceremony 2" />
-                      <img src="/image/award3.jpeg" onClick={() => handleGalleryClick("/image/award3.jpeg")} alt="Award ceremony 3" />
-                      <img src="/image/award4.jpeg" onClick={() => handleGalleryClick("/image/award4.jpeg")} alt="Award ceremony 4" />
-                      <img src="/image/award5.jpeg" onClick={() => handleGalleryClick("/image/award5.jpeg")} alt="Award ceremony 5" />
-                      <img src="/image/award6.jpeg" onClick={() => handleGalleryClick("/image/award6.jpeg")} alt="Award ceremony 6" />
+                      <img src="/image/award1.jpeg" />
+                      <img src="/image/award2.jpeg" />
+                      <img src="/image/award3.jpeg" />
+                      <img src="/image/award4.jpeg" />
+                      <img src="/image/award5.jpeg" />
+                      <img src="/image/award6.jpeg" />
+                      <img src="/image/award1.jpeg" />
+                      <img src="/image/award2.jpeg" />
+                      <img src="/image/award3.jpeg" />
+                      <img src="/image/award4.jpeg" />
+                      <img src="/image/award5.jpeg" />
+                      <img src="/image/award6.jpeg" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -325,40 +376,36 @@ const Home = () => {
                 <div className="video-item">
                   <video controls muted loop>
                     <source src="/videos/highlight2.mp4" type="video/mp4" />
-                    Your browser does not support the video tag.
                   </video>
                   <div className="video-overlay">
-                    <b>Match 1 Highlights</b>
+                    <b>Highlights</b>
                   </div>
                 </div>
 
                 <div className="video-item">
                   <video controls muted loop>
                     <source src="/videos/highlight1.mp4" type="video/mp4" />
-                    Your browser does not support the video tag.
                   </video>
                   <div className="video-overlay">
-                    <b>Match 2 Highlights</b>
+                    <b>Highlights</b>
                   </div>
                 </div>
 
                 <div className="video-item">
                   <video controls muted loop>
                     <source src="/videos/highlight3.mp4" type="video/mp4" />
-                    Your browser does not support the video tag.
                   </video>
                   <div className="video-overlay">
-                    <b>Match 3 Highlights</b>
+                    <b>Highlights</b>
                   </div>
                 </div>
 
                 <div className="video-item">
                   <video controls muted loop>
                     <source src="/videos/highlight4.mp4" type="video/mp4" />
-                    Your browser does not support the video tag.
                   </video>
                   <div className="video-overlay">
-                    <b>Match 4 Highlights</b>
+                    <b>Highlights</b>
                   </div>
                 </div>
               </div>
@@ -375,13 +422,13 @@ const Home = () => {
             </button>
             
             <div style={{ marginTop: '2rem', color: 'var(--cricket-cream)', fontSize: '0.9rem' }}>
-              <p><i className="fas fa-phone"></i> Contact for Registration: +91 9896529577</p>
-              <p style={{ marginTop: '5px' }}><i className="fas fa-envelope"></i> Email: cdspremierleague@gmail.com</p>
+              <p><i className="fas fa-phone"></i> Contact for Registration: +91 98765 43210</p>
+              <p style={{ marginTop: '5px' }}><i className="fas fa-envelope"></i> Email: register@cdscricketleague.com</p>
             </div>
           </section>
         </div>
       </div>
-      <Footer />
+      <Footer/>
     </>
   );
 };

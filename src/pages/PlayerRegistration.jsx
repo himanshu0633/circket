@@ -505,7 +505,42 @@ const CricketPlayerRegistration = () => {
       color: '#92400e',
       fontSize: isMobile ? '0.8rem' : '0.9rem',
       lineHeight: '1.5'
-    }
+    },
+
+    modalOverlay: {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  background: 'rgba(0,0,0,0.6)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 9999,
+  padding: '15px'
+},
+
+modalBox: {
+  background: '#fff',
+  borderRadius: isMobile ? '14px' : '18px',
+  width: '100%',
+  maxWidth: '500px',
+  padding: isMobile ? '20px' : '30px',
+  animation: 'slideIn 0.4s ease',
+  boxShadow: '0 25px 60px rgba(0,0,0,0.3)'
+},
+
+closeBtn: {
+  position: 'absolute',
+  top: '12px',
+  right: '16px',
+  background: 'transparent',
+  border: 'none',
+  fontSize: '22px',
+  cursor: 'pointer'
+}
+
   };
 
   const handleChange = (e) => {
@@ -1093,34 +1128,53 @@ const CricketPlayerRegistration = () => {
                       </button>
                     </div>
                   </form>
+             {registrationStatus && (
+               <div style={styles.modalOverlay}>
+                      <div style={{ ...styles.modalBox, position: 'relative' }}>
+      
+                       <button
+                      style={styles.closeBtn}
+                  onClick={() => setRegistrationStatus(null)}
+                 >
+                 ✖
+                   </button>
 
-                  {registrationStatus && (
-                    <div style={{
-                      ...styles.statusMessage,
-                      ...(registrationStatus.type === 'success' ? styles.successStatus : 
-                           registrationStatus.type === 'error' ? styles.errorStatus : 
-                           { background: '#fef3c7', border: '2px solid #f59e0b' })
-                    }}>
-                      <div style={styles.statusIcon}>
-                        {registrationStatus.type === 'success' ? '✅' : '❌'}
-                      </div>
-                      <div style={styles.statusContent}>
-                        <h4 style={styles.statusTitle}>{registrationStatus.title}</h4>
-                        <p style={styles.statusText}>
-                          {registrationStatus.message}
-                          {registrationStatus.playerId && (
-                            <><br/><strong>Player ID:</strong> {registrationStatus.playerId}</>
-                          )}
-                          {registrationStatus.utrNumber && (
-                            <><br/><strong>UTR Number:</strong> {registrationStatus.utrNumber}</>
-                          )}
-                          {registrationStatus.registrationDate && (
-                            <><br/><strong>Date:</strong> {registrationStatus.registrationDate}</>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+      <div style={{
+        ...styles.statusMessage,
+        ...(registrationStatus.type === 'success'
+          ? styles.successStatus
+          : styles.errorStatus)
+      }}>
+        <div style={styles.statusIcon}>
+          {registrationStatus.type === 'success' ? '✅' : '❌'}
+        </div>
+
+        <div style={styles.statusContent}>
+          <h4 style={styles.statusTitle}>
+            {registrationStatus.title}
+          </h4>
+
+          <p style={styles.statusText}>
+            {registrationStatus.message}
+
+            {registrationStatus.playerId && (
+              <><br /><strong>Player ID:</strong> {registrationStatus.playerId}</>
+            )}
+
+            {registrationStatus.utrNumber && (
+              <><br /><strong>UTR Number:</strong> {registrationStatus.utrNumber}</>
+            )}
+
+            {registrationStatus.registrationDate && (
+              <><br /><strong>Date:</strong> {registrationStatus.registrationDate}</>
+            )}
+            </p>
+           </div>
+          </div>
+         </div>
+           </div>
+              )}
+
                 </div>
               </div>
             )}
