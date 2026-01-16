@@ -22,6 +22,7 @@
     color: #333;
     line-height: 1.6;
     overflow-x: hidden;
+    position: relative;
 }
 
 /* Animated Background Pattern */
@@ -46,12 +47,11 @@
     100% { transform: translateY(100px); }
 }
 
-
 /* Hero Section */
 .hero {
     height: 90vh;
     background: linear-gradient(rgba(10, 10, 10, 0.7), rgba(0, 0, 0, 0.567)),
-                url('public/image/Cricket-bg.jpg');
+                url('/image/stadium4.jpeg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -188,6 +188,7 @@
     padding-left: 12px;
     font-weight: 700;
     text-align: center;
+    position: relative;
 }
 
 .section-title::after {
@@ -231,7 +232,7 @@
     align-items: center;
     position: relative;
     z-index: 2;
-    padding: 0px 20px ;
+    padding: 0px 20px;
 }
 
 .stadium-image {
@@ -385,7 +386,6 @@
     white-space: nowrap;
     display: flex;
     justify-content: center;
-
 }
 
 .slot-card:hover .slot-time {
@@ -453,6 +453,7 @@
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
+    cursor: pointer;
 }
 
 .gallery-item:hover img {
@@ -472,109 +473,125 @@
 .gallery-item:hover .gallery-overlay {
     transform: translateY(0);
 }
+
 .auto-gallery {
-  position: relative;
-  overflow: hidden;
+    position: relative;
+    overflow: hidden;
 }
 
 .auto-track {
-  width: 100%;
-  overflow: hidden;
+    width: 100%;
+    overflow: hidden;
 }
-/* 
+
 .auto-scroll {
-  display: flex;
-  width: max-content;
-  animation: scrollX 18s linear infinite;
-} */
+    display: flex;
+    width: max-content;
+    animation: scrollX 18s linear infinite;
+}
 
 .auto-scroll img {
-  width: 100%;        /* 🔥 fixed width mandatory */
-  height: 220px;
-  object-fit: cover;
-  flex-shrink: 0;
+    width: 250px;
+    height: 220px;
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 @keyframes scrollX {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
- 
+
+.auto-gallery:hover .auto-scroll {
+    animation-play-state: paused;
+}
+
 /* Button container to center horizontally */
 .open-gallery-btn-container {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* horizontal center */
-  margin-top: 40px;        /* spacing from gallery */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 40px;
+    margin-bottom: 30px;
 }
 
 /* Button style */
 .open-gallery-btn {
-  background: linear-gradient(45deg, #006400, #FFD700);
-  color: white;
-  padding: 15px 50px;
-  font-size: 1.8rem;
-  font-weight: 700;
-  border: none;
-  border-radius: 35px;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  transition: transform 0.3s, box-shadow 0.3s;
+    background: linear-gradient(45deg, #006400, #FFD700);
+    color: white;
+    padding: 15px 50px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 35px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .open-gallery-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
 
-
-            
-.auto-gallery:hover .auto-scroll {
-  animation-play-state: paused;
-}
-
+/* Video Gallery Section */
 .video-gallery-section {
-  padding: 4rem 2rem;
-  text-align: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #f9f9f9, #e8f4ff);
+    border-radius: 20px;
+    margin: 2.5rem 0;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.video-gallery-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--cricket-blue), var(--cricket-gold), var(--cricket-green));
 }
 
 .video-gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
 }
 
 .video-item {
-  position: relative;
-  overflow: hidden;
-  border-radius: 16px;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    background: #000;
 }
 
 .video-item video {
-  width: 100%;
-  height: 450px; /* fixed height */
-  object-fit: cover; /* crop portrait videos to fit width */
-  border-radius: 16px;
+    width: 100%;
+    height: 450px;
+    object-fit: cover;
+    border-radius: 16px;
+    display: block;
 }
 
 .video-overlay {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  padding: 0.5rem;
-  font-size: 0.85rem;
-  text-align: center;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    text-align: center;
 }
-
-
 
 /* Registration CTA - Wider */
 .registration-cta {
@@ -641,7 +658,6 @@
     box-shadow: 0 12px 30px rgba(255,215,0,0.6);
 }
 
-
 /* Animations */
 @keyframes fadeInUp {
     0% { opacity: 0; transform: translateY(40px); }
@@ -665,6 +681,120 @@
     transform: translateY(0);
 }
 
+/* Image Popup Styles - FIXED */
+.image-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.image-popup-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    animation: popupFadeIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.popup-image {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: block;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.close-popup-btn {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: var(--cricket-red);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 2001;
+}
+
+.close-popup-btn:hover {
+    background: #d32f2f;
+    transform: rotate(90deg);
+}
+
+.popup-close-hint {
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+/* Make gallery images clickable */
+.gallery-grid img {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.gallery-grid img:hover {
+    transform: scale(1.05);
+}
+
+/* Login button styles */
+.login-btn {
+    padding: 10px 24px;
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.login-btn:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.login-btn:active {
+    transform: scale(0.97);
+}
+
 /* Responsive Design */
 @media (max-width: 1100px) {
     .slot-cards {
@@ -674,13 +804,13 @@
     .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    
+    .video-gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-
 @media (max-width: 768px) {
-
-
-    
     .hero {
         margin-top: 1px;
         height: 80vh;
@@ -703,79 +833,89 @@
     .gallery-grid {
         grid-template-columns: 1fr;
     }
-
-    .cta-register-btn {
-        padding: 1rem 2.5rem;
-    font-size: 0.6rem;
-    font-weight: 900;
+    
+    .video-gallery-grid {
+        grid-template-columns: 1fr;
     }
     
-    .footer-content {
-        grid-template-columns: 1fr;
+    .cta-register-btn {
+        padding: 0.9rem 1.8rem;
+        font-size: 1.1rem;
+        font-weight: 900;
+    }
+    
+    .popup-image {
+        max-width: 95%;
+        max-height: 70vh;
+    }
+    
+    .close-popup-btn {
+        top: -55px;
+        right: 5px;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
     }
 }
 
 @media (max-width: 320px) {
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+    }
 
-  .header-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px;
-  }
+    /* LEFT → LOGO */
+    .logo-section {
+        display: flex;
+        align-items: center;
+    }
+    .logo {
+        width: 50px;
+        height: 49px;
+    }
 
-  /* LEFT → LOGO */
-  .logo-section {
-    display: flex;
-    align-items: center;
-  }
-  .logo{
-    width: 50px;
-    height: 49px;
-  }
+    .logo img {
+        width: 55px;
+        height: 49px;
+        object-fit: cover;
+    }
 
-  .logo img {
-    width: 55px;
-    height: 49px;
-    object-fit: cover;
-  }
+    /* Hide logo text on mobile */
+    .logo-section > div:last-child {
+        display: none;
+    }
 
-  /* Hide logo text on mobile */
-  .logo-section > div:last-child {
-    display: none;
-  }
+    /* CENTER → TEXT */
+    .title-section {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        white-space: nowrap;
+    }
 
-  /* CENTER → TEXT */
-  .title-section {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    white-space: nowrap;
-  }
+    .main-title {
+        font-size: 0.7rem;
+        font-weight: 500;
+        line-height: 1.1;
+        margin-right: 18px;
+    }
 
-  .main-title {
-    font-size: 0.7rem;
-    font-weight: 500;
-    line-height: 1.1;
-    margin-right:18px ;
-  }
+    .sub-title {
+        font-size: 0.3rem !important;
+        margin-right: 18px;
+    }
 
-  .sub-title {
-    font-size: 0.3rem !important;
-    margin-right:18px ;
-  }
-
-  /* RIGHT → BUTTON */
-  .login-btn {
-    padding: 9px !important;
-    font-size: 0.1rem;
-    text-align: center;
-    width: 70px;
-    height: 30px;
-
-  }
-
+    /* RIGHT → BUTTON */
+    .login-btn {
+        padding: 9px !important;
+        font-size: 0.1rem;
+        text-align: center;
+        width: 70px;
+        height: 30px;
+    }
 
     .hero h1 {
         font-size: 1.8rem;
@@ -798,34 +938,39 @@
         font-size: 1.1rem;
         white-space: normal;
     }
-}
-
-.login-btn {
-  padding: 10px 24px;
-  background-color: #2563eb; /* blue */
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.login-btn:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-1px);
-}
-
-.login-btn:active {
-  transform: scale(0.97);
+    
+    .popup-close-hint {
+        font-size: 0.7rem;
+        bottom: -35px;
+    }
 }
 
 @media (max-width: 480px) {
-    .login-card-right {
-        padding: 25px 20px;
+    .popup-image {
         max-width: 95%;
-        height: 100%;
-        margin-block: auto;
+        max-height: 60vh;
+        border-radius: 5px;
     }
+    
+    .close-popup-btn {
+        top: -45px;
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Test button for popup (can remove after testing) */
+.test-popup-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--cricket-green);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 999;
+    font-size: 12px;
 }

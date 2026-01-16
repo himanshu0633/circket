@@ -3,7 +3,7 @@ import API from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import "../pages/login.css";
-
+import { Link } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -176,11 +176,13 @@ export default function Login() {
         {/* Right Side - Login Form */}
         <div className="login-card-right">
           <div className="login-logo-container">
+            <Link to="/" className="login-logo-wrapper">
             <div className="login-logo-wrapper">
               <img src={logo} alt="CDS Premier League Logo" className="login-logo-image" />
               <div className="login-logo-glow"></div>
               <div className="login-logo-shine"></div>
             </div>
+            </Link>
           </div>
           
           <div className="login-title-container">

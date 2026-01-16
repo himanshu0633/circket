@@ -1,20 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import { useNavigate } from "react-router-dom";
+import QR from "../assets/qrcode.png";
 
 const CricketPlayerRegistration = () => {
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    dob: '', // New DOB field added
     profileLink: '',
-    role: 'Batsman'
+    role: 'Batsman',
+    paymentMethod: 'qr',
+    utrNumber: ''
   });
   
   const [loading, setLoading] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState(null);
-  const [orderId, setOrderId] = useState(null);
+  const [registrationStatus, setRegistrationStatus] = useState(null);
+  const [paymentInfo, setPaymentInfo] = useState({
+    qrCodeUrl: null,
+    upiId: '',
+    bankDetails: null
+  });
+  const [isMobile, setIsMobile] = useState(false);
 
   const roles = [
     "Batsman",
@@ -24,169 +34,429 @@ const CricketPlayerRegistration = () => {
     "Batsman (WC)"
   ];
 
+  // ✅ styleTag variable को define करें
+  const styleTag = `
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+    }
+    
+    .backButton:hover:not(:disabled) {
+      box-shadow: 0 10px 25px rgba(100, 116, 139, 0.2);
+    }
+    
+    .nextButton:hover:not(:disabled) {
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+    }
+    
+    /* Mobile-specific optimizations */
+    @media (max-width: 768px) {
+      input, select, button {
+        font-size: 16px !important;
+      }
+      
+      .step-line-mobile {
+        display: none !important;
+      }
+    }
+    
+    * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+  `;
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    fetchPaymentInfo();
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
+  const fetchPaymentInfo = async () => {
+    try {
+      const response = await API.get('/player/payment-details');
+      if (response.data.success) {
+        setPaymentInfo({
+          qrCodeUrl: response.data.qrCodeUrl || null,
+          upiId: response.data.upiId || 'example@upi',
+          bankDetails: response.data.bankDetails || null
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch payment info:", error);
+      setPaymentInfo({
+        qrCodeUrl: null,
+        upiId: 'cricket.tournament@upi',
+        bankDetails: {
+          bankName: 'Example Bank',
+          accountNumber: '1234567890',
+          ifsc: 'EXAMPLE123'
+        }
+      });
+    }
+  };
+
+  // ✅ styles object को यहाँ define करें (या component के अंदर कहीं भी)
   const styles = {
     appContainer: {
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       minHeight: '100vh',
-      padding: '20px',
+      padding: isMobile ? '10px' : '20px',
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'center'
+      alignItems: 'flex-start',
+      paddingTop: isMobile ? '20px' : '40px',
+      paddingBottom: isMobile ? '20px' : '40px'
     },
     registrationContainer: {
       background: 'white',
-      borderRadius: '20px',
+      borderRadius: isMobile ? '15px' : '20px',
       boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
       width: '100%',
-      maxWidth: '1200px',
-      overflow: 'hidden'
+      maxWidth: isMobile ? '100%' : '1000px',
+      overflow: 'hidden',
+      margin: isMobile ? '0 10px' : '0'
     },
     headerSection: {
       background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
       color: 'white',
-      padding: '40px',
+      padding: isMobile ? '20px 15px' : '40px',
       textAlign: 'center',
-      position: 'relative'
+      position: 'relative',
+      paddingTop: isMobile ? '60px' : '40px'
     },
     logoContainer: {
       display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '20px',
-      marginBottom: '10px'
+      gap: isMobile ? '10px' : '20px',
+      marginBottom: isMobile ? '5px' : '10px'
     },
     cricketLogo: {
-      fontSize: '48px',
+      fontSize: isMobile ? '36px' : '48px',
       animation: 'bounce 2s infinite'
     },
     dashboardButton: {
       position: 'absolute',
-      left: '30px',
-      top: '30px',
+      left: isMobile ? '15px' : '30px',
+      top: isMobile ? '15px' : '30px',
       background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
       color: 'white',
       border: 'none',
-      padding: '12px 24px',
+      padding: isMobile ? '8px 16px' : '12px 24px',
       borderRadius: '50px',
-      fontSize: '0.95rem',
+      fontSize: isMobile ? '0.85rem' : '0.95rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px',
-      boxShadow: '0 4px 15px rgba(79, 70, 229, 0.3)'
+      gap: '6px',
+      boxShadow: '0 4px 15px rgba(79, 70, 229, 0.3)',
+      whiteSpace: 'nowrap'
     },
     title: {
-      fontSize: '2.5rem',
+      fontSize: isMobile ? '1.5rem' : '2.5rem',
       fontWeight: '700',
-      margin: '0'
+      margin: '0',
+      textAlign: 'center'
     },
     subtitle: {
-      fontSize: '1.1rem',
+      fontSize: isMobile ? '0.9rem' : '1.1rem',
       opacity: '0.9',
-      marginTop: '10px'
+      marginTop: isMobile ? '8px' : '10px',
+      padding: isMobile ? '0 10px' : '0'
+    },
+    stepIndicator: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: isMobile ? '20px' : '40px',
+      padding: isMobile ? '15px 20px' : '20px 40px',
+      background: '#f1f5f9',
+      borderBottom: '1px solid #e2e8f0',
+      flexWrap: 'wrap'
+    },
+    step: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: isMobile ? '6px' : '10px',
+      fontSize: isMobile ? '0.85rem' : '1rem',
+      fontWeight: '600',
+      color: '#64748b',
+      position: 'relative',
+      minWidth: isMobile ? 'auto' : '150px'
+    },
+    stepActive: {
+      color: '#4f46e5'
+    },
+    stepCompleted: {
+      color: '#10b981'
+    },
+    stepNumber: {
+      width: isMobile ? '28px' : '36px',
+      height: isMobile ? '28px' : '36px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#e2e8f0',
+      fontWeight: '700',
+      fontSize: isMobile ? '0.85rem' : '1rem',
+      flexShrink: 0
+    },
+    stepNumberActive: {
+      background: '#4f46e5',
+      color: 'white'
+    },
+    stepNumberCompleted: {
+      background: '#10b981',
+      color: 'white'
+    },
+    stepLine: {
+      width: isMobile ? '20px' : '40px',
+      height: '3px',
+      background: '#e2e8f0',
+      position: 'absolute',
+      right: isMobile ? '-23px' : '-45px',
+      display: isMobile ? 'block' : 'block'
+    },
+    stepLineActive: {
+      background: '#4f46e5'
+    },
+    stepLineCompleted: {
+      background: '#10b981'
     },
     contentWrapper: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '40px',
-      padding: '40px'
+      padding: isMobile ? '20px 15px' : '40px'
     },
     formSection: {
       background: '#f8fafc',
-      padding: '30px',
-      borderRadius: '15px',
+      padding: isMobile ? '20px' : '30px',
+      borderRadius: isMobile ? '12px' : '15px',
       border: '1px solid #e2e8f0'
     },
     registrationForm: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '24px'
+      gap: isMobile ? '15px' : '20px'
     },
     formGroup: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px'
+      gap: isMobile ? '6px' : '8px'
     },
     label: {
       fontWeight: '600',
       color: '#334155',
-      fontSize: '0.95rem'
+      fontSize: isMobile ? '0.85rem' : '0.95rem'
+    },
+    required: {
+      color: '#ef4444',
+      marginLeft: '4px'
     },
     input: {
-      padding: '14px 16px',
+      padding: isMobile ? '12px 14px' : '14px 16px',
       border: '2px solid #e2e8f0',
-      borderRadius: '10px',
-      fontSize: '1rem',
-      transition: 'all 0.3s ease',
-      background: 'white'
-    },
-    select: {
-      padding: '14px 16px',
-      border: '2px solid #e2e8f0',
-      borderRadius: '10px',
-      fontSize: '1rem',
+      borderRadius: isMobile ? '8px' : '10px',
+      fontSize: isMobile ? '0.95rem' : '1rem',
       transition: 'all 0.3s ease',
       background: 'white',
-      cursor: 'pointer'
+      width: '100%'
     },
-    focused: {
-      outline: 'none',
-      borderColor: '#4f46e5',
-      boxShadow: '0 0 0 3px rgba(79, 70, 229, 0.1)'
+    select: {
+      padding: isMobile ? '12px 14px' : '14px 16px',
+      border: '2px solid #e2e8f0',
+      borderRadius: isMobile ? '8px' : '10px',
+      fontSize: isMobile ? '0.95rem' : '1rem',
+      transition: 'all 0.3s ease',
+      background: 'white',
+      cursor: 'pointer',
+      width: '100%'
     },
-    paymentInfo: {
-      background: '#f1f5f9',
-      padding: '20px',
+    paymentSection: {
+      textAlign: 'center',
+      padding: isMobile ? '0' : '20px'
+    },
+    qrCodeContainer: {
+      maxWidth: isMobile ? '100%' : '400px',
+      margin: '0 auto 30px',
+      padding: isMobile ? '15px' : '20px',
+      background: 'white',
+      borderRadius: isMobile ? '12px' : '15px',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+      border: '2px solid #e2e8f0'
+    },
+    qrImage: {
+      width: isMobile ? '200px' : '250px',
+      height: isMobile ? '200px' : '250px',
+      margin: '0 auto 20px',
+      display: 'block',
+      border: '1px solid #e2e8f0',
       borderRadius: '10px',
-      margin: '10px 0'
+      padding: '10px',
+      background: 'white',
+      maxWidth: '100%'
     },
-    paymentAmount: {
+    qrPlaceholder: {
+      width: isMobile ? '200px' : '250px',
+      height: isMobile ? '200px' : '250px',
+      margin: '0 auto 20px',
+      background: 'linear-gradient(45deg, #f3f4f6 25%, #e5e7eb 25%, #e5e7eb 50%, #f3f4f6 50%, #f3f4f6 75%, #e5e7eb 75%, #e5e7eb)',
+      backgroundSize: '20px 20px',
       display: 'flex',
-      justifyContent: 'space-between',
+      flexDirection: 'column',
       alignItems: 'center',
-      fontSize: '1.2rem',
+      justifyContent: 'center',
+      fontSize: isMobile ? '1rem' : '1.2rem',
+      color: '#9ca3af',
+      border: '2px dashed #d1d5db',
+      borderRadius: '10px',
+      maxWidth: '100%'
+    },
+    paymentInstructions: {
+      background: '#f0f9ff',
+      padding: isMobile ? '15px' : '20px',
+      borderRadius: isMobile ? '8px' : '10px',
+      border: '2px solid #bae6fd',
+      marginBottom: '30px',
+      textAlign: 'left'
+    },
+    instructionTitle: {
+      color: '#0369a1',
+      marginBottom: '15px',
+      fontSize: isMobile ? '1rem' : '1.2rem'
+    },
+    instructionList: {
+      listStyle: 'none',
+      paddingLeft: '0',
+      margin: '0'
+    },
+    instructionItem: {
+      padding: '6px 0',
+      paddingLeft: '25px',
+      position: 'relative',
+      textAlign: 'left',
+      fontSize: isMobile ? '0.85rem' : '1rem',
+      '&:before': {
+        content: '"✓"',
+        position: 'absolute',
+        left: '0',
+        color: '#10b981',
+        fontWeight: 'bold'
+      }
+    },
+    amountBadge: {
+      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      color: 'white',
+      padding: isMobile ? '8px 16px' : '8px 20px',
+      borderRadius: '20px',
+      fontSize: isMobile ? '1.1rem' : '1.3rem',
+      fontWeight: 'bold',
+      display: 'inline-block',
+      marginBottom: '20px',
+      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+      width: isMobile ? '90%' : 'auto'
+    },
+    buttonContainer: {
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between',
+      marginTop: isMobile ? '30px' : '40px',
+      gap: isMobile ? '15px' : '20px'
+    },
+    navButton: {
+      padding: isMobile ? '12px 20px' : '14px 30px',
+      borderRadius: isMobile ? '8px' : '10px',
+      fontSize: isMobile ? '0.9rem' : '1rem',
       fontWeight: '600',
-      marginBottom: '10px'
+      cursor: 'pointer',
+      border: 'none',
+      transition: 'all 0.3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+      minWidth: isMobile ? '100%' : '150px',
+      width: isMobile ? '100%' : 'auto'
     },
-    amount: {
-      color: '#059669',
-      fontSize: '1.5rem'
+    backButton: {
+      background: '#f1f5f9',
+      color: '#475569',
+      border: '2px solid #e2e8f0'
     },
-    paymentNote: {
-      color: '#64748b',
-      fontSize: '0.9rem',
-      lineHeight: '1.5'
+    nextButton: {
+      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+      color: 'white'
     },
     submitBtn: {
-      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+      background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
       color: 'white',
       border: 'none',
-      padding: '18px',
-      borderRadius: '12px',
-      fontSize: '1.1rem',
+      padding: isMobile ? '14px 30px' : '16px 40px',
+      borderRadius: isMobile ? '8px' : '10px',
+      fontSize: isMobile ? '1rem' : '1.1rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '10px'
+      gap: '8px',
+      marginTop: isMobile ? '20px' : '30px',
+      width: isMobile ? '100%' : 'auto'
     },
     submitBtnDisabled: {
       opacity: '0.6',
       cursor: 'not-allowed'
     },
-    paymentStatus: {
-      marginTop: '30px',
-      padding: '20px',
-      borderRadius: '12px',
+    statusMessage: {
+      marginTop: '20px',
+      padding: isMobile ? '15px' : '20px',
+      borderRadius: isMobile ? '10px' : '12px',
       display: 'flex',
-      alignItems: 'center',
-      gap: '15px',
-      animation: 'slideIn 0.5s ease'
+      alignItems: 'flex-start',
+      gap: '12px',
+      animation: 'slideIn 0.5s ease',
+      flexDirection: isMobile ? 'column' : 'row'
     },
     successStatus: {
       background: '#d1fae5',
@@ -197,73 +467,44 @@ const CricketPlayerRegistration = () => {
       border: '2px solid #ef4444'
     },
     statusIcon: {
-      fontSize: '24px'
+      fontSize: isMobile ? '20px' : '24px',
+      flexShrink: 0
     },
-    statusMessage: {
+    statusContent: {
       flex: '1'
     },
     statusTitle: {
       marginBottom: '5px',
-      color: '#1f2937'
+      color: '#1f2937',
+      fontWeight: '600',
+      fontSize: isMobile ? '1rem' : '1.1rem'
     },
     statusText: {
       color: '#4b5563',
-      fontSize: '0.95rem'
+      fontSize: isMobile ? '0.85rem' : '0.95rem',
+      lineHeight: '1.5'
     },
-    infoSection: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '25px'
-    },
-    infoCard: {
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-      color: 'white',
-      padding: '30px',
-      borderRadius: '15px'
+    infoBox: {
+      background: '#fef3c7',
+      border: '2px solid #f59e0b',
+      borderRadius: isMobile ? '8px' : '10px',
+      padding: isMobile ? '12px' : '15px',
+      marginTop: '20px',
+      textAlign: 'left'
     },
     infoTitle: {
-      color: '#60a5fa',
-      marginBottom: '20px',
-      fontSize: '1.5rem'
+      color: '#d97706',
+      fontWeight: '600',
+      marginBottom: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      fontSize: isMobile ? '0.9rem' : '1rem'
     },
-    infoList: {
-      listStyle: 'none',
-      paddingLeft: '0'
-    },
-    infoListItem: {
-      padding: '10px 0',
-      paddingLeft: '30px',
-      position: 'relative',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-      '&:last-child': {
-        borderBottom: 'none'
-      },
-      '&:before': {
-        content: '"✓"',
-        position: 'absolute',
-        left: '0',
-        color: '#10b981',
-        fontWeight: 'bold'
-      }
-    },
-    contactInfo: {
-      background: '#f0f9ff',
-      padding: '25px',
-      borderRadius: '15px',
-      border: '2px solid #bae6fd'
-    },
-    contactTitle: {
-      color: '#0369a1',
-      marginBottom: '15px',
-      fontSize: '1.3rem'
-    },
-    contactText: {
-      color: '#0c4a6e',
-      marginBottom: '10px',
-      fontWeight: '500',
-      '&:last-child': {
-        marginBottom: '0'
-      }
+    infoText: {
+      color: '#92400e',
+      fontSize: isMobile ? '0.8rem' : '0.9rem',
+      lineHeight: '1.5'
     }
   };
 
@@ -275,29 +516,60 @@ const CricketPlayerRegistration = () => {
     }));
   };
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        return resolve(true);
-      }
-      
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      
-      script.onload = () => {
-        resolve(true);
-      };
-      
-      script.onerror = () => {
-        resolve(false);
-      };
-      
-      document.body.appendChild(script);
-    });
+  // Validate CricHeroes profile link format
+  const validateCricHeroesLink = (link) => {
+    // Check if link contains cricheroes.com
+    if (!link.includes('cricheroes.com')) {
+      throw new Error('Profile link must be a valid CricHeroes URL');
+    }
+    
+    // Check for specific pattern: https://cricheroes.com/player-profile/{numbers}/{name}
+    const pattern = /^https:\/\/cricheroes\.com\/player-profile\/\d+\/[A-Za-z0-9_-]+$/;
+    if (!pattern.test(link)) {
+      throw new Error('CricHeroes profile link must be in format: https://cricheroes.com/player-profile/1572929/Pepsi');
+    }
+    
+    return true;
   };
 
-  const validateForm = () => {
-    const { name, email, phone, profileLink } = formData;
+  // Validate date of birth
+  const validateDOB = (dob) => {
+    if (!dob) {
+      throw new Error('Date of Birth is required');
+    }
+    
+    const dobDate = new Date(dob);
+    const today = new Date();
+    
+    // Check if date is valid
+    if (isNaN(dobDate.getTime())) {
+      throw new Error('Please enter a valid date of birth');
+    }
+    
+    // Check if date is not in future
+    if (dobDate > today) {
+      throw new Error('Date of Birth cannot be in the future');
+    }
+    
+    // Check minimum age (e.g., 10 years)
+    const minAgeDate = new Date();
+    minAgeDate.setFullYear(today.getFullYear() - 10);
+    if (dobDate > minAgeDate) {
+      throw new Error('Player must be at least 10 years old');
+    }
+    
+    // Check maximum age (e.g., 60 years)
+    const maxAgeDate = new Date();
+    maxAgeDate.setFullYear(today.getFullYear() - 60);
+    if (dobDate < maxAgeDate) {
+      throw new Error('Player age cannot exceed 60 years');
+    }
+    
+    return true;
+  };
+
+  const validateStep1 = () => {
+    const { name, email, phone, dob, profileLink } = formData;
     
     if (!name.trim()) {
       throw new Error('Full Name is required');
@@ -316,252 +588,149 @@ const CricketPlayerRegistration = () => {
       throw new Error('Phone number is required');
     }
     
-    const phoneRegex = /^[0-9]{10}$/;
+    const phoneRegex = /^[6-9]\d{9}$/;
     const cleanedPhone = phone.replace(/\D/g, '');
     if (!phoneRegex.test(cleanedPhone)) {
-      throw new Error('Please enter a valid 10-digit phone number');
+      throw new Error('Please enter a valid 10-digit Indian phone number');
     }
     
+    // Validate Date of Birth
+    validateDOB(dob);
+    
+    // Validate CricHeroes Profile Link
     if (!profileLink.trim()) {
-      throw new Error('Profile link is required');
+      throw new Error('CricHeroes profile link is required');
+    }
+    
+    validateCricHeroesLink(profileLink.trim());
+    
+    return true;
+  };
+
+  const validateStep2 = () => {
+    const { utrNumber } = formData;
+    
+    if (!utrNumber.trim()) {
+      throw new Error('UTR number is required');
+    }
+    
+    if (utrNumber.trim().length < 8) {
+      throw new Error('Please enter a valid UTR number (minimum 8 characters)');
     }
     
     return true;
+  };
+
+  const handleNextStep = () => {
+    try {
+      validateStep1();
+      setCurrentStep(2);
+      setRegistrationStatus(null);
+    } catch (error) {
+      setRegistrationStatus({
+        type: 'error',
+    
+        message: error.message
+      });
+      
+      if (isMobile) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(1);
+    setRegistrationStatus(null);
+    
+    if (isMobile) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     setLoading(true);
-    setPaymentStatus(null);
+    setRegistrationStatus(null);
 
     try {
-      validateForm();
+      validateStep2();
 
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error('Failed to load payment gateway. Please check your internet connection.');
-      }
-
-      const orderResponse = await API.post('/player/create-order', {
-        amount: 50000,
-        currency: 'INR'
-      });
-
-      if (!orderResponse.data.success) {
-        throw new Error(orderResponse.data.message || 'Failed to create payment order');
-      }
-
-      const orderData = orderResponse.data.order;
-      setOrderId(orderData.id);
-
-      const razorpayKey = import.meta.env?.VITE_RAZORPAY_KEY_ID || 'rzp_test_RpQ1JwSJEy6yAw';
-
-      const options = {
-        key: razorpayKey,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'Cricket Player Registration',
-        description: `Registration for ${formData.role}`,
-        order_id: orderData.id,
-        handler: async (response) => {
-          await verifyPaymentAndSavePlayer(response);
-        },
-        prefill: {
-          name: formData.name,
-          email: formData.email,
-          contact: formData.phone
-        },
-        theme: {
-          color: '#4f46e5'
-        },
-        modal: {
-          ondismiss: () => {
-            setLoading(false);
-            setPaymentStatus({
-              type: 'info',
-              message: 'Payment was cancelled. You can try again.'
-            });
-          }
-        }
+      const playerData = {
+        ...formData,
+        phone: formData.phone.replace(/\D/g, ''),
+        registrationDate: new Date().toISOString(),
+        paymentStatus: 'pending',
+        verificationStatus: 'pending'
       };
 
-      if (!window.Razorpay) {
-        throw new Error('Payment gateway initialization failed. Please refresh the page and try again.');
-      }
+      const response = await API.post('/player/register', playerData);
       
-      const rzp = new window.Razorpay(options);
-      
-      rzp.on('payment.failed', function (response) {
-        setPaymentStatus({
-          type: 'error',
-          message: `Payment failed: ${response.error.description || 'Unknown error'}`
-        });
-        setLoading(false);
-      });
-      
-      rzp.open();
-
-    } catch (error) {
-      let userMessage = error.message;
-      
-      if (error.message.includes('Network Error')) {
-        userMessage = 'Network error. Please check your internet connection.';
-      } else if (error.message.includes('timeout')) {
-        userMessage = 'Request timeout. Please try again.';
-      } else if (error.message.includes('razorpay')) {
-        userMessage = 'Payment gateway error. Please try again or contact support.';
-      }
-      
-      setPaymentStatus({
-        type: 'error',
-        message: userMessage
-      });
-      setLoading(false);
-    }
-  };
-
-  const verifyPaymentAndSavePlayer = async (razorpayResponse) => {
-    try {
-      const verificationPayload = {
-        razorpay_order_id: razorpayResponse.razorpay_order_id,
-        razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-        razorpay_signature: razorpayResponse.razorpay_signature
-      };
-      
-      const verificationResponse = await API.post('/player/verify-payment', verificationPayload);
-      
-      if (!verificationResponse.data.success) {
-        throw new Error(verificationResponse.data.message || 'Payment verification failed');
-      }
-
-      const playerPayload = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        profileLink: formData.profileLink,
-        role: formData.role,
-        razorpay_order_id: razorpayResponse.razorpay_order_id,
-        razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-        razorpay_signature: razorpayResponse.razorpay_signature
-      };
-      
-      const playerResponse = await API.post('/player/save-player', playerPayload);
-      
-      if (playerResponse.data.success) {
-        const playerId = playerResponse.data.playerId || 'N/A';
-        const successMessage = `🎉 Registration Successful! Payment verified and profile created. Your player ID: ${playerId}`;
-        
-        setPaymentStatus({
+      if (response.data.success) {
+        setRegistrationStatus({
           type: 'success',
-          message: successMessage
+          title: 'Registration Submitted Successfully!',
+          message: 'Your registration has been submitted for verification.',
+          playerId: response.data.playerId || 'REG-' + Date.now(),
+          utrNumber: formData.utrNumber,
+          registrationDate: new Date().toLocaleDateString()
         });
         
+        // Reset form
         setFormData({
           name: '',
           email: '',
           phone: '',
+          dob: '',
           profileLink: '',
-          role: 'Batsman'
+          role: 'Batsman',
+          paymentMethod: 'qr',
+          utrNumber: ''
         });
         
-        setOrderId(null);
+        // Go back to step 1 after successful submission
+        setTimeout(() => {
+          setCurrentStep(1);
+          if (isMobile) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 5000);
         
       } else {
-        throw new Error(playerResponse.data.message || 'Profile creation failed');
+        throw new Error(response.data.message || 'Registration failed. Please try again.');
       }
 
     } catch (error) {
-      setPaymentStatus({
+      let userMessage = error.message;
+      
+      if (error.response?.data?.message) {
+        userMessage = error.response.data.message;
+      } else if (error.message.includes('Network Error')) {
+        userMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message.includes('timeout')) {
+        userMessage = 'Request timeout. Please try again.';
+      }
+      
+      setRegistrationStatus({
         type: 'error',
-        message: error.message || 'Registration failed. Please contact support with your payment ID.'
+        title: 'Registration Failed',
+        message: userMessage
       });
+      
+      if (isMobile) {
+        setTimeout(() => {
+          const statusElement = document.querySelector('[style*="statusMessage"]');
+          if (statusElement) {
+            statusElement.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
       
     } finally {
       setLoading(false);
     }
   };
-
-  const styleTag = `
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    input:focus, select:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-    
-    .dashboard-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
-    }
-    
-    @media (max-width: 992px) {
-      .content-wrapper {
-        grid-template-columns: 1fr !important;
-        gap: 30px !important;
-      }
-      
-      .header-section {
-        padding: 30px 20px !important;
-      }
-      
-      h1 {
-        font-size: 2rem !important;
-      }
-      
-      .dashboard-btn {
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
-        margin-bottom: 20px !important;
-        align-self: center !important;
-      }
-      
-      .logo-container {
-        flex-direction: column !important;
-      }
-    }
-    
-    @media (max-width: 576px) {
-      body {
-        padding: 10px !important;
-      }
-      
-      .content-wrapper {
-        padding: 20px !important;
-      }
-      
-      .form-section, .info-card, .contact-info {
-        padding: 20px !important;
-      }
-      
-      .logo-container {
-        flex-direction: column !important;
-        text-align: center !important;
-        gap: 10px !important;
-      }
-      
-      .dashboard-btn {
-        padding: 10px 20px !important;
-        font-size: 0.9rem !important;
-      }
-    }
-  `;
 
   return (
     <>
@@ -570,11 +739,10 @@ const CricketPlayerRegistration = () => {
         <div style={styles.registrationContainer}>
           
           <div style={styles.headerSection}>
-            {/* Dashboard Button - Now positioned at top-left */}
             <button 
-              className="dashboard-btn"
               style={styles.dashboardButton}
               onClick={() => navigate("/")}
+              aria-label="Go back to dashboard"
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
                 e.currentTarget.style.boxShadow = '0 6px 20px rgba(79, 70, 229, 0.4)';
@@ -590,204 +758,372 @@ const CricketPlayerRegistration = () => {
             
             <div style={styles.logoContainer}>
               <div style={styles.cricketLogo}>🏏</div>
-              <h1 style={styles.title}>Cricket Player Registration</h1>
+              <h1 style={styles.title}>CDS Champions Trophy</h1>
             </div>
-            <p style={styles.subtitle}>Complete payment first, then profile will be created</p>
+            <p style={styles.subtitle}>Complete registration in 2 simple steps</p>
+          </div>
+
+          <div style={styles.stepIndicator}>
+            <div style={{
+              ...styles.step,
+              ...(currentStep === 1 ? styles.stepActive : currentStep === 2 ? styles.stepCompleted : {})
+            }}>
+              <div style={{
+                ...styles.stepNumber,
+                ...(currentStep === 1 ? styles.stepNumberActive : currentStep === 2 ? styles.stepNumberCompleted : {})
+              }}>
+                1
+              </div>
+              <span>{isMobile ? 'Details' : 'Player Details'}</span>
+              <div style={{
+                ...styles.stepLine,
+                ...(currentStep === 2 ? styles.stepLineCompleted : {}),
+                display: isMobile ? 'none' : 'block'
+              }}></div>
+            </div>
+            
+            <div style={{
+              ...styles.step,
+              ...(currentStep === 2 ? styles.stepActive : {})
+            }}>
+              <div style={{
+                ...styles.stepNumber,
+                ...(currentStep === 2 ? styles.stepNumberActive : {})
+              }}>
+                2
+              </div>
+              <span>{isMobile ? 'Payment' : 'Payment & UTR'}</span>
+            </div>
           </div>
 
           <div style={styles.contentWrapper}>
-            <div style={styles.formSection}>
-              <form onSubmit={handleSubmit} style={styles.registrationForm}>
-                <div style={styles.formGroup}>
-                  <label htmlFor="name" style={styles.label}>Full Name *</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                    required
-                    style={styles.input}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label htmlFor="email" style={styles.label}>Email Address *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Enter your email"
-                    required
-                    style={styles.input}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label htmlFor="phone" style={styles.label}>Phone Number *</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="Enter 10-digit phone number"
-                    required
-                    style={styles.input}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label htmlFor="profileLink" style={styles.label}>Profile Link *</label>
-                  <input
-                    type="url"
-                    id="profileLink"
-                    name="profileLink"
-                    value={formData.profileLink}
-                    onChange={handleChange}
-                    placeholder="Enter your cricket profile/stats link"
-                    required
-                    style={styles.input}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label htmlFor="role" style={styles.label}>Playing Role *</label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    required
-                    style={styles.select}
-                    disabled={loading}
-                  >
-                    {roles.map((role) => (
-                      <option key={role} value={role}>{role}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={styles.paymentInfo}>
-                  <div style={styles.paymentAmount}>
-                    <span>Registration Fee:</span>
-                    <span style={styles.amount}>₹500</span>
+            {currentStep === 1 ? (
+              <div style={styles.formSection}>
+                <form style={styles.registrationForm}>
+                  <div style={styles.formGroup}>
+                    <label htmlFor="name" style={styles.label}>
+                      Full Name <span style={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Enter your full name"
+                      required
+                      style={styles.input}
+                      aria-required="true"
+                    />
                   </div>
-                  <p style={styles.paymentNote}>
-                    <strong>Important:</strong> First complete payment, then your profile will be automatically created. No payment = No registration.
-                  </p>
-                  {orderId && (
-                    <p style={{...styles.paymentNote, color: '#4f46e5', fontWeight: 'bold'}}>
-                      Order ID: {orderId}
-                    </p>
+
+                  <div style={styles.formGroup}>
+                    <label htmlFor="email" style={styles.label}>
+                      Email Address <span style={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email"
+                      required
+                      style={styles.input}
+                      aria-required="true"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label htmlFor="phone" style={styles.label}>
+                      Phone Number <span style={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Enter 10-digit phone number"
+                      required
+                      inputMode="numeric"
+                      maxLength={10}
+                      pattern="[6-9][0-9]{9}"
+                      style={styles.input}
+                      aria-required="true"
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label htmlFor="dob" style={styles.label}>
+                      Date of Birth <span style={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="dob"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      required
+                      style={styles.input}
+                      aria-required="true"
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                    <small style={{ color: '#64748b', fontSize: isMobile ? '0.8rem' : '0.85rem' }}>
+                      Player must be between 10 and 60 years old
+                    </small>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label htmlFor="profileLink" style={styles.label}>
+                      CricHeroes Profile Link <span style={styles.required}>*</span>
+                    </label>
+                    <input
+                      type="url"
+                      id="profileLink"
+                      name="profileLink"
+                      value={formData.profileLink}
+                      onChange={handleChange}
+                      placeholder="https://cricheroes.com/player-profile/000000000/xyz"
+                      required
+                      style={styles.input}
+                      aria-required="true"
+                    />
+                    <small style={{ color: '#64748b', fontSize: isMobile ? '0.8rem' : '0.85rem' }}>
+                      Format: https://cricheroes.com/player-profile/0000000/Abcde
+                    </small>
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label htmlFor="role" style={styles.label}>
+                      Playing Role <span style={styles.required}>*</span>
+                    </label>
+                    <select
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      required
+                      style={styles.select}
+                      aria-required="true"
+                    >
+                      {roles.map((role) => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {registrationStatus && registrationStatus.type === 'error' && (
+                    <div style={{
+                      ...styles.statusMessage,
+                      ...styles.errorStatus
+                    }}>
+                      <div style={styles.statusIcon}>❌</div>
+                      <div style={styles.statusContent}>
+                        <h4 style={styles.statusTitle}>{registrationStatus.title}</h4>
+                        <p style={styles.statusText}>{registrationStatus.message}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={styles.buttonContainer}>
+                    <button 
+                      type="button"
+                      style={{...styles.navButton, ...styles.backButton}}
+                      onClick={() => navigate("/")}
+                      aria-label="Cancel registration"
+                    >
+                      <span>←</span>
+                      <span>Cancel</span>
+                    </button>
+                    
+                    <button 
+                      type="button"
+                      style={{...styles.navButton, ...styles.nextButton}}
+                      onClick={handleNextStep}
+                      aria-label="Proceed to payment step"
+                    >
+                      <span>{isMobile ? 'Next' : 'Next: Payment'}</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div style={styles.formSection}>
+                <div style={styles.paymentSection}>
+                  <div style={styles.amountBadge}>
+                    Registration Fee: ₹500
+                  </div>
+                  
+                  <div style={styles.qrCodeContainer}>
+                    <h3 style={{color: '#1e293b', marginBottom: '20px', fontSize: isMobile ? '1.1rem' : '1.2rem'}}>
+                      Scan QR Code to Pay
+                    </h3>
+                    
+                    {/* QR Code Image */}
+                    {paymentInfo.qrCodeUrl ? (
+                      <img 
+                        src={paymentInfo.qrCodeUrl} 
+                        alt="Payment QR Code"
+                        style={styles.qrImage}
+                        onError={(e) => {
+                          console.error("Failed to load QR from URL");
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <img 
+                          src={QR} 
+                          alt="Payment QR Code"
+                          style={styles.qrImage}
+                          onError={(e) => {
+                            console.error("Failed to load local QR image");
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </>
+                    )}
+                    
+                    {/* Fallback QR Placeholder */}
+                    {(!paymentInfo.qrCodeUrl && (!QR || QR.includes('undefined'))) && (
+                      <div style={styles.qrPlaceholder}>
+                        <div>QR Code</div>
+                        <div style={{fontSize: '2rem', marginTop: '10px'}}>₹500</div>
+                      </div>
+                    )}
+                    
+                    <div style={styles.paymentInstructions}>
+                      <h4 style={styles.instructionTitle}>How to Pay:</h4>
+                      <ul style={styles.instructionList}>
+                        <li style={styles.instructionItem}>
+                          Open any UPI app (Google Pay, PhonePe, Paytm, etc.)
+                        </li>
+                        <li style={styles.instructionItem}>
+                          Scan the QR code above
+                        </li>
+                        <li style={styles.instructionItem}>
+                          Enter amount: ₹500
+                        </li>
+                        <li style={styles.instructionItem}>
+                          Complete the payment
+                        </li>
+                        <li style={styles.instructionItem}>
+                          Save the UTR/Reference number
+                        </li>
+                      </ul>
+                    </div>
+                    
+                  </div>
+
+                  <form onSubmit={handleSubmit} style={styles.registrationForm}>
+                    <div style={styles.formGroup}>
+                      <label htmlFor="utrNumber" style={styles.label}>
+                        Enter UTR/Reference Number <span style={styles.required}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="utrNumber"
+                        name="utrNumber"
+                        value={formData.utrNumber}
+                        onChange={handleChange}
+                        placeholder="Enter UTR number from your payment"
+                        inputMode="numeric"
+                        maxLength={16}
+                        required
+                        style={styles.input}
+                        disabled={loading}
+                        aria-required="true"
+                      />
+                      <small style={{ color: '#64748b', fontSize: isMobile ? '0.8rem' : '0.85rem' }}>
+                        Enter the UTR/Reference number you received after payment
+                      </small>
+                    </div>
+
+                    <div style={styles.infoBox}>
+                      <div style={styles.infoTitle}>
+                        <span>ℹ️</span>
+                        <span>Important Information</span>
+                      </div>
+                      <p style={styles.infoText}>
+                        • Keep your UTR number safe for future reference.
+                      </p>
+                    </div>
+
+                    <div style={styles.buttonContainer}>
+                      <button 
+                        type="button"
+                        style={{...styles.navButton, ...styles.backButton}}
+                        onClick={handlePrevStep}
+                        disabled={loading}
+                        aria-label="Go back to player details"
+                      >
+                        <span>←</span>
+                        <span>Back</span>
+                      </button>
+                      
+                      <button 
+                        type="submit" 
+                        style={{
+                          ...styles.submitBtn,
+                          ...(loading ? styles.submitBtnDisabled : {})
+                        }}
+                        disabled={loading}
+                        aria-label="Complete registration"
+                      >
+                        {loading ? (
+                          <>
+                            <span>Processing...</span>
+                            <span style={{
+                              width: '20px',
+                              height: '20px',
+                              border: '2px solid rgba(255,255,255,0.3)',
+                              borderRadius: '50%',
+                              borderTopColor: '#fff',
+                              animation: 'spin 1s linear infinite'
+                            }}></span>
+                          </>
+                        ) : (
+                          <>
+                            <span>{isMobile ? 'Submit' : 'Complete Registration'}</span>
+                            <span style={{fontSize: '18px'}}>✅</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  {registrationStatus && (
+                    <div style={{
+                      ...styles.statusMessage,
+                      ...(registrationStatus.type === 'success' ? styles.successStatus : 
+                           registrationStatus.type === 'error' ? styles.errorStatus : 
+                           { background: '#fef3c7', border: '2px solid #f59e0b' })
+                    }}>
+                      <div style={styles.statusIcon}>
+                        {registrationStatus.type === 'success' ? '✅' : '❌'}
+                      </div>
+                      <div style={styles.statusContent}>
+                        <h4 style={styles.statusTitle}>{registrationStatus.title}</h4>
+                        <p style={styles.statusText}>
+                          {registrationStatus.message}
+                          {registrationStatus.playerId && (
+                            <><br/><strong>Player ID:</strong> {registrationStatus.playerId}</>
+                          )}
+                          {registrationStatus.utrNumber && (
+                            <><br/><strong>UTR Number:</strong> {registrationStatus.utrNumber}</>
+                          )}
+                          {registrationStatus.registrationDate && (
+                            <><br/><strong>Date:</strong> {registrationStatus.registrationDate}</>
+                          )}
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
-
-                <button 
-                  type="submit" 
-                  style={{
-                    ...styles.submitBtn,
-                    ...(loading ? styles.submitBtnDisabled : {}),
-                    cursor: loading ? 'not-allowed' : 'pointer'
-                  }}
-                  disabled={loading}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 10px 25px rgba(79, 70, 229, 0.4)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <span>Opening Payment Gateway...</span>
-                      <span style={{fontSize: '18px'}}>⏳</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Proceed to Payment (₹500)</span>
-                      <span style={{fontSize: '18px'}}>💰</span>
-                    </>
-                  )}
-                </button>
-              </form>
-
-              {paymentStatus && (
-                <div style={{
-                  ...styles.paymentStatus,
-                  ...(paymentStatus.type === 'success' ? styles.successStatus : 
-                       paymentStatus.type === 'error' ? styles.errorStatus : 
-                       { background: '#e0f2fe', border: '2px solid #0ea5e9' })
-                }}>
-                  <div style={styles.statusIcon}>
-                    {paymentStatus.type === 'success' ? '✅' : 
-                     paymentStatus.type === 'error' ? '❌' : 'ℹ️'}
-                  </div>
-                  <div style={styles.statusMessage}>
-                    <h4 style={styles.statusTitle}>
-                      {paymentStatus.type === 'success' ? 'Success!' : 
-                       paymentStatus.type === 'error' ? 'Error' : 'Notice'}
-                    </h4>
-                    <p style={styles.statusText}>{paymentStatus.message}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={styles.infoSection}>
-              <div style={styles.infoCard}>
-                <h3 style={styles.infoTitle}>Registration Process</h3>
-                <ul style={styles.infoList}>
-                  <li style={styles.infoListItem}>
-                    <strong>Step 1:</strong> Fill all details carefully
-                  </li>
-                  <li style={styles.infoListItem}>
-                    <strong>Step 2:</strong> Click "Proceed to Payment"
-                  </li>
-                  <li style={styles.infoListItem}>
-                    <strong>Step 3:</strong> Complete ₹500 payment via Razorpay
-                  </li>
-                  <li style={styles.infoListItem}>
-                    <strong>Step 4:</strong> Payment automatically verified
-                  </li>
-                  <li style={styles.infoListItem}>
-                    <strong>Step 5:</strong> Profile created instantly after payment
-                  </li>
-                  <li style={styles.infoListItem}>
-                    <strong>Step 6:</strong> Get confirmation with Player ID
-                  </li>
-                </ul>
               </div>
-
-              <div style={styles.contactInfo}>
-                <h3 style={styles.contactTitle}>Need Assistance?</h3>
-                <p style={styles.contactText}>
-                  <strong>Email:</strong> cdspremierleague@gmail.com
-                </p>
-                <p style={styles.contactText}>
-                  <strong>Phone:</strong> +91-98765 43210 (10 AM - 6 PM)
-                </p>
-                <p style={styles.contactText}>
-                  <strong>WhatsApp:</strong> +91-98765 43210
-                </p>
-                <p style={{...styles.contactText, fontSize: '0.9rem', color: '#64748b'}}>
-                  Response time: Within 30 minutes
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
