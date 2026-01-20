@@ -9,6 +9,9 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import SlotsPage from './pages/Slots/SlotsPage.jsx';
 import CaptainDashboard from "./pages/captain/CaptainDashboard";
+import ChampionsTrophy from "./pages/captain/ChampionsTrophy";
+
+
 import Booking from "./pages/booking/Booking.jsx";
 import Gallery from "./pages/Gallery";
 import CricketPlayerRegistration from "./pages/PlayerRegistration.jsx"
@@ -42,7 +45,9 @@ function App() {
         {/* Team Captain Routes */}
         {/* <Route path="/captain" element={<ProtectedRoute role="teamCaptain"> <CaptainDashboard /></ProtectedRoute>}/> */}
         <Route path="/captain" element={<CaptainDashboard />} />
+        <Route path="/ChampionsTrophy" element={<ChampionsTrophy />} />
         <Route path="/book-slots" element={<Booking />} />
+
 
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />

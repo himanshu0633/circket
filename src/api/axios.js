@@ -1,4 +1,6 @@
 import axios from "axios";
+export const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:4000";
+
 
 // Create axios instance
 const API = axios.create({

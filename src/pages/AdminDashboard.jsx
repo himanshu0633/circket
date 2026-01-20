@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminDashboard.css';
+import API, { IMAGE_BASE_URL } from "../api/axios";
 
 const AdminDashboard = () => {
   // State variables
@@ -59,6 +60,7 @@ const AdminDashboard = () => {
   
   // Base URL for API calls
   const API_BASE_URL = 'https://backend.cdspremierleague.com/api';
+  
 
   // Stats cards data
   const statsCards = [
@@ -982,6 +984,7 @@ const AdminDashboard = () => {
                             className="table-cell player-details-cell"
                             data-label="Player Details"
                           >
+                            
                             <div className="player-name">
                               {player.name}
                             </div>
@@ -991,6 +994,31 @@ const AdminDashboard = () => {
                             <div className="player-info">
                               <span className="info-icon">📱</span> {player.phone}
                             </div>
+
+                            {/* PAYMENT PROOF IMAGE */}
+                              <div className="payment-proof-container">
+                                  {player.paymentProof ? (
+                                    <img
+                                      src={`${IMAGE_BASE_URL}/uploads/captains/${player.paymentProof}`}
+                                      alt="Payment Proof"
+                                      className="payment-proof-img"
+                                      onClick={() =>
+                                        window.open(
+                                          `${IMAGE_BASE_URL}/uploads/captains/${player.paymentProof}`,
+                                          "_blank"
+                                        )
+                                      }
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "/no-image.png"; // optional fallback image
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="payment-proof-fallback">
+                                      Payment Proof Not Available
+                                    </div>
+                                  )}
+                                </div>
                             {player.profileLink && (
                               <a 
                                 href={player.profileLink} 
