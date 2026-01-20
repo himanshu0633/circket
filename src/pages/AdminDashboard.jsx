@@ -836,7 +836,7 @@ const AdminDashboard = () => {
                 onClick={handleStatusCheck}
                 disabled={searching}
               >
-                <span className="btn-icon">🔍</span>
+                {/* <span className="btn-icon">🔍</span> */}
                 {searching ? 'Searching...' : 'Check Status'}
               </button>
             </div>
