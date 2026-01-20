@@ -6,7 +6,6 @@ export const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_URL || "http://localhos
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
   // baseURL: import.meta.env.VITE_API_URL || "https://backend.cdspremierleague.com/api",
-  // const IMAGE_BASE_URL = "https://backend.cdspremierleague.com";
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
