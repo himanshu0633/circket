@@ -300,7 +300,7 @@ export default function SlotsPage() {
   /* ================= TOGGLE SLOT STATUS ================= */
   const toggleSlotStatus = async (slotId) => {
     try {
-       const slot = allSlots.find(s => s._id === slotId);
+       const slot = slots.find(s => s._id === slotId);
       if (slot && isDateBeforeToday(slot.slotDate)) {
         showSnackbar("Cannot modify past slots", "warning");
         return;
@@ -316,7 +316,7 @@ export default function SlotsPage() {
 
   /* ================= DELETE SLOT ================= */
   const deleteSlot = async (slotId) => {
-     const slot = allSlots.find(s => s._id === slotId);
+     const slot = slots.find(s => s._id === slotId);
     if (slot && isDateBeforeToday(slot.slotDate)) {
       showSnackbar("Cannot delete past slots", "warning");
       return;
@@ -453,45 +453,68 @@ export default function SlotsPage() {
       initial="hidden"
       animate="visible"
       custom={index}
+      style={{
+        width: '100%'
+      }}
     >
-      <Card
-        sx={{
-          height: "100%",
-          background: `linear-gradient(135deg, ${color}20, ${color}40)`,
-          borderLeft: `4px solid ${color}`,
-          transition: "transform 0.3s, box-shadow 0.3s",
-          "&:hover": {
-            transform: "translateY(-4px)",
-            boxShadow: theme.shadows[8]
-          }
-        }}
+      <div style={{
+        background: `linear-gradient(135deg, ${color}20, ${color}40)`,
+        borderLeft: `4px solid ${color}`,
+        borderRadius: '8px',
+        padding: isMobile ? '12px' : '16px',
+        height: isMobile ? '70px' : '90px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        transition: 'transform 0.3s, box-shadow 0.3s',
+        cursor: 'pointer'
+      }}
+      onMouseOver={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+      }}
       >
-        <CardContent>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box>
-              <Typography color="textSecondary" gutterBottom variant={isMobile ? "caption" : "overline"}>
-                {title}
-              </Typography>
-              <Typography variant={isMobile ? "h6" : "h4"} component="div" fontWeight="bold">
-                {value}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                backgroundColor: `${color}20`,
-                borderRadius: "50%",
-                p: isMobile ? 1 : 1.5,
-                display: "flex",
-                alignItems: "center",
-                marginLeft: 9,
-                justifyContent: "center",
-              }}
-            >
-              {React.cloneElement(icon, { fontSize: isMobile ? "small" : "medium" })}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '100%'
+        }}>
+          <div>
+            <div style={{
+              color: '#666',
+              fontSize: isMobile ? '11px' : '13px',
+              fontWeight: '500',
+              marginBottom: '4px'
+            }}>
+              {title}
+            </div>
+            <div style={{
+              fontSize: isMobile ? '20px' : '28px',
+              fontWeight: 'bold',
+              color: '#333'
+            }}>
+              {value}
+            </div>
+          </div>
+          <div style={{
+            backgroundColor: `${color}20`,
+            borderRadius: '50%',
+            padding: isMobile ? '6px' : '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginLeft: '8px'
+          }}>
+            {React.cloneElement(icon, { 
+              fontSize: isMobile ? "small" : "medium",
+              style: { color: color }
+            })}
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 
@@ -514,96 +537,178 @@ export default function SlotsPage() {
   const DateSlotCard = ({ slot }) => {
     const isExpanded = expandedSlot === slot._id;
     const isPastSlot = isDateBeforeToday(slot.slotDate);
+    const borderColor = slot.isDisabled ? '#f44336' :
+                       slot.bookedCount >= slot.capacity ? '#4caf50' :
+                       '#1976d2';
+    
     return (
-      <Card sx={{ 
-        mb: 2,
-        borderLeft: `4px solid ${
-          slot.isDisabled ? theme.palette.error.main :
-          slot.bookedCount >= slot.capacity ? theme.palette.success.main :
-          theme.palette.primary.main
-        }`
+      <div style={{
+        marginBottom: '16px',
+        borderLeft: `4px solid ${borderColor}`,
+        borderRadius: '8px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        backgroundColor: 'white'
       }}>
-        <CardContent sx={{ p: 2 }}>
+        <div style={{ padding: '16px' }}>
           {/* Slot Header */}
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-            <Box>
-              <Typography variant="h6" component="div">
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '8px'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#333'
+              }}>
                 {slot.startTime} - {slot.endTime}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
+              </div>
+              <div style={{
+                fontSize: '14px',
+                color: '#666',
+                marginTop: '4px'
+              }}>
                 Capacity: {slot.bookedCount || 0}/{slot.capacity}
-              </Typography>
-            </Box>
+              </div>
+            </div>
             
-            <Box display="flex" alignItems="center" gap={1}>
-              <Chip
-                label={slot.isDisabled ? "Disabled" : 
-                       slot.bookedCount >= slot.capacity ? "Full" : "Available"}
-                color={
-                  slot.isDisabled ? "error" : 
-                  slot.bookedCount >= slot.capacity ? "success" : "primary"
-                }
-                size="small"
-              />
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <div style={{
+                backgroundColor: slot.isDisabled ? '#ffebee' : 
+                               slot.bookedCount >= slot.capacity ? '#e8f5e9' : '#e3f2fd',
+                color: slot.isDisabled ? '#d32f2f' : 
+                       slot.bookedCount >= slot.capacity ? '#2e7d32' : '#1976d2',
+                padding: '4px 12px',
+                borderRadius: '16px',
+                fontSize: '12px',
+                fontWeight: '500',
+                border: `1px solid ${slot.isDisabled ? '#f44336' : 
+                        slot.bookedCount >= slot.capacity ? '#4caf50' : '#1976d2'}`
+              }}>
+                {slot.isDisabled ? "Disabled" : 
+                 slot.bookedCount >= slot.capacity ? "Full" : "Available"}
+              </div>
               <MuiIconButton
                 size="small"
                 onClick={() => handleExpandSlot(slot._id)}
+                style={{ padding: '4px' }}
               >
                 {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </MuiIconButton>
-            </Box>
-          </Box>
+            </div>
+          </div>
           
           {/* Booking Information (Always Visible) */}
           {slot.bookedTeams && slot.bookedTeams.length > 0 && (
-            <Box mb={2}>
-              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#333',
+                marginBottom: '8px'
+              }}>
                 Booked Teams ({slot.bookedTeams.length}):
-              </Typography>
-              <Box display="flex" flexWrap="wrap" gap={0.5}>
+              </div>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '4px'
+              }}>
                 {slot.bookedTeams.map((team, idx) => (
-                  <Chip
-                    key={idx}
-                    label={team}
-                    size="small"
-                    variant="outlined"
-                    sx={{ mb: 0.5 }}
-                  />
+                  <div key={idx} style={{
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    border: '1px solid #ddd',
+                    backgroundColor: '#f5f5f5',
+                    color: '#666'
+                  }}>
+                    {team}
+                  </div>
                 ))}
-              </Box>
-            </Box>
+              </div>
+            </div>
           )}
           
           {/* Expanded Details */}
           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <Box mt={2} pt={2} borderTop={1} borderColor="divider">
+            <div style={{
+              marginTop: '16px',
+              paddingTop: '16px',
+              borderTop: '1px solid #eee'
+            }}>
               {/* Booked Teams Details */}
               {slot.bookedTeams && slot.bookedTeams.length > 0 ? (
-                <Box mb={2}>
-                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#333',
+                    marginBottom: '8px'
+                  }}>
                     Team Details:
-                  </Typography>
-                  <Box>
+                  </div>
+                  <div>
                     {slot.bookedTeams.map((team, idx) => (
-                      <Box key={idx} display="flex" alignItems="center" mb={1}>
-                        <PersonIcon sx={{ mr: 1, color: 'primary.main', fontSize: 16 }} />
-                        <Typography variant="body2">{team}</Typography>
-                      </Box>
+                      <div key={idx} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginBottom: '8px'
+                      }}>
+                        <PersonIcon style={{ 
+                          marginRight: '8px', 
+                          color: '#1976d2', 
+                          fontSize: '16px' 
+                        }} />
+                        <div style={{ fontSize: '14px', color: '#333' }}>{team}</div>
+                      </div>
                     ))}
-                  </Box>
-                </Box>
+                  </div>
+                </div>
               ) : (
-                <Typography variant="body2" color="textSecondary" mb={2}>
+                <div style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  marginBottom: '16px'
+                }}>
                   No teams booked for this slot
-                </Typography>
+                </div>
               )}
               
               {/* Slot Actions */}
-              <Box display="flex" gap={1} mt={2}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<EditIcon />}
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                marginTop: '16px'
+              }}>
+                <button
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    border: '1px solid #1976d2',
+                    backgroundColor: 'transparent',
+                    color: '#1976d2',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.backgroundColor = '#1976d2';
+                    e.currentTarget.color = 'white';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.backgroundColor = 'transparent';
+                    e.currentTarget.color = '#1976d2';
+                  }}
                   onClick={() => {
                     setEditingSlot(slot);
                     slotFormik.setValues({
@@ -615,34 +720,70 @@ export default function SlotsPage() {
                     setSlotDialogOpen(true);
                   }}
                 >
+                  <EditIcon style={{ fontSize: '16px' }} />
                   Edit
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={slot.isDisabled ? <CheckCircleIcon /> : <DeleteIcon />}
-                  color={slot.isDisabled ? "success" : "warning"}
+                </button>
+                <button
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    border: `1px solid ${slot.isDisabled ? '#2e7d32' : '#ff9800'}`,
+                    backgroundColor: 'transparent',
+                    color: slot.isDisabled ? '#2e7d32' : '#ff9800',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.backgroundColor = slot.isDisabled ? '#2e7d32' : '#ff9800';
+                    e.currentTarget.color = 'white';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.backgroundColor = 'transparent';
+                    e.currentTarget.color = slot.isDisabled ? '#2e7d32' : '#ff9800';
+                  }}
                   onClick={() => toggleSlotStatus(slot._id)}
                 >
+                  {slot.isDisabled ? <CheckCircleIcon style={{ fontSize: '16px' }} /> : <DeleteIcon style={{ fontSize: '16px' }} />}
                   {slot.isDisabled ? "Enable" : "Disable"}
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  color="error"
-                  startIcon={<DeleteIcon />}
+                </button>
+                <button
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    border: '1px solid #f44336',
+                    backgroundColor: 'transparent',
+                    color: '#f44336',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.backgroundColor = '#f44336';
+                    e.currentTarget.color = 'white';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.backgroundColor = 'transparent';
+                    e.currentTarget.color = '#f44336';
+                  }}
                   onClick={() => deleteSlot(slot._id)}
                 >
+                  <DeleteIcon style={{ fontSize: '16px' }} />
                   Delete
-                </Button>
-              </Box>
-            </Box>
+                </button>
+              </div>
+            </div>
           </Collapse>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   };
-
 
   return (
     <>
@@ -654,230 +795,262 @@ export default function SlotsPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#f5f5f5'
+      }}
     >
 
-
       {/* MAIN CONTENT */}
-      <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
-        <Box p={{ xs: 1, sm: 2, md: 3 }}>
+      <div style={{
+        maxWidth: '100%',
+        margin: '0 auto',
+        padding: isMobile ? '8px' : '16px 24px'
+      }}>
+        <div style={{
+          padding: isMobile ? '8px' : '16px 24px'
+        }}>
           {/* DASHBOARD HEADER */}
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <Box mb={{ xs: 2, sm: 3, md: 4 }}>
-              <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold" gutterBottom>
+            <div style={{
+              marginBottom: isMobile ? '16px' : '32px'
+            }}>
+              <div style={{
+                fontSize: isMobile ? '20px' : '32px',
+                fontWeight: 'bold',
+                color: '#333',
+                marginBottom: '8px'
+              }}>
                 Ground Slots Calendar
-              </Typography>
-              <Typography variant={isMobile ? "body2" : "body1"} color="textSecondary" mb={3}>
+              </div>
+              <div style={{
+                fontSize: isMobile ? '14px' : '16px',
+                color: '#666',
+                marginBottom: '24px'
+              }}>
                 Click on any date to view all slots for that day
-              </Typography>
-            </Box>
+              </div>
+            </div>
           </motion.div>
 
           {/* SLOTS STATS - RESPONSIVE GRID */}
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
-              <Box
-                sx={{
+              <div style={{
                   display: 'grid',
-                  gridTemplateColumns: { 
-                    xs: 'repeat(2, 1fr)',
-                    sm: 'repeat(2, 1fr)',  
-                    md: 'repeat(4, 1fr)'
-                  },
-                  gap: { xs: 0.75, sm: 1.5, md: 2.5 }, // Smaller gap
-                  mb: { xs: 1.5, sm: 2.5, md: 3.5 }
-                }}
-              >
-                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                  gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 
+                                    isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+                  gap: isMobile ? '8px' : '16px',
+                  marginBottom: isMobile ? '16px' : '32px'
+                }}>
+                <div>
                   <StatCard
-                    title="Total "
+                    title="Total Dates"
                     value={[...new Set(slots.map(slot => new Date(slot.slotDate).toISOString().split('T')[0]))].length}
-                    icon={<CalendarIcon sx={{ color: theme.palette.primary.main }} />}
-                    color={theme.palette.primary.main}
+                    icon={<CalendarIcon />}
+                    color="#1976d2"
                     index={0}
-                    sx={{
-                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
-                        p: { xs: 0.1, sm: 1, md: 1 },              // 👈 less padding
-                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
-                      
-                      }}
                   />
-                </Box>
+                </div>
                 
-                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                <div>
                   <StatCard
-                    title="Total "
+                    title="Total Slots"
                     value={slots.filter(s => !isDateBeforeToday(s.slotDate)).length}
-                    icon={<EventIcon sx={{ color: theme.palette.info.main }} />}
-                    color={theme.palette.info.main}
+                    icon={<EventIcon />}
+                    color="#2196f3"
                     index={1}
-                    sx={{
-                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
-                        p: { xs: 0.1, sm: 1, md: 1 },              // 👈 less padding
-                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
-                      }}
                   />
-                </Box>
+                </div>
                 
-                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                <div>
                   <StatCard
-                    title="Active "
+                    title="Active Slots"
                     value={slots.filter(s => !s.isDisabled && !isDateBeforeToday(s.slotDate)).length}
-                    icon={<CheckCircleIcon sx={{ color: theme.palette.success.main }} />}
-                    color={theme.palette.success.main}
+                    icon={<CheckCircleIcon />}
+                    color="#4caf50"
                     index={2}
-                    sx={{
-                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
-                        p: { xs: 0.1, sm: 1, md: 1 },                // 👈 less padding
-                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
-                      }}
                   />
-                </Box>
+                </div>
                 
-                <Box sx={{ gridColumn: { xs: 'span 1', md: 'span 1' } }}>
+                <div>
                   <StatCard
                     title="Bookings"
                     value={slots.reduce((sum, slot) => sum + (slot.bookedCount || 0), 0)}
-                    icon={<GroupsIcon sx={{ color: theme.palette.warning.main }} />}
-                    color={theme.palette.warning.main}
+                    icon={<GroupsIcon />}
+                    color="#ff9800"
                     index={3}
-                    sx={{
-                        height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
-                        p: { xs: 0.5, sm: 1.25, md: 1.75 },                // 👈 less padding
-                        fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
-                      }}
                   />
-                </Box>
-              </Box>
+                </div>
+              </div>
             </motion.div>
 
           {/* MAIN CALENDAR AND SLOTS VIEW */}
-          <Card sx={{ 
-            mb: 4, 
-            borderRadius: { xs: 1, sm: 2 }, 
-            boxShadow: theme.shadows[3],
+          <div style={{
+            marginBottom: '32px',
+            borderRadius: isMobile ? '8px' : '16px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            backgroundColor: 'white',
             overflow: 'hidden'
           }}>
-            <CardHeader
-              title={
-               <Box display="flex" alignItems="center">
-                  {showDateSlots && (
-                    <IconButton onClick={handleBackToCalendar} sx={{ mr: 2 }}>
-                      <ArrowBackIcon />
+            <div style={{
+              padding: '16px 24px',
+              borderBottom: '1px solid #eee'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                {showDateSlots && (
+                  <IconButton onClick={handleBackToCalendar} style={{ marginRight: '16px' }}>
+                    <ArrowBackIcon />
+                  </IconButton>
+                )}
+                {showDateSlots ? (
+                  <div style={{
+                    fontSize: isMobile ? '14px' : '18px',
+                    fontWeight: '500',
+                    color: '#333'
+                  }}>
+                    Slots for {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    }) : ''}
+                  </div>
+                ) : (
+                  <div style={{
+                    fontSize: isMobile ? '16px' : '20px',
+                    fontWeight: '400',
+                    color: '#666'
+                  }}>
+                    Calendar View - Click on any date
+                  </div>
+                )}
+              </div>
+              
+              {!showDateSlots && !isMobile && (
+                <div style={{
+                  display: 'flex',
+                  gap: '16px',
+                  marginLeft: 'auto'
+                }}>
+                  <Tooltip title="Refresh">
+                    <IconButton onClick={fetchSlots} style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      backgroundColor: '#f5f5f5'
+                    }}>
+                      <RefreshIcon />
                     </IconButton>
-                  )}
-                  {showDateSlots ? (
-                    <Typography 
-                      sx={{ 
-                        fontSize: { xs: '0.9rem', sm: '1rem' }, // Mobile पर 0.9rem, tablet/desktop पर 1rem
-                        fontWeight: 500 
-                      }}
-                    >
-                      Slots for {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      }) : ''}
-                    </Typography>
-                  ) : (
-                    <Typography 
-                      sx={{ 
-                        fontSize: { xs: '1.400rem', sm: '1.500rem' }, // Mobile पर थोड़ा और छोटा
-                        fontWeight: 400,
-                        color: 'text.secondary'
-                      }}
-                    >
-                      Calendar View - Click on any date
-                    </Typography>
-                  )}
-                </Box>
-              }
-              action={
-                !showDateSlots && !isMobile && (
-                  <Box display="flex" gap={2} >
-                    <Tooltip title="Refresh">
-                      <IconButton onClick={fetchSlots}>
-                        <RefreshIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setDisableDateDialog(true)}
-                      startIcon={<DeleteIcon />}
-                      size={isTablet ? "small" : "medium"}
-                    >
-                      Disable Date
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={() => setBulkDialogOpen(true)}
-                      startIcon={<ScheduleIcon />}
-                      size={isTablet ? "small" : "medium"}
-                    >
-                      Generate Slots
-                    </Button>
-                    {/* <Button
-                      variant="contained"
-                      onClick={() => {
-                        setEditingSlot(null);
-                        slotFormik.resetForm();
-                        setSlotDialogOpen(true);
-                      }}
-                      startIcon={<AddIcon />}
-                      size={isTablet ? "small" : "medium"}
-                    >
-                      Add Slot
-                    </Button> */}
-                  </Box>
-                )
-              }
-            />
-            <Divider />
+                  </Tooltip>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      border: '1px solid #f44336',
+                      backgroundColor: 'transparent',
+                      color: '#f44336',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onClick={() => setDisableDateDialog(true)}
+                  >
+                    <DeleteIcon style={{ fontSize: '18px' }} />
+                    Disable Date
+                  </button>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      border: '1px solid #2196f3',
+                      backgroundColor: 'transparent',
+                      color: '#2196f3',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onClick={() => setBulkDialogOpen(true)}
+                  >
+                    <ScheduleIcon style={{ fontSize: '18px' }} />
+                    Generate Slots
+                  </button>
+                </div>
+              )}
+            </div>
             
             {/* MOBILE ACTION BUTTONS */}
             {!showDateSlots && isMobile && (
-              <Box sx={{ p: 2, display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-                
-                <Button
-                  variant="outlined"
-                  onClick={() => setDisableDateDialog(true)}
-                  startIcon={<DeleteIcon />}
-                  size="small"
-                >
-                  Disable Date
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => setBulkDialogOpen(true)}
-                  startIcon={<ScheduleIcon />}
-                  size="small"
-                >
-                  Generate
-                </Button>
-                <IconButton onClick={fetchSlots} size="small">
-                  <RefreshIcon />
-                </IconButton>
-                {/* <Button
-                  variant="contained"
-                  onClick={() => {
-                    setEditingSlot(null);
-                    slotFormik.resetForm();
-                    setSlotDialogOpen(true);
+              <div style={{
+                padding: '16px',
+                display: 'flex',
+                gap: '8px',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                borderBottom: '1px solid #eee'
+              }}>
+                <button
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    border: '1px solid #f44336',
+                    backgroundColor: 'transparent',
+                    color: '#f44336',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
                   }}
-                  startIcon={<AddIcon />}
-                  size="small"
+                  onClick={() => setDisableDateDialog(true)}
                 >
-                  Add Slot
-                </Button> */}
-              </Box>
+                  <DeleteIcon style={{ fontSize: '14px' }} />
+                  Disable Date
+                </button>
+                <button
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    border: '1px solid #2196f3',
+                    backgroundColor: 'transparent',
+                    color: '#2196f3',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  onClick={() => setBulkDialogOpen(true)}
+                >
+                  <ScheduleIcon style={{ fontSize: '14px' }} />
+                  Generate
+                </button>
+                <IconButton onClick={fetchSlots} size="small" style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#f5f5f5'
+                }}>
+                  <RefreshIcon style={{ fontSize: '18px' }} />
+                </IconButton>
+              </div>
             )}
 
             {/* CALENDAR VIEW */}
             {!showDateSlots ? (
-              <Box sx={{ p: { xs: 0, sm: 1, md: 2 } }}>
+              <div style={{ 
+                padding: isMobile ? '8px' : '16px' 
+              }}>
                 {/* Calendar */}
                 <FullCalendar
                   plugins={[dayGridPlugin, interactionPlugin]}
@@ -943,12 +1116,12 @@ export default function SlotsPage() {
                     const hasBookings = eventInfo.event.extendedProps.bookedCount > 0;
                     
                     return (
-                      <Box sx={{ p: 1 }}>
-                        <Box
-                          sx={{
+                      <div style={{ padding: '4px' }}>
+                        <div
+                          style={{
                             textAlign: 'center',
-                            p: 0.5,
-                            borderRadius: 1,
+                            padding: '4px',
+                            borderRadius: '4px',
                             backgroundColor: hasBookings ? '#1976d2' : '#4caf50',
                             color: 'white',
                             minHeight: isMobile ? '20px' : 'auto',
@@ -957,123 +1130,205 @@ export default function SlotsPage() {
                             justifyContent: 'center'
                           }}
                         >
-                    {isMobile ? (
-                      // Mobile view: सिर्फ number
-                      <Typography
-                        sx={{
-                          fontWeight: 'bold',
-                          fontSize: '0.7rem'
-                        }}
-                      >
-                        {eventInfo.event.extendedProps.bookedCount || 0}
-                      </Typography>
-                    ) : (
-                      // Desktop view: number + "bookings" text
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontWeight: 'bold',
-                          fontSize: '0.75rem'
-                        }}
-                      >
-                        {eventInfo.event.extendedProps.bookedCount || 0} bookings
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
+                          {isMobile ? (
+                            <div style={{
+                              fontWeight: 'bold',
+                              fontSize: '12px'
+                            }}>
+                              {eventInfo.event.extendedProps.bookedCount || 0}
+                            </div>
+                          ) : (
+                            <div style={{
+                              fontWeight: 'bold',
+                              fontSize: '12px'
+                            }}>
+                              {eventInfo.event.extendedProps.bookedCount || 0} bookings
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     );
                   }}
                 />
                 
                 {/* Calendar Legend */}
-                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                <div style={{
+                  padding: '16px',
+                  backgroundColor: '#f9f9f9',
+                  borderRadius: '8px',
+                  marginTop: '16px'
+                }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#333',
+                    marginBottom: '12px'
+                  }}>
                     Calendar Legend:
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6} sm={3}>
-                      <Box display="flex" alignItems="center">
-                        <Box sx={{ width: 16, height: 16, bgcolor: '#007bff', borderRadius: '4px', mr: 1 }} />
-                        <Typography variant="caption">Available Dates</Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6} sm={3}>
-                      <Box display="flex" alignItems="center">
-                        <Box sx={{ width: 16, height: 16, bgcolor: '#6c757d', borderRadius: '4px', mr: 1 }} />
-                        <Typography variant="caption">No Active Slots</Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6} sm={3}>
-                      <Box display="flex" alignItems="center">
-                        <Box sx={{ width: 16, height: 16, bgcolor: '#dc3545', borderRadius: '4px', mr: 1 }} />
-                        <Typography variant="caption">Disabled Dates</Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6} sm={3}>
-                      <Box display="flex" alignItems="center">
-                        <Box sx={{ width: 16, height: 16, bgcolor: '#28a745', borderRadius: '4px', mr: 1 }} />
-                        <Typography variant="caption">Fully Booked</Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Box>
-              </Box>
+                  </div>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+                    gap: '16px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#007bff',
+                        borderRadius: '4px',
+                        marginRight: '8px'
+                      }} />
+                      <div style={{ fontSize: '12px', color: '#666' }}>Available Dates</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#6c757d',
+                        borderRadius: '4px',
+                        marginRight: '8px'
+                      }} />
+                      <div style={{ fontSize: '12px', color: '#666' }}>No Active Slots</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#dc3545',
+                        borderRadius: '4px',
+                        marginRight: '8px'
+                      }} />
+                      <div style={{ fontSize: '12px', color: '#666' }}>Disabled Dates</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: '#28a745',
+                        borderRadius: '4px',
+                        marginRight: '8px'
+                      }} />
+                      <div style={{ fontSize: '12px', color: '#666' }}>Fully Booked</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
               /* SELECTED DATE SLOTS VIEW */
-              <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+              <div style={{
+                padding: isMobile ? '8px' : '16px 24px'
+              }}>
                 {/* Date Summary Card */}
-                <Card sx={{ mb: 3, bgcolor: 'primary.main', color: 'white' }}>
-                  <CardContent>
-                    <Box display="flex" flexDirection={isMobile ? "column" : "row"} justifyContent="space-between" alignItems={isMobile ? "flex-start" : "center"}>
-                      <Box>
-                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight="bold" gutterBottom>
-                          {new Date(selectedDate).toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </Typography>
-                        <Typography variant="body2">
-                          Click on any slot to expand and view booking details
-                        </Typography>
-                      </Box>
-                      
-                      <Box sx={{ mt: isMobile ? 2 : 0 }}>
-                        <Grid container spacing={2}>
-                          <Grid item>
-                            <Box textAlign="center">
-                              <Typography variant="h4" fontWeight="bold">
-                                {selectedDateSlots.length}
-                              </Typography>
-                              <Typography variant="caption">Total Slots</Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item>
-                            <Box textAlign="center">
-                              <Typography variant="h4" fontWeight="bold" color="success.light">
-                                {selectedDateSlots.filter(s => !s.isDisabled).length}
-                              </Typography>
-                              <Typography variant="caption">Active Slots</Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item>
-                            <Box textAlign="center">
-                              <Typography variant="h4" fontWeight="bold" color="warning.light">
-                                {selectedDateSlots.reduce((sum, slot) => sum + (slot.bookedCount || 0), 0)}
-                              </Typography>
-                              <Typography variant="caption">Total Bookings</Typography>
-                            </Box>
-                          </Grid>
-                        </Grid>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                  <CardActions sx={{ justifyContent: 'flex-end', p: 2, pt: 0 }}>
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      size={isMobile ? "small" : "medium"}
+                <div style={{
+                  marginBottom: '24px',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '24px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    justifyContent: 'space-between',
+                    alignItems: isMobile ? 'flex-start' : 'center'
+                  }}>
+                    <div>
+                      <div style={{
+                        fontSize: isMobile ? '18px' : '24px',
+                        fontWeight: 'bold',
+                        marginBottom: '8px'
+                      }}>
+                        {new Date(selectedDate).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                      <div style={{
+                        fontSize: '14px',
+                        opacity: 0.9
+                      }}>
+                        Click on any slot to expand and view booking details
+                      </div>
+                    </div>
+                    
+                    <div style={{
+                      marginTop: isMobile ? '16px' : '0'
+                    }}>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '24px'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{
+                            fontSize: '32px',
+                            fontWeight: 'bold'
+                          }}>
+                            {selectedDateSlots.length}
+                          </div>
+                          <div style={{
+                            fontSize: '12px',
+                            opacity: 0.9
+                          }}>
+                            Total Slots
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{
+                            fontSize: '32px',
+                            fontWeight: 'bold',
+                            color: '#81c784'
+                          }}>
+                            {selectedDateSlots.filter(s => !s.isDisabled).length}
+                          </div>
+                          <div style={{
+                            fontSize: '12px',
+                            opacity: 0.9
+                          }}>
+                            Active Slots
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{
+                            fontSize: '32px',
+                            fontWeight: 'bold',
+                            color: '#ffb74d'
+                          }}>
+                            {selectedDateSlots.reduce((sum, slot) => sum + (slot.bookedCount || 0), 0)}
+                          </div>
+                          <div style={{
+                            fontSize: '12px',
+                            opacity: 0.9
+                          }}>
+                            Total Bookings
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    padding: '16px',
+                    paddingBottom: '0'
+                  }}>
+                    <button
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        border: 'none',
+                        backgroundColor: 'white',
+                        color: '#1976d2',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
                       onClick={() => {
                         setEditingSlot(null);
                         slotFormik.resetForm();
@@ -1086,28 +1341,61 @@ export default function SlotsPage() {
                         setSlotDialogOpen(true);
                       }}
                     >
+                      <AddIcon style={{ fontSize: '18px' }} />
                       Add New Slot
-                    </Button>
-                  </CardActions>
-                </Card>
+                    </button>
+                  </div>
+                </div>
 
                 {/* Slots List */}
                 {slotLoading ? (
-                  <Box display="flex" justifyContent="center" py={8}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    padding: '64px 0'
+                  }}>
                     <CircularProgress />
-                  </Box>
+                  </div>
                 ) : selectedDateSlots.length === 0 ? (
-                  <Box textAlign="center" py={8}>
-                    <ScheduleIcon sx={{ fontSize: 60, color: "grey.400", mb: 2 }} />
-                    <Typography variant="h6" gutterBottom>
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '64px 0'
+                  }}>
+                    <ScheduleIcon style={{
+                      fontSize: '60px',
+                      color: '#bdbdbd',
+                      marginBottom: '16px'
+                    }} />
+                    <div style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#333',
+                      marginBottom: '8px'
+                    }}>
                       No slots found for this date
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      marginBottom: '24px'
+                    }}>
                       Create the first slot for this date
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
+                    </div>
+                    <button
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        border: 'none',
+                        backgroundColor: '#1976d2',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        margin: '0 auto'
+                      }}
                       onClick={() => {
                         setEditingSlot(null);
                         slotFormik.resetForm();
@@ -1120,56 +1408,87 @@ export default function SlotsPage() {
                         setSlotDialogOpen(true);
                       }}
                     >
+                      <AddIcon style={{ fontSize: '18px' }} />
                       Create First Slot
-                    </Button>
-                  </Box>
+                    </button>
+                  </div>
                 ) : (
-                  <Box>
+                  <div>
                     {/* Filter Options */}
-                    <Box display="flex" gap={1} mb={2} flexWrap="wrap">
-                      <Chip
-                        label={`All Slots (${selectedDateSlots.length})`}
-                        color="primary"
-                        variant="outlined"
-                        clickable
-                      />
-                      <Chip
-                        label={`Active (${selectedDateSlots.filter(s => !s.isDisabled).length})`}
-                        color="success"
-                        variant="outlined"
-                        clickable
-                      />
-                      <Chip
-                        label={`Disabled (${selectedDateSlots.filter(s => s.isDisabled).length})`}
-                        color="error"
-                        variant="outlined"
-                        clickable
-                      />
-                      <Chip
-                        label={`Booked (${selectedDateSlots.filter(s => (s.bookedCount || 0) > 0).length})`}
-                        color="warning"
-                        variant="outlined"
-                        clickable
-                      />
-                      <Chip
-                                                label={`Past (${selectedDateSlots.filter(s => isDateBeforeToday(s.slotDate)).length})`}
-                                                sx={{ backgroundColor: theme.palette.grey[300] }}
-                                                variant="outlined"
-                                                clickable
-                                              />
-                    </Box>
+                    <div style={{
+                      display: 'flex',
+                      gap: '8px',
+                      marginBottom: '16px',
+                      flexWrap: 'wrap'
+                    }}>
+                      <div style={{
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        border: '1px solid #1976d2',
+                        backgroundColor: 'transparent',
+                        color: '#1976d2',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}>
+                        All Slots ({selectedDateSlots.length})
+                      </div>
+                      <div style={{
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        border: '1px solid #4caf50',
+                        backgroundColor: 'transparent',
+                        color: '#4caf50',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}>
+                        Active ({selectedDateSlots.filter(s => !s.isDisabled).length})
+                      </div>
+                      <div style={{
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        border: '1px solid #f44336',
+                        backgroundColor: 'transparent',
+                        color: '#f44336',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}>
+                        Disabled ({selectedDateSlots.filter(s => s.isDisabled).length})
+                      </div>
+                      <div style={{
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        border: '1px solid #ff9800',
+                        backgroundColor: 'transparent',
+                        color: '#ff9800',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}>
+                        Booked ({selectedDateSlots.filter(s => (s.bookedCount || 0) > 0).length})
+                      </div>
+                      <div style={{
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        border: '1px solid #9e9e9e',
+                        backgroundColor: 'transparent',
+                        color: '#9e9e9e',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}>
+                        Past ({selectedDateSlots.filter(s => isDateBeforeToday(s.slotDate)).length})
+                      </div>
+                    </div>
 
                     {/* Slots Cards */}
-                    <Box>
+                    <div>
                       {selectedDateSlots.map((slot) => (
                         <DateSlotCard key={slot._id} slot={slot} />
                       ))}
-                    </Box>
-                  </Box>
+                    </div>
+                  </div>
                 )}
-              </Box>
+              </div>
             )}
-          </Card>
+          </div>
 
           {/* CREATE/EDIT SLOT DIALOG - RESPONSIVE */}
           <Dialog 
@@ -1184,84 +1503,217 @@ export default function SlotsPage() {
             </DialogTitle>
             <DialogContent dividers>
               <form onSubmit={slotFormik.handleSubmit}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Slot Date"
-                      name="slotDate"
-                      InputLabelProps={{ shrink: true }}
-                      value={slotFormik.values.slotDate}
-                      onChange={slotFormik.handleChange}
-                      onBlur={slotFormik.handleBlur}
-                      error={slotFormik.touched.slotDate && Boolean(slotFormik.errors.slotDate)}
-                      helperText={slotFormik.touched.slotDate && slotFormik.errors.slotDate}
-                      size={isMobile ? "small" : "medium"}
-                    />
-                    {isDateBeforeToday(slotFormik.values.slotDate) && (
-                                            <Alert severity="warning" sx={{ mt: 1 }}>
-                                              Cannot create/edit slots for past dates
-                                            </Alert>
-                                          )}
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      type="time"
-                      label="Start Time"
-                      name="startTime"
-                      InputLabelProps={{ shrink: true }}
-                      value={slotFormik.values.startTime}
-                      onChange={slotFormik.handleChange}
-                      onBlur={slotFormik.handleBlur}
-                      error={slotFormik.touched.startTime && Boolean(slotFormik.errors.startTime)}
-                      helperText={slotFormik.touched.startTime && slotFormik.errors.startTime}
-                      size={isMobile ? "small" : "medium"}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      type="time"
-                      label="End Time"
-                      name="endTime"
-                      InputLabelProps={{ shrink: true }}
-                      value={slotFormik.values.endTime}
-                      onChange={slotFormik.handleChange}
-                      onBlur={slotFormik.handleBlur}
-                      error={slotFormik.touched.endTime && Boolean(slotFormik.errors.endTime)}
-                      helperText={slotFormik.touched.endTime && slotFormik.errors.endTime}
-                      size={isMobile ? "small" : "medium"}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={slotFormik.values.isDisabled}
-                          onChange={(e) => slotFormik.setFieldValue('isDisabled', e.target.checked)}
-                          size={isMobile ? "small" : "medium"}
-                        />
-                      }
-                      label="Disable this slot"
-                    />
-                  </Grid>
-                </Grid>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(12, 1fr)',
+                  gap: '16px'
+                }}>
+                  <div style={{ gridColumn: 'span 12' }}>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      <label style={{
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#333'
+                      }}>
+                        Slot Date
+                      </label>
+                      <input
+                        type="date"
+                        name="slotDate"
+                        value={slotFormik.values.slotDate}
+                        onChange={slotFormik.handleChange}
+                        onBlur={slotFormik.handleBlur}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '4px',
+                          border: `1px solid ${
+                            slotFormik.touched.slotDate && slotFormik.errors.slotDate ? '#f44336' : '#ddd'
+                          }`,
+                          fontSize: '14px'
+                        }}
+                      />
+                      {slotFormik.touched.slotDate && slotFormik.errors.slotDate && (
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#f44336'
+                        }}>
+                          {slotFormik.errors.slotDate}
+                        </div>
+                      )}
+                      {isDateBeforeToday(slotFormik.values.slotDate) && (
+                        <div style={{
+                          padding: '8px',
+                          borderRadius: '4px',
+                          backgroundColor: '#fff3cd',
+                          border: '1px solid #ffeaa7',
+                          marginTop: '8px'
+                        }}>
+                          <div style={{
+                            fontSize: '12px',
+                            color: '#856404'
+                          }}>
+                            Cannot create/edit slots for past dates
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ gridColumn: 'span 6' }}>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      <label style={{
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#333'
+                      }}>
+                        Start Time
+                      </label>
+                      <input
+                        type="time"
+                        name="startTime"
+                        value={slotFormik.values.startTime}
+                        onChange={slotFormik.handleChange}
+                        onBlur={slotFormik.handleBlur}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '4px',
+                          border: `1px solid ${
+                            slotFormik.touched.startTime && slotFormik.errors.startTime ? '#f44336' : '#ddd'
+                          }`,
+                          fontSize: '14px'
+                        }}
+                      />
+                      {slotFormik.touched.startTime && slotFormik.errors.startTime && (
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#f44336'
+                        }}>
+                          {slotFormik.errors.startTime}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ gridColumn: 'span 6' }}>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      <label style={{
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#333'
+                      }}>
+                        End Time
+                      </label>
+                      <input
+                        type="time"
+                        name="endTime"
+                        value={slotFormik.values.endTime}
+                        onChange={slotFormik.handleChange}
+                        onBlur={slotFormik.handleBlur}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '4px',
+                          border: `1px solid ${
+                            slotFormik.touched.endTime && slotFormik.errors.endTime ? '#f44336' : '#ddd'
+                          }`,
+                          fontSize: '14px'
+                        }}
+                      />
+                      {slotFormik.touched.endTime && slotFormik.errors.endTime && (
+                        <div style={{
+                          fontSize: '12px',
+                          color: '#f44336'
+                        }}>
+                          {slotFormik.errors.endTime}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ gridColumn: 'span 12' }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={slotFormik.values.isDisabled}
+                        onChange={(e) => slotFormik.setFieldValue('isDisabled', e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px'
+                        }}
+                      />
+                      <span style={{
+                        fontSize: '14px',
+                        color: '#333'
+                      }}>
+                        Disable this slot
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </form>
             </DialogContent>
             <DialogActions>
               {isMobile && (
-                <IconButton onClick={() => setSlotDialogOpen(false)}>
+                <button
+                  onClick={() => setSlotDialogOpen(false)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
                   <CloseIcon />
-                </IconButton>
+                </button>
               )}
-              <Button onClick={() => setSlotDialogOpen(false)} size={isMobile ? "small" : "medium"}>
+              <button
+                onClick={() => setSlotDialogOpen(false)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  backgroundColor: 'white',
+                  color: '#333',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
                 Cancel
-              </Button>
-              <Button variant="contained" onClick={slotFormik.submitForm} size={isMobile ? "small" : "medium"} disabled={isDateBeforeToday(slotFormik.values.slotDate)}>
+              </button>
+              <button
+                onClick={slotFormik.submitForm}
+                disabled={isDateBeforeToday(slotFormik.values.slotDate)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: isDateBeforeToday(slotFormik.values.slotDate) ? '#ccc' : '#1976d2',
+                  color: 'white',
+                  fontSize: '14px',
+                  cursor: isDateBeforeToday(slotFormik.values.slotDate) ? 'not-allowed' : 'pointer',
+                  opacity: isDateBeforeToday(slotFormik.values.slotDate) ? 0.6 : 1
+                }}
+              >
                 {editingSlot ? "Update" : "Create"}
-              </Button>
+              </button>
             </DialogActions>
           </Dialog>
 
@@ -1275,28 +1727,78 @@ export default function SlotsPage() {
           >
             <DialogTitle>Disable Slots for Date</DialogTitle>
             <DialogContent dividers>
-              <TextField
-                type="date"
-                fullWidth
-                label="Date"
-                InputLabelProps={{ shrink: true }}
-                value={disableDate.slotDate}
-                onChange={(e) => setDisableDate({ ...disableDate, slotDate: e.target.value })}
-                size={isMobile ? "small" : "medium"}
-              />
-               {isDateBeforeToday(disableDate.slotDate) && (
-                                <Alert severity="warning" sx={{ mt: 2 }}>
-                                  Cannot disable slots for past dates
-                                </Alert>
-                              )}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <label style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={disableDate.slotDate}
+                  onChange={(e) => setDisableDate({ ...disableDate, slotDate: e.target.value })}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '4px',
+                    border: '1px solid #ddd',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+              {isDateBeforeToday(disableDate.slotDate) && (
+                <div style={{
+                  padding: '8px',
+                  borderRadius: '4px',
+                  backgroundColor: '#fff3cd',
+                  border: '1px solid #ffeaa7',
+                  marginTop: '16px'
+                }}>
+                  <div style={{
+                    fontSize: '12px',
+                    color: '#856404'
+                  }}>
+                    Cannot disable slots for past dates
+                  </div>
+                </div>
+              )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setDisableDateDialog(false)} size={isMobile ? "small" : "medium"}>
+              <button
+                onClick={() => setDisableDateDialog(false)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  backgroundColor: 'white',
+                  color: '#333',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
                 Cancel
-              </Button>
-              <Button variant="contained" color="error" onClick={disableSlotsByDate} size={isMobile ? "small" : "medium"} disabled={isDateBeforeToday(disableDate.slotDate)}>
+              </button>
+              <button
+                onClick={disableSlotsByDate}
+                disabled={isDateBeforeToday(disableDate.slotDate)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: isDateBeforeToday(disableDate.slotDate) ? '#ccc' : '#f44336',
+                  color: 'white',
+                  fontSize: '14px',
+                  cursor: isDateBeforeToday(disableDate.slotDate) ? 'not-allowed' : 'pointer',
+                  opacity: isDateBeforeToday(disableDate.slotDate) ? 0.6 : 1
+                }}
+              >
                 Disable
-              </Button>
+              </button>
             </DialogActions>
           </Dialog>
 
@@ -1310,78 +1812,175 @@ export default function SlotsPage() {
           >
             <DialogTitle>Generate Future Slots</DialogTitle>
             <DialogContent dividers>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="date"
-                    label="Start Date"
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    value={bulkSlotData.startDate}
-                    onChange={(e) => setBulkSlotData({ ...bulkSlotData, startDate: e.target.value })}
-                    size={isMobile ? "small" : "medium"}
-                  /> 
-                   {isDateBeforeToday(bulkSlotData.startDate) && (
-                                        <Alert severity="warning" sx={{ mt: 1 }}>
-                                          Start date cannot be in the past
-                                        </Alert>
-                                      )}
-                </Grid>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(12, 1fr)',
+                gap: '16px'
+              }}>
+                <div style={{ gridColumn: 'span 6' }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <label style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#333'
+                    }}>
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={bulkSlotData.startDate}
+                      onChange={(e) => setBulkSlotData({ ...bulkSlotData, startDate: e.target.value })}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                  {isDateBeforeToday(bulkSlotData.startDate) && (
+                    <div style={{
+                      padding: '8px',
+                      borderRadius: '4px',
+                      backgroundColor: '#fff3cd',
+                      border: '1px solid #ffeaa7',
+                      marginTop: '8px'
+                    }}>
+                      <div style={{
+                        fontSize: '12px',
+                        color: '#856404'
+                      }}>
+                        Start date cannot be in the past
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="date"
-                    label="End Date"
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    value={bulkSlotData.endDate}
-                    onChange={(e) => setBulkSlotData({ ...bulkSlotData, endDate: e.target.value })}
-                    size={isMobile ? "small" : "medium"}
-                  />
-                </Grid>
+                <div style={{ gridColumn: 'span 6' }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <label style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#333'
+                    }}>
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={bulkSlotData.endDate}
+                      onChange={(e) => setBulkSlotData({ ...bulkSlotData, endDate: e.target.value })}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="time"
-                    label="Start Time"
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    value={bulkSlotData.timeSlots[0].startTime}
-                    onChange={(e) =>
-                      setBulkSlotData({
-                        ...bulkSlotData,
-                        timeSlots: [{ ...bulkSlotData.timeSlots[0], startTime: e.target.value }]
-                      })
-                    }
-                    size={isMobile ? "small" : "medium"}
-                  />
-                </Grid>
+                <div style={{ gridColumn: 'span 6' }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <label style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#333'
+                    }}>
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={bulkSlotData.timeSlots[0].startTime}
+                      onChange={(e) =>
+                        setBulkSlotData({
+                          ...bulkSlotData,
+                          timeSlots: [{ ...bulkSlotData.timeSlots[0], startTime: e.target.value }]
+                        })
+                      }
+                      style={{
+                        padding: '12px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="time"
-                    label="End Time"
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    value={bulkSlotData.timeSlots[0].endTime}
-                    onChange={(e) =>
-                      setBulkSlotData({
-                        ...bulkSlotData,
-                        timeSlots: [{ ...bulkSlotData.timeSlots[0], endTime: e.target.value }]
-                      })
-                    }
-                    size={isMobile ? "small" : "medium"}
-                  />
-                </Grid>
-              </Grid>
+                <div style={{ gridColumn: 'span 6' }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <label style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#333'
+                    }}>
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={bulkSlotData.timeSlots[0].endTime}
+                      onChange={(e) =>
+                        setBulkSlotData({
+                          ...bulkSlotData,
+                          timeSlots: [{ ...bulkSlotData.timeSlots[0], endTime: e.target.value }]
+                        })
+                      }
+                      style={{
+                        padding: '12px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setBulkDialogOpen(false)} size={isMobile ? "small" : "medium"}>
+              <button
+                onClick={() => setBulkDialogOpen(false)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  backgroundColor: 'white',
+                  color: '#333',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
                 Cancel
-              </Button>
-              <Button variant="contained" onClick={generateFutureSlots} size={isMobile ? "small" : "medium"}>
+              </button>
+              <button
+                onClick={generateFutureSlots}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
                 Generate
-              </Button>
+              </button>
             </DialogActions>
           </Dialog>
 
@@ -1394,18 +1993,29 @@ export default function SlotsPage() {
               vertical: isMobile ? "top" : "bottom", 
               horizontal: isMobile ? "center" : "right" 
             }}
+            style={{
+              position: 'fixed',
+              zIndex: 9999
+            }}
           >
-            <Alert
-              onClose={handleCloseSnackbar}
-              severity={snackbar.severity}
-              variant="filled"
-              sx={{ width: "100%" }}
+            <div
+              style={{
+                padding: '16px',
+                borderRadius: '4px',
+                backgroundColor: snackbar.severity === 'error' ? '#f44336' : 
+                               snackbar.severity === 'warning' ? '#ff9800' : 
+                               snackbar.severity === 'info' ? '#2196f3' : '#4caf50',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: '500',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+              }}
             >
               {snackbar.message}
-            </Alert>
+            </div>
           </Snackbar>
-        </Box>
-      </Container>
+        </div>
+      </div>
     </motion.div>
     <Footer />
     </>
