@@ -701,6 +701,7 @@ export default function SlotsPage() {
                         height: { xs: '60px', sm: '90px', md: '110px' },   // 👈 mobile smaller
                         p: { xs: 0.1, sm: 1, md: 1 },              // 👈 less padding
                         fontSize: { xs: '0.7rem', sm: '0.9rem', md: '1rem' }
+                      
                       }}
                   />
                 </Box>

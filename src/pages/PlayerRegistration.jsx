@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import { useNavigate } from "react-router-dom";
-import QR from "../assets/qrcode.png";
+import QR from "../assets/qrcode.jpeg";
 
 const CricketPlayerRegistration = () => {
   const navigate = useNavigate();

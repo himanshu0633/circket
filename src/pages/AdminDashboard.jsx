@@ -3,7 +3,6 @@ import axios from 'axios';
 import './AdminDashboard.css';
 import API, { IMAGE_BASE_URL } from "../api/axios";
 
-
 const AdminDashboard = () => {
   // State variables
   const [players, setPlayers] = useState([]);
@@ -61,6 +60,7 @@ const AdminDashboard = () => {
   
   // Base URL for API calls
   const API_BASE_URL = 'https://backend.cdspremierleague.com/api';
+  
 
   // Stats cards data
   const statsCards = [
