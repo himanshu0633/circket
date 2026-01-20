@@ -139,7 +139,7 @@ const Home = () => {
         <div className="main-content">
           {/* Tournament Info */}
           <section className="info-section reveal">
-            <h2 className="section-title">TOURNAMENT DETAILS & FEATURES</h2>
+            <h2 className=" section-titleh2">TOURNAMENT DETAILS & FEATURES</h2>
             <p className="section-subtitle">Professional cricket league organized by CDS at Yamunanagar Ground Stadium with world-class facilities</p>
             
             <div className="slot-cards">
@@ -227,7 +227,7 @@ const Home = () => {
           {/* Time Slots Section */}
           <section className="slots-section reveal">
             <div className="slots-container">
-              <h2 className="section-title">DAILY MATCH TIME SLOTS</h2>
+              <h2 className="section-titleh2">DAILY MATCH TIME SLOTS</h2>
               <p className="section-subtitle">Same time slots available every day at Yamunanagar Ground Stadium. Choose your preferred match timing.</p>
               
               <div className="slot-cards">
@@ -261,7 +261,7 @@ const Home = () => {
           {/* Match Gallery Section */}
           <section className="gallery-section reveal" id="gallery">
             <div className="gallery-container">
-              <h2 className="section-title">MATCH GALLERY & HIGHLIGHTS</h2>
+              <h2 className="section-titleh2">MATCH GALLERY & HIGHLIGHTS</h2>
               <p className="section-subtitle">
                 Experience the excitement through photos from our previous matches and tournaments
               </p>
@@ -367,7 +367,7 @@ const Home = () => {
           {/* Video Gallery Section */}
           <section className="video-gallery-section reveal" id="video-gallery">
             <div className="gallery-container">
-              <h2 className="section-title">MATCH HIGHLIGHTS VIDEOS</h2>
+              <h2 className="section-titleh2">MATCH HIGHLIGHTS VIDEOS</h2>
               <p className="section-subtitle">
                 Watch exciting highlights from our previous matches
               </p>
@@ -417,7 +417,7 @@ const Home = () => {
             <h2>READY TO PLAY PROFESSIONAL CRICKET?</h2>
             <p>Don't miss your chance to be part of the most exciting cricket tournament in Yamunanagar. Register now and secure your spot in the CDS Cricket Premier League 2025-26. Limited slots available for each time session!</p>
             
-            <button className="cta-register-btn" onClick={handleRegister}>
+            <button className="cta-register-btn" onClick={() => navigate("/login")}>
               <i className="fas fa-cricket"></i> REGISTER FOR CDS CRICKET LEAGUE
             </button>
             

@@ -19,6 +19,11 @@ export default function Login() {
   const formRef = useRef(null);
   const containerRef = useRef(null);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+
   // Load saved credentials
   useEffect(() => {
     const savedEmail = localStorage.getItem("cricket_login_email");
