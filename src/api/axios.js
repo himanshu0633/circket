@@ -1,9 +1,12 @@
 import axios from "axios";
+export const IMAGE_BASE_URL =
+  import.meta.env.VITE_IMAGE_URL || "http://localhost:4000";
+
 
 // Create axios instance
 const API = axios.create({
-  // baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
-  baseURL: import.meta.env.VITE_API_URL || "https://backend.cdspremierleague.com/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
+  // baseURL: import.meta.env.VITE_API_URL || "https://backend.cdspremierleague.com/api",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",

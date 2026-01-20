@@ -49,7 +49,6 @@ function App() {
         <Route path="/book-slots" element={<Booking />} />
 
 
-
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
         <Route path="/playerRegistration" element={<CricketPlayerRegistration/>} />
