@@ -10,7 +10,7 @@ const CricketPlayerRegistration = () => {
     name: '',
     email: '',
     phone: '',
-    dob: '', // New DOB field added
+    dob: '', 
     profileLink: '',
     role: 'Batsman',
     paymentMethod: 'qr',
@@ -25,6 +25,11 @@ const CricketPlayerRegistration = () => {
     bankDetails: null
   });
   const [isMobile, setIsMobile] = useState(false);
+  
+  // NEW STATE for screenshot upload
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+  const [screenshotPreview, setScreenshotPreview] = useState(null);
+  const [screenshotUploading, setScreenshotUploading] = useState(false);
 
   const roles = [
     "Batsman",
@@ -134,6 +139,7 @@ const CricketPlayerRegistration = () => {
 
   // ✅ styles object को यहाँ define करें (या component के अंदर कहीं भी)
   const styles = {
+    // ... (all existing styles remain the same) ...
     appContainer: {
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -326,14 +332,14 @@ const CricketPlayerRegistration = () => {
       border: '2px solid #e2e8f0'
     },
     qrImage: {
-      width: isMobile ? '200px' : '250px',
-      height: isMobile ? '200px' : '250px',
-      margin: '0 auto 20px',
+      width: isMobile ? '300px' : '350px',
+      height: isMobile ? '450px' : '450px',
+      // margin: '0 auto 20px',
       display: 'block',
-      border: '1px solid #e2e8f0',
+      // border: '1px solid #e2e8f0',
       borderRadius: '10px',
-      padding: '10px',
-      background: 'white',
+      // padding: '10px',
+      // background: 'white',
       maxWidth: '100%'
     },
     qrPlaceholder: {
@@ -506,41 +512,109 @@ const CricketPlayerRegistration = () => {
       fontSize: isMobile ? '0.8rem' : '0.9rem',
       lineHeight: '1.5'
     },
-
     modalOverlay: {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  width: '100vw',
-  height: '100vh',
-  background: 'rgba(0,0,0,0.6)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 9999,
-  padding: '15px'
-},
-
-modalBox: {
-  background: '#fff',
-  borderRadius: isMobile ? '14px' : '18px',
-  width: '100%',
-  maxWidth: '500px',
-  padding: isMobile ? '20px' : '30px',
-  animation: 'slideIn 0.4s ease',
-  boxShadow: '0 25px 60px rgba(0,0,0,0.3)'
-},
-
-closeBtn: {
-  position: 'absolute',
-  top: '12px',
-  right: '16px',
-  background: 'transparent',
-  border: 'none',
-  fontSize: '22px',
-  cursor: 'pointer'
-}
-
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'rgba(0,0,0,0.6)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999,
+      padding: '15px'
+    },
+    modalBox: {
+      background: '#fff',
+      borderRadius: isMobile ? '14px' : '18px',
+      width: '100%',
+      maxWidth: '500px',
+      padding: isMobile ? '20px' : '30px',
+      animation: 'slideIn 0.4s ease',
+      boxShadow: '0 25px 60px rgba(0,0,0,0.3)'
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: '12px',
+      right: '16px',
+      background: 'transparent',
+      border: 'none',
+      fontSize: '22px',
+      cursor: 'pointer'
+    },
+    // NEW STYLES for screenshot upload
+    fileUploadContainer: {
+      border: '2px dashed #cbd5e1',
+      borderRadius: isMobile ? '8px' : '10px',
+      padding: isMobile ? '20px' : '25px',
+      textAlign: 'center',
+      backgroundColor: '#f8fafc',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      marginTop: '10px'
+    },
+    fileUploadContainerHover: {
+      borderColor: '#4f46e5',
+      backgroundColor: '#eef2ff'
+    },
+    fileUploadLabel: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '12px',
+      cursor: 'pointer'
+    },
+    uploadIcon: {
+      fontSize: isMobile ? '28px' : '32px',
+      color: '#4f46e5'
+    },
+    uploadText: {
+      fontWeight: '600',
+      color: '#475569',
+      fontSize: isMobile ? '0.9rem' : '1rem'
+    },
+    uploadSubtext: {
+      color: '#64748b',
+      fontSize: isMobile ? '0.8rem' : '0.85rem',
+      marginTop: '4px'
+    },
+    fileInput: {
+      display: 'none'
+    },
+    previewContainer: {
+      marginTop: '15px',
+      position: 'relative'
+    },
+    previewImage: {
+      maxWidth: '100%',
+      maxHeight: '200px',
+      borderRadius: '8px',
+      border: '2px solid #e2e8f0'
+    },
+    removeButton: {
+      position: 'absolute',
+      top: '-10px',
+      right: '-10px',
+      background: '#ef4444',
+      color: 'white',
+      border: 'none',
+      borderRadius: '50%',
+      width: '28px',
+      height: '28px',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '16px',
+      fontWeight: 'bold'
+    },
+    optionalText: {
+      color: '#6b7280',
+      fontSize: isMobile ? '0.8rem' : '0.85rem',
+      marginLeft: '4px',
+      fontWeight: 'normal'
+    }
   };
 
   const handleChange = (e) => {
@@ -549,6 +623,52 @@ closeBtn: {
       ...prev,
       [name]: value
     }));
+  };
+
+  // NEW: Handle screenshot file selection
+  const handleScreenshotChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setRegistrationStatus({
+        type: 'error',
+        title: 'Invalid File Type',
+        message: 'Please upload only image files (JPG, PNG, GIF, WebP)'
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setRegistrationStatus({
+        type: 'error',
+        title: 'File Too Large',
+        message: 'Maximum file size is 5MB. Please upload a smaller image.'
+      });
+      return;
+    }
+
+    setPaymentScreenshot(file);
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setScreenshotPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // NEW: Remove screenshot
+  const handleRemoveScreenshot = () => {
+    setPaymentScreenshot(null);
+    setScreenshotPreview(null);
+    // Reset file input
+    const fileInput = document.getElementById('paymentScreenshot');
+    if (fileInput) fileInput.value = '';
   };
 
   // Validate CricHeroes profile link format
@@ -664,7 +784,6 @@ closeBtn: {
     } catch (error) {
       setRegistrationStatus({
         type: 'error',
-    
         message: error.message
       });
       
@@ -692,15 +811,33 @@ closeBtn: {
     try {
       validateStep2();
 
-      const playerData = {
-        ...formData,
-        phone: formData.phone.replace(/\D/g, ''),
-        registrationDate: new Date().toISOString(),
-        paymentStatus: 'pending',
-        verificationStatus: 'pending'
-      };
+      // Create FormData to handle file upload
+      const submitData = new FormData();
+      
+      // Add all form data
+      Object.keys(formData).forEach(key => {
+        if (key === 'phone') {
+          submitData.append(key, formData[key].replace(/\D/g, ''));
+        } else {
+          submitData.append(key, formData[key]);
+        }
+      });
+      
+      // Add registration metadata
+      submitData.append('registrationDate', new Date().toISOString());
+      submitData.append('paymentStatus', 'pending');
+      submitData.append('verificationStatus', 'pending');
+      
+      // Add screenshot if exists
+      if (paymentScreenshot) {
+        submitData.append('paymentProof', paymentScreenshot);
+      }
 
-      const response = await API.post('/player/register', playerData);
+      const response = await API.post('/player/register', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
       if (response.data.success) {
         setRegistrationStatus({
@@ -712,7 +849,7 @@ closeBtn: {
           registrationDate: new Date().toLocaleDateString()
         });
         
-        // Reset form
+        // Reset form and screenshot
         setFormData({
           name: '',
           email: '',
@@ -723,6 +860,8 @@ closeBtn: {
           paymentMethod: 'qr',
           utrNumber: ''
         });
+        setPaymentScreenshot(null);
+        setScreenshotPreview(null);
         
         // Go back to step 1 after successful submission
         setTimeout(() => {
@@ -1007,6 +1146,7 @@ closeBtn: {
                           e.target.style.display = 'none';
                         }}
                       />
+                     
                     ) : (
                       <>
                         <img 
@@ -1028,7 +1168,13 @@ closeBtn: {
                         <div style={{fontSize: '2rem', marginTop: '10px'}}>₹500</div>
                       </div>
                     )}
-                    
+                     <h3 style={{color: '#1e293b', marginBottom: '20px', fontSize: isMobile ? '1.1rem' : '1.2rem'}}>
+                      Or 
+                      <br />
+                      Pay on UPI: 
+                      <br />
+                      9896529577@ptsbi
+                    </h3>
                     <div style={styles.paymentInstructions}>
                       <h4 style={styles.instructionTitle}>How to Pay:</h4>
                       <ul style={styles.instructionList}>
@@ -1076,6 +1222,80 @@ closeBtn: {
                       </small>
                     </div>
 
+                    {/* NEW: Screenshot Upload Section */}
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>
+                        Upload Payment Screenshot <span style={styles.optionalText}>(Optional)</span>
+                      </label>
+                      <div 
+                        style={{
+                          ...styles.fileUploadContainer,
+                          ...(paymentScreenshot ? styles.fileUploadContainerHover : {})
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!paymentScreenshot) {
+                            e.currentTarget.style.borderColor = '#4f46e5';
+                            e.currentTarget.style.backgroundColor = '#eef2ff';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!paymentScreenshot) {
+                            e.currentTarget.style.borderColor = '#cbd5e1';
+                            e.currentTarget.style.backgroundColor = '#f8fafc';
+                          }
+                        }}
+                      >
+                        <label htmlFor="paymentScreenshot" style={styles.fileUploadLabel}>
+                          <div style={styles.uploadIcon}>📱</div>
+                          <div>
+                            <div style={styles.uploadText}>
+                              {paymentScreenshot ? 'Change Screenshot' : 'Upload Payment Screenshot'}
+                            </div>
+                            <div style={styles.uploadSubtext}>
+                              {paymentScreenshot 
+                                ? `Selected: ${paymentScreenshot.name}`
+                                : 'Click to upload or drag and drop'
+                              }
+                            </div>
+                            <div style={styles.uploadSubtext}>
+                              Supports: JPG, PNG, GIF, WebP (Max 5MB)
+                            </div>
+                          </div>
+                          <input
+                            type="file"
+                            id="paymentScreenshot"
+                            accept="image/*"
+                            onChange={handleScreenshotChange}
+                            style={styles.fileInput}
+                            disabled={loading}
+                          />
+                        </label>
+                        
+                        {/* Screenshot Preview */}
+                        {screenshotPreview && (
+                          <div style={styles.previewContainer}>
+                            <img 
+                              src={screenshotPreview} 
+                              alt="Payment screenshot preview" 
+                              style={styles.previewImage}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleRemoveScreenshot}
+                              style={styles.removeButton}
+                              disabled={loading}
+                              aria-label="Remove screenshot"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <small style={{ color: '#64748b', fontSize: isMobile ? '0.8rem' : '0.85rem', marginTop: '8px' }}>
+                        Uploading a screenshot of your payment receipt helps in faster verification
+                      </small>
+                    </div>
+
                     <div style={styles.infoBox}>
                       <div style={styles.infoTitle}>
                         <span>ℹ️</span>
@@ -1083,6 +1303,10 @@ closeBtn: {
                       </div>
                       <p style={styles.infoText}>
                         • Keep your UTR number safe for future reference.
+                        <br />
+                        • Screenshot upload is optional but recommended for faster verification.
+                        <br />
+                        • Make sure the screenshot clearly shows payment details and UTR number.
                       </p>
                     </div>
 

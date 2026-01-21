@@ -213,32 +213,58 @@
             <Grid container spacing={3}>
               {/* Captain Details Section */}
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 3, borderRadius: 2, height: '100%' }}>
+                <Paper sx={{ p: 3, borderRadius: 2, height: '100%', width: '100%' }}>
                   <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <PersonIcon /> Captain Information
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
-                  
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <Box display="flex" alignItems="center" mb={1}>
-                        <EmailIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
-                        <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
-                          Email:
-                        </Typography>
-                        <Typography variant="body1" fontWeight={500}>
-                          {captain.email}
-                        </Typography>
-                      </Box>
-                    </Grid>
+                  <Grid container spacing={{ xs: 2, md: 6 }}>
+                   <Grid item xs={12}>
+                 <Box
+                 display="flex"
+                   alignItems="center"
+                           flexWrap="wrap"      // ✅ mobile me wrap allow
+                     mb={1}
+                  >
+                    <EmailIcon
+                           sx={{
+                                mr: 1,
+                        color: "text.secondary",
+                          fontSize: 30
+                         }}
+                      />
+
+              <Typography
+                   variant="body2"
+                  color="text.secondary"
+                    sx={{
+                     minWidth: { xs: "70%", sm: 50 } // ✅ mobile me new line
+              }}
+               >
+                Email:
+               </Typography>
+
+               <Typography
+               variant="body1"
+            fontWeight={650}
+            sx={{
+              wordBreak: "break-all",        // ✅ long email break
+                overflowWrap: "anywhere"       // ✅ overflow fix
+               }}
+           >
+            {captain.email}
+              </Typography>
+             </Box>
+               </Grid>
+
 
                     <Grid item xs={12}>
                       <Box display="flex" alignItems="center" mb={1}>
-                        <PhoneIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                        <PhoneIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 30 }} />
                         <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
                           Phone:
                         </Typography>
-                        <Typography variant="body1" fontWeight={500}>
+                        <Typography variant="body1" fontWeight={650}>
                           {captain.phoneNo}
                         </Typography>
                       </Box>
@@ -246,7 +272,7 @@
 
                     <Grid item xs={12}>
                       <Box display="flex" alignItems="center" mb={1}>
-                        <PaymentIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                        <PaymentIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 30 }} />
                         <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
                           Payment Status:
                         </Typography>
@@ -263,11 +289,11 @@
 
                     <Grid item xs={12}>
                       <Box display="flex" alignItems="center">
-                        <AccessTimeIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
+                        <AccessTimeIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 30 }} />
                         <Typography variant="body2" color="textSecondary" sx={{ minWidth: 120 }}>
                           Created:
                         </Typography>
-                        <Typography variant="body1" fontWeight={500}>
+                        <Typography variant="body1" fontWeight={650}>
                           {formatDate(captain.createdAt)}
                         </Typography>
                       </Box>
@@ -278,65 +304,84 @@
 
               {/* Team Details Section */}
               <Grid item xs={12} md={6}>
-                <Paper sx={{ p: 3, borderRadius: 2, height: '100%' }}>
+                <Paper sx={{ p: 3, borderRadius: 2, height: '100%'  }}>
                   <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <SportsIcon /> Team Details
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   
                   {team ? (
-                    <Grid container spacing={2}>
+                    <Grid container spacing={{ xs: 2, md: 14.5 }}>
+  
+                      {/* TEAM NAME - FULL WIDTH */}
                       <Grid item xs={12}>
-                        <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
+                        <Typography
+                          variant="h5"
+                          fontWeight="bold"
+                          color="primary"
+                          sx={{ textTransform: "capitalize" }}
+                        >
                           {team.teamName}
                         </Typography>
                       </Grid>
 
-                    
-
-                      <Grid item xs={12} sm={6}>
-                        <Box display="flex" alignItems="center" mb={1}>
-                          <GroupsIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
-                          <Typography variant="body2" color="textSecondary">
+                      {/* TOTAL PLAYERS */}
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <GroupsIcon color="action" />
+                          <Typography variant="body2" color="text.secondary">
                             Total Players:
                           </Typography>
-                          <Typography variant="body1" fontWeight={500} sx={{ ml: 1 }}>
+                          <Typography fontWeight={600}>
                             {team.totalPlayers}
                           </Typography>
                         </Box>
                       </Grid>
 
-                      <Grid item xs={12} sm={6}>
-                        <Box display="flex" alignItems="center" mb={1}>
-                          <PeopleIcon sx={{ mr: 1, color: 'text.secondary', fontSize: 20 }} />
-                          <Typography variant="body2" color="textSecondary">
+                      {/* CURRENT PLAYERS */}
+                      <Grid item xs={12} sm={6} md={4}>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <PeopleIcon color="action" />
+                          <Typography variant="body2" color="text.secondary">
                             Current:
                           </Typography>
-                          <Typography variant="body1" fontWeight={500} sx={{ ml: 1 }}>
+                          <Typography fontWeight={600}>
                             {team.currentPlayers}
                           </Typography>
                         </Box>
                       </Grid>
 
-                      <Grid item xs={12}>
-                        <Box display="flex" alignItems="center" justifyContent="space-between">
-                          <Box display="flex" alignItems="center">
-                            <Typography variant="body2" color="textSecondary" sx={{ mr: 1 }}>
-                              Status:
-                            </Typography>
-                            <Chip 
-                              label={team.status} 
-                              size="small" 
-                              color={getStatusColor(team.status)}
-                              variant="outlined"
-                            />
-                          </Box>
-                          <Typography variant="caption" color="textSecondary">
-                            Created: {formatDate(team.createdAt)}
+                      {/* STATUS */}
+                      <Grid item xs={12} sm={6} md={2}>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Typography variant="body2" color="text.secondary">
+                            Status:
                           </Typography>
+                          <Chip
+                            label={team.status}
+                            size="small"
+                            color={getStatusColor(team.status)}
+                            variant="outlined"
+                          />
                         </Box>
                       </Grid>
+
+                      {/* CREATED DATE */}
+                      <Grid
+                        item
+                        xs={12}
+                        sm={6}
+                        md={2}
+                        display="flex"
+                        justifyContent={{ xs: "flex-start", md: "flex-end" }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          Created: {formatDate(team.createdAt)}
+                        </Typography>
+                      </Grid>
+
                     </Grid>
+
                   ) : (
                     <Box textAlign="center" py={4}>
                       <GroupsIcon sx={{ fontSize: 60, color: 'grey.400', mb: 2 }} />
@@ -352,9 +397,14 @@
               </Grid>
 
               {/* Team Members Section */}
-              <Grid item xs={12}>
-                <Paper sx={{ p: 3, borderRadius: 2 }}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+              <Grid item xs={32} md={6} sx={{
+                mr:{xs: 4, md: 12},
+              }}>                
+                <Paper sx={{ p: 3, 
+                  borderRadius: 2, 
+                  height: '100%',
+                  }}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={2} >
                     <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <PeopleIcon /> Team Members ({members?.length || 0})
                     </Typography>
@@ -846,7 +896,6 @@
       </motion.div>
     );
 
-    /* ================= MAIN RENDER ================= */
     return (
       <>
         <motion.div

@@ -122,9 +122,9 @@
   cursor: pointer;
   z-index: 3;
   transition: all 0.3s ease;
-}
+} */
 
-.slideshow-nav:hover {
+ .slideshow-nav:hover {
   background: rgba(0, 0, 0, 0.8);
   transform: translateY(-50%) scale(1.1);
 }
@@ -327,6 +327,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
+    margin-left: 1rem;
     margin-top: 1rem;
     position: relative;
     overflow: hidden;
@@ -392,18 +393,19 @@
     background: linear-gradient(90deg, var(--cricket-blue), var(--cricket-gold), var(--cricket-green));
 }
 
-.section-title {
+.section-titleh2 {
     font-size: 32px;
     color: var(--cricket-green);
     margin-bottom: 12px;
     border-left: none !important;
     padding-left: 12px;
     font-weight: 700;
+    justify-content: center;
     text-align: center;
     position: relative;
 }
 
-.section-title::after {
+.section-titleh2::after {
     content: '';
     position: absolute;
     width: 90px;
@@ -1032,10 +1034,38 @@
     .hero h1 {
         font-size: 2.2rem;
     }
+
+      .main-title {
+        font-size: 0.70rem !important;
+        font-weight: 500;
+        line-height: 1.1;
+        margin-right: 18px;
+    }
     
     .stadium-content {
         grid-template-columns: 1fr;
         gap: 1.8rem;
+    }
+
+    .slideshow-dots {
+        display: none;  
+    }
+
+    .hero .slideshow-dots{
+        display: none;
+    }
+
+     .logo {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+    .logo img {
+        width: 55px;
+        height: 49px;
+        object-fit: cover;
     }
     
     .slot-cards {
@@ -1070,7 +1100,7 @@
     }
 }
 
-@media (max-width: 320px) {
+@media (max-width: 380px) {
     .header-container {
         display: flex;
         align-items: center;
@@ -1083,20 +1113,18 @@
         display: flex;
         align-items: center;
     }
-    .logo {
-        width: 50px;
-        height: 49px;
-    }
+   .logo {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
 
     .logo img {
         width: 55px;
         height: 49px;
         object-fit: cover;
-    }
-
-    /* Hide logo text on mobile */
-    .logo-section > div:last-child {
-        display: none;
     }
 
     /* CENTER → TEXT */
@@ -1127,6 +1155,7 @@
         text-align: center;
         width: 70px;
         height: 30px;
+        margin-bottom: 20px;
     }
 
     .hero h1 {
@@ -1139,7 +1168,7 @@
     
     .register-btn, .cta-register-btn, .login-btn {
         padding: 0.8rem 1.5rem;
-        font-size: 1rem;
+        font-size: 0.7rem;
     }
     
     .section-title {
@@ -1170,6 +1199,8 @@
         height: 35px;
         font-size: 0.9rem;
     }
+
+    
 }
 
 /* Test button for popup (can remove after testing) */

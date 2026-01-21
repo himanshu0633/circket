@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API, { IMAGE_BASE_URL, API_BASE_URL } from '../api/axios';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -57,9 +57,6 @@ const AdminDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(20);
   
-  // Base URL for API calls
-  const API_BASE_URL = 'https://backend.cdspremierleague.com/api';
-
   // Stats cards data
   const statsCards = [
     { 
@@ -106,7 +103,7 @@ const AdminDashboard = () => {
       setError('');
       
       // First get dashboard stats
-      const statsResponse = await axios.get(`${API_BASE_URL}/player/dashboard-stats`);
+      const statsResponse = await API.get(`/player/dashboard-stats`);
       
       if (statsResponse.data.success) {
         setDashboardStats(statsResponse.data.data);
@@ -130,7 +127,7 @@ const AdminDashboard = () => {
       }
       
       // Fetch all players with pagination
-      const playersResponse = await axios.get(`${API_BASE_URL}/player/all-players`, {
+      const playersResponse = await API.get(`/player/all-players`, { 
         params: {
           page: currentPage,
           limit: itemsPerPage,
@@ -142,12 +139,12 @@ const AdminDashboard = () => {
       
       if (playersResponse.data.success) {
         setAllPlayers(playersResponse.data.data);
-        setCurrentPage(playersResponse.data.pagination.page);
-        setTotalPages(playersResponse.data.pagination.pages);
+        setCurrentPage(playersResponse.data.pagination?.page || 1);
+        setTotalPages(playersResponse.data.pagination?.pages || 1);
       }
       
       // Fetch pending players for the pending-only view
-      const pendingResponse = await axios.get(`${API_BASE_URL}/player/pending-registrations`);
+      const pendingResponse = await API.get(`/player/pending-registrations`);
       
       if (pendingResponse.data.success) {
         setPlayers(pendingResponse.data.data || []);
@@ -180,12 +177,12 @@ const AdminDashboard = () => {
       if (filters.startDate) params.startDate = filters.startDate;
       if (filters.endDate) params.endDate = filters.endDate;
       
-      const response = await axios.get(`${API_BASE_URL}/player/search`, { params });
+      const response = await API.get(`/player/search`, { params });
       
       if (response.data.success) {
         setAllPlayers(response.data.data);
-        setCurrentPage(response.data.pagination.page);
-        setTotalPages(response.data.pagination.pages);
+        setCurrentPage(response.data.pagination?.page || 1);
+        setTotalPages(response.data.pagination?.pages || 1);
       }
     } catch (error) {
       console.error('Error fetching filtered players:', error);
@@ -211,6 +208,7 @@ const AdminDashboard = () => {
       utrNumber: `UTR${status.toUpperCase().slice(0, 3)}${String(1000 + i).slice(1)}`,
       paymentStatus: status,
       paymentMethod: 'qr',
+      paymentProof: 'demo-payment.jpg',
       createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
       verificationDate: status !== 'pending' ? new Date().toISOString() : null,
       verifiedBy: status !== 'pending' ? 'Admin' : null,
@@ -298,7 +296,7 @@ const AdminDashboard = () => {
         setSuccess(`Payment ${verificationStatus} successfully (mock data)`);
       } else {
         // Real API call
-        const response = await axios.post(`${API_BASE_URL}/player/verify-payment`, {
+        const response = await API.post(`/player/verify-payment`, {
           playerId: selectedPlayer._id,
           status: verificationStatus,
           verifiedBy: verifiedBy.trim(),
@@ -390,7 +388,7 @@ const AdminDashboard = () => {
         params.utrNumber = searchTerm.trim();
       }
       
-      const response = await axios.get(`${API_BASE_URL}/player/check-status`, { params });
+      const response = await API.get(`/player/check-status`, { params });
       
       if (response.data.success) {
         setSearchResults(response.data.data);
@@ -481,8 +479,7 @@ const AdminDashboard = () => {
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
       
-      // Note: For production, you'll need to implement the actual API call
-      // For now, we'll use CSV export as fallback
+      // For now, use CSV export as fallback
       exportToCSV();
       
     } catch (error) {
@@ -523,17 +520,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // Format date for input fields
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0];
-    } catch (e) {
-      return '';
-    }
-  };
-
   // Get status badge color
   const getStatusColor = (status) => {
     switch (status) {
@@ -552,9 +538,24 @@ const AdminDashboard = () => {
     }
   };
 
+  // Handle filter change
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
   useEffect(() => {
     fetchAllPlayers();
-  }, []);
+  }, [currentPage, showAllPlayersView]);
+
+  // Add this useEffect to handle filters
+  useEffect(() => {
+    if (showAllPlayersView) {
+      const timer = setTimeout(() => {
+        fetchPlayersWithFilters(1);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [filters.status, filters.role, filters.category]);
 
   return (
     <div className="admin-dashboard">
@@ -714,7 +715,7 @@ const AdminDashboard = () => {
                   <select
                     className="filter-select"
                     value={filters.status}
-                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
                   >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
@@ -728,7 +729,7 @@ const AdminDashboard = () => {
                   <select
                     className="filter-select"
                     value={filters.role}
-                    onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
+                    onChange={(e) => handleFilterChange('role', e.target.value)}
                   >
                     <option value="all">All Roles</option>
                     <option value="Batsman">Batsman</option>
@@ -743,7 +744,7 @@ const AdminDashboard = () => {
                   <select
                     className="filter-select"
                     value={filters.category}
-                    onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
                   >
                     <option value="all">All Categories</option>
                     <option value="Junior">Junior</option>
@@ -761,7 +762,7 @@ const AdminDashboard = () => {
                     className="filter-input"
                     placeholder="Search by name, email, phone, or UTR..."
                     value={filters.search}
-                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
                   />
                 </div>
                 
@@ -771,7 +772,7 @@ const AdminDashboard = () => {
                     type="date"
                     className="filter-input"
                     value={filters.startDate}
-                    onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                    onChange={(e) => handleFilterChange('startDate', e.target.value)}
                   />
                 </div>
                 
@@ -781,7 +782,7 @@ const AdminDashboard = () => {
                     type="date"
                     className="filter-input"
                     value={filters.endDate}
-                    onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                    onChange={(e) => handleFilterChange('endDate', e.target.value)}
                   />
                 </div>
               </div>
@@ -835,7 +836,7 @@ const AdminDashboard = () => {
                 onClick={handleStatusCheck}
                 disabled={searching}
               >
-                <span className="btn-icon">🔍</span>
+                {/* <span className="btn-icon">🔍</span> */}
                 {searching ? 'Searching...' : 'Check Status'}
               </button>
             </div>
@@ -867,7 +868,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="result-field">
                     <div className="field-label">Registered</div>
-                    <div className="field-value">{formatDate(searchResults.registeredAt)}</div>
+                    <div className="field-value">{formatDate(searchResults.createdAt || searchResults.registeredAt)}</div>
                   </div>
                   {searchResults.verifiedBy && (
                     <div className="result-field">
@@ -982,6 +983,7 @@ const AdminDashboard = () => {
                             className="table-cell player-details-cell"
                             data-label="Player Details"
                           >
+                            
                             <div className="player-name">
                               {player.name}
                             </div>
@@ -991,6 +993,32 @@ const AdminDashboard = () => {
                             <div className="player-info">
                               <span className="info-icon">📱</span> {player.phone}
                             </div>
+
+                            {/* PAYMENT PROOF IMAGE */}
+                            <div className="payment-proof-container">
+                              {player.paymentProof ? (
+                                <img
+                                  src={`${IMAGE_BASE_URL}/uploads/captains/${player.paymentProof}`}
+                                  alt="Payment Proof"
+                                  className="payment-proof-img"
+                                  onClick={() =>
+                                    window.open(
+                                      `${IMAGE_BASE_URL}/uploads/captains/${player.paymentProof}`,
+                                      "_blank"
+                                    )
+                                  }
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = "/no-image.png";
+                                  }}
+                                />
+                              ) : (
+                                <div className="payment-proof-fallback">
+                                  Payment Proof Not Available
+                                </div>
+                              )}
+                            </div>
+
                             {player.profileLink && (
                               <a 
                                 href={player.profileLink} 
@@ -1096,7 +1124,7 @@ const AdminDashboard = () => {
                                     email: player.email,
                                     utrNumber: player.utrNumber,
                                     paymentStatus: player.paymentStatus,
-                                    registeredAt: player.createdAt,
+                                    createdAt: player.createdAt,
                                     verifiedBy: player.verifiedBy
                                   });
                                 }}
@@ -1129,109 +1157,103 @@ const AdminDashboard = () => {
 
       {/* Verification Modal */}
       {showVerifyModal && (
-  <div className="modal-overlay">
-    <div className="modal-content">
-      <h2 className="modal-title">
-        Verify Payment
-      </h2>
-      
-      <div className="modal-body">
-        {/* Change Status Section */}
-        <div className="modal-section">
-          <div className="modal-field-label">Change Status</div>
-          <div className="status-options">
-            <button
-              className={`status-option-btn ${verificationStatus === 'pending' ? 'active pending' : ''}`}
-              onClick={() => setVerificationStatus('pending')}
-            >
-              Pending
-            </button>
-            <button
-              className={`status-option-btn ${verificationStatus === 'verified' ? 'active verified' : ''}`}
-              onClick={() => setVerificationStatus('verified')}
-            >
-              Verified
-            </button>
-            <button
-              className={`status-option-btn ${verificationStatus === 'rejected' ? 'active rejected' : ''}`}
-              onClick={() => setVerificationStatus('rejected')}
-            >
-              Rejected
-            </button>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2 className="modal-title">
+              Verify Payment
+            </h2>
+            
+            <div className="modal-body">
+              <div className="modal-section">
+                <div className="modal-field-label">Change Status</div>
+                <div className="status-options">
+                  <button
+                    className={`status-option-btn ${verificationStatus === 'pending' ? 'active pending' : ''}`}
+                    onClick={() => setVerificationStatus('pending')}
+                  >
+                    Pending
+                  </button>
+                  <button
+                    className={`status-option-btn ${verificationStatus === 'verified' ? 'active verified' : ''}`}
+                    onClick={() => setVerificationStatus('verified')}
+                  >
+                    Verified
+                  </button>
+                  <button
+                    className={`status-option-btn ${verificationStatus === 'rejected' ? 'active rejected' : ''}`}
+                    onClick={() => setVerificationStatus('rejected')}
+                  >
+                    Rejected
+                  </button>
+                </div>
+              </div>
+              
+              <div className="modal-section">
+                <div className="modal-field-label">UTR Number</div>
+                <div className="modal-utr-display">
+                  {selectedPlayer?.utrNumber || '2334455675646523'}
+                </div>
+              </div>
+              
+              <div className="modal-section">
+                <div className="modal-field-label">Current Status</div>
+                <div className="current-status-display">
+                  <span className="modal-status-badge pending">
+                    {selectedPlayer?.paymentStatus || 'pending'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="modal-section">
+                <div className="modal-field-label">
+                  Verified By (Your Name)
+                </div>
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder="Enter your name"
+                  value={verifiedBy}
+                  onChange={(e) => setVerifiedBy(e.target.value)}
+                />
+              </div>
+              
+              <div className="modal-section">
+                <div className="modal-field-label">
+                  Notes (Optional)
+                </div>
+                <textarea
+                  className="modal-textarea"
+                  placeholder="Add any notes or remarks..."
+                  value={verificationNotes}
+                  onChange={(e) => setVerificationNotes(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="modal-actions">
+              <button
+                className="modal-btn cancel-btn"
+                onClick={() => {
+                  setShowVerifyModal(false);
+                  setSelectedPlayer(null);
+                  setVerificationStatus('');
+                  setVerifiedBy('');
+                  setVerificationNotes('');
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className={`modal-btn confirm-btn ${verificationStatus || 'pending'}`}
+                onClick={handleVerifyPayment}
+                disabled={!verifiedBy.trim() || verifying}
+              >
+                {verifying ? 'Processing...' : `Mark as ${verificationStatus || 'pending'}`}
+              </button>
+            </div>
           </div>
         </div>
-        
-        {/* UTR Number Section */}
-        <div className="modal-section">
-          <div className="modal-field-label">UTR Number</div>
-          <div className="modal-utr-display">
-            {selectedPlayer?.utrNumber || '2334455675646523'}
-          </div>
-        </div>
-        
-        {/* Current Status Section */}
-        <div className="modal-section">
-          <div className="modal-field-label">Current Status</div>
-          <div className="current-status-display">
-            <span className="modal-status-badge pending">
-              {selectedPlayer?.paymentStatus || 'pending'}
-            </span>
-          </div>
-        </div>
-        
-        {/* Verified By field */}
-        <div className="modal-section">
-          <div className="modal-field-label">
-            Verified By (Your Name)
-          </div>
-          <input
-            type="text"
-            className="modal-input"
-            placeholder="Enter your name"
-            value={verifiedBy}
-            onChange={(e) => setVerifiedBy(e.target.value)}
-          />
-        </div>
-        
-        {/* Notes field */}
-        <div className="modal-section">
-          <div className="modal-field-label">
-            Notes (Optional)
-          </div>
-          <textarea
-            className="modal-textarea"
-            placeholder="Add any notes or remarks..."
-            value={verificationNotes}
-            onChange={(e) => setVerificationNotes(e.target.value)}
-          />
-        </div>
-      </div>
-      
-      {/* Modal actions at the bottom */}
-      <div className="modal-actions">
-        <button
-          className="modal-btn cancel-btn"
-          onClick={() => {
-            setShowVerifyModal(false);
-            setSelectedPlayer(null);
-            setVerificationStatus('');
-            setVerifiedBy('');
-            setVerificationNotes('');
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          className={`modal-btn confirm-btn ${verificationStatus || 'pending'}`}
-          onClick={handleVerifyPayment}
-          disabled={!verifiedBy.trim() || verifying}
-        >
-          {verifying ? 'Processing...' : `Mark as ${verificationStatus || 'pending'}`}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 };

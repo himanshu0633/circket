@@ -22,7 +22,6 @@ const ChampionsTrophy = () => {
         "profileLink": "https://cricheroes.com/player-profile/1572929/Pepsi",
         "role": "Batsmen",
       }
-      
     ]
   }
 
