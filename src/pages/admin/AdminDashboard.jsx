@@ -748,10 +748,18 @@ export default function CaptainsPage() {
     </motion.div>
   );
 
-  return (
-    <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-        <ResponsiveHeader title="CDS Premier League" subtitle="Team Captains Management" />
+    return (
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* RESPONSIVE HEADER */}
+          <ResponsiveHeader 
+            title="CDS Premier League"
+            subtitle="Team Captains Management"
+          />
 
         <Container maxWidth="xl" style={{ paddingLeft: isMobile ? 8 : 16, paddingRight: isMobile ? 8 : 16 }}>
           <Box style={{ paddingTop: isMobile ? 16 : 24, paddingBottom: isMobile ? 16 : 24 }}>

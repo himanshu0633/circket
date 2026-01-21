@@ -303,9 +303,9 @@
   color: white;
 }
 
-.btn-icon {
-  font-size: 1.1rem;
-}
+/* .btn-icon {
+  font-size: 0.9rem;
+} */
 
 .action-buttons {
   display: flex;
@@ -459,6 +459,7 @@
 
 .search-label {
   font-weight: 600;
+   font-size: 1.2rem;
   color: #4a5568;
 }
 
@@ -468,7 +469,7 @@
   border-radius: 8px;
   background: white;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 
 .search-input {
@@ -477,7 +478,7 @@
   padding: 12px 20px;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.2rem;
   transition: all 0.3s ease;
 }
 
@@ -493,7 +494,8 @@
   padding: 12px 25px;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -987,6 +989,120 @@
 .view-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   MOBILE CARD FIX – FINAL
+========================= */
+@media (max-width: 768px) {
+
+  /* TABLE TO CARD */
+  .players-table {
+    min-width: unset;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .players-table thead {
+    display: none;
+  }
+
+  .table-row {
+    display: block;
+    background: #fff;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  }
+
+  .table-cell {
+    display: block;
+    padding: 0;
+    border: none;
+  }
+
+  /* =========================
+     PLAYER DETAILS – FIX
+  ========================= */
+  .player-details-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* NAME */
+  .player-name {
+    order: 1;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  /* IMAGE */
+  .payment-proof-container {
+    order: 2;
+    margin: 12px 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .payment-proof-img {
+    width: 130px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px dashed #e53e3e;
+  }
+
+  /* EMAIL & PHONE */
+  .player-info {
+    order: 3;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+
+  /* PROFILE LINK */
+  .profile-link {
+    order: 4;
+    width: 38%;
+    margin-top: 10px;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: #edf2f7;
+  }
+
+  /* TEAM PREF */
+  .team-preference {
+    order: 5;
+    justify-content: center;
+    margin-top: 6px;
+  }
+
+  /* =========================
+     OTHER CELLS
+  ========================= */
+  .payment-cell,
+  .category-cell,
+  .actions-cell {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #edf2f7;
+  }
+
+  /* ACTION BUTTONS */
+  .action-buttons-group {
+    flex-direction: column;
+  }
+
+  .verify-btn,
+  .view-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.95rem;
+  }
 }
 
 /* Footer */
@@ -1828,3 +1944,5 @@
     max-height: 80vh;
   }
 }
+
+
