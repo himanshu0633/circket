@@ -3,10 +3,11 @@ import './Home.css';
 import { useNavigate } from "react-router-dom";
 import Header from '../pages/components/header';
 import Footer from '../pages/components/footer';
-
+import video from '../assets/popupview.mp4';
 const Home = () => {
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [stadiumImageIndex, setStadiumImageIndex] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
   
   // Hero section images
   const heroImages = [
@@ -25,6 +26,20 @@ const Home = () => {
     '/image/stadium8.jpeg',
     '/image/stadium6.jpeg' 
   ];
+
+  // Show popup on page load/refresh
+  useEffect(() => {
+    const popupShown = sessionStorage.getItem('popupShown');
+    
+    if (!popupShown) {
+      const timer = setTimeout(() => {
+        setShowPopup(true);
+        sessionStorage.setItem('popupShown', 'true');
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Hero image slideshow
   useEffect(() => {
@@ -60,7 +75,7 @@ const Home = () => {
     };
     
     window.addEventListener('scroll', revealOnScroll);
-    revealOnScroll(); // Initial check
+    revealOnScroll();
     
     return () => {
       window.removeEventListener('scroll', revealOnScroll);
@@ -68,6 +83,11 @@ const Home = () => {
   }, []);
 
   const navigate = useNavigate();
+
+  // Close popup function
+  const closePopup = () => {
+    setShowPopup(false);
+  };
 
   // Register now function
   const handleRegister = () => {
@@ -98,9 +118,111 @@ const Home = () => {
       <div className="home-container">
         <div className="bg-pattern"></div>
 
+        {/* Welcome Popup with Video */}
+        {showPopup && (
+          <div className="welcome-popup">
+            <div className="popup-overlay" onClick={closePopup}></div>
+            <div className="popup-content">
+              <button className="popup-close" onClick={closePopup}>
+                <i className="fas fa-times"></i>
+              </button>
+              
+              <div className="popup-grid">
+                <div className="popup-info">
+                  <h2><i className="fas fa-cricket-ball"></i> WELCOME TO CDS CRICKET LEAGUE</h2>
+                  <p className="popup-subtitle">Yamunanagar's Premier Cricket Tournament</p>
+                  
+                  <div className="popup-features">
+                    <div className="feature-item">
+                      <i className="fas fa-trophy"></i>
+                      <div>
+                        <h4>Professional League</h4>
+                        <p>Certified umpires & equipment</p>
+                      </div>
+                    </div>
+                    
+                    <div className="feature-item">
+                      <i className="fas fa-calendar-day"></i>
+                      <div>
+                        <h4>Daily Matches</h4>
+                        <p>4 time slots every day</p>
+                      </div>
+                    </div>
+                    
+                    <div className="feature-item">
+                      <i className="fas fa-users"></i>
+                      <div>
+                        <h4>Youth Focused</h4>
+                        <p>Players aged 10-25 years</p>
+                      </div>
+                    </div>
+                    
+                    <div className="feature-item">
+                      <i className="fas fa-medal"></i>
+                      <div>
+                        <h4>Prizes & Awards</h4>
+                        <p>Trophies, medals & certificates</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="popup-actions">
+                    <button 
+                      className="popup-register-btn"
+                      onClick={() => {
+                        closePopup();
+                        navigate("/playerRegistration");
+                      }}
+                    >
+                      <i className="fas fa-user-plus"></i> Register Now
+                    </button>
+                    
+                    <button 
+                      className="popup-explore-btn"
+                      onClick={() => {
+                        closePopup();
+                        navigate("/gallery");
+                      }}
+                    >
+                      <i className="fas fa-photo-video"></i> Explore Gallery
+                    </button>
+                  </div>
+                  
+                  <div className="popup-contact">
+                    <p><i className="fas fa-phone"></i> +91 98765 43210</p>
+                    <p><i className="fas fa-clock"></i> Registration: 9:00 AM - 6:00 PM</p>
+                  </div>
+                </div>
+                
+                <div className="popup-video">
+                  <div className="video-container">
+                    <video 
+                      autoPlay 
+                      muted 
+                      loop 
+                      playsInline
+                      poster="/image/stadium1.jpeg"
+                    >
+                      <source src={video} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                    <div className="video-overlay-text">
+                      <h3>MATCH HIGHLIGHTS</h3>
+                      <p>Watch exciting cricket action!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="popup-footer">
+                <p>Limited slots available! Register today to secure your spot in CDS Cricket Premier League 2025-26</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Hero Section with Slideshow */}
         <section className="hero">
-          {/* Hero Slideshow Container */}
           <div className="hero-slideshow">
             {heroImages.map((img, index) => (
               <div 
@@ -110,7 +232,6 @@ const Home = () => {
               />
             ))}
             
-            {/* Slideshow Dots */}
             <div className="slideshow-dots">
               {heroImages.map((_, index) => (
                 <button
@@ -126,21 +247,18 @@ const Home = () => {
             <h1>JOIN THE CRICKET REVOLUTION AT YAMUNANAGAR GROUND</h1>
             <p>Experience professional cricket at our state-of-the-art stadium. Daily matches with certified umpires, advanced facilities, and a perfect platform to showcase your talent. Register now for CDS Cricket Premier League 2025-26!</p>
             
-
-              <button 
-            className="register-btn" 
-            onClick={() => navigate("/playerRegistration")}
-          >
-            Register As Player
-          </button>
-            
+            <button 
+              className="register-btn" 
+              onClick={() => navigate("/playerRegistration")}
+            >
+              Register As Player
+            </button>
             
             <button onClick={() => navigate("/login")} className="register-btn">
               Login
             </button>
           </div>
           
-          {/* Floating Cricket Balls */}
           <div className="cricket-ball ball-1"></div>
           <div className="cricket-ball ball-2"></div>
         </section>
@@ -149,7 +267,7 @@ const Home = () => {
         <div className="main-content">
           {/* Tournament Info */}
           <section className="info-section reveal">
-            <h2 className=" section-titleh2">TOURNAMENT DETAILS & FEATURES</h2>
+            <h2 className="section-titleh2">TOURNAMENT DETAILS & FEATURES</h2>
             <p className="section-subtitle">Professional cricket league organized by CDS at Yamunanagar Ground Stadium with world-class facilities</p>
             
             <div className="slot-cards">
@@ -192,7 +310,6 @@ const Home = () => {
                   </div>
                 ))}
                 
-                {/* Slideshow Navigation */}
                 <button 
                   className="slideshow-nav prev"
                   onClick={() => setStadiumImageIndex((prev) => (prev - 1 + stadiumImages.length) % stadiumImages.length)}
@@ -206,7 +323,6 @@ const Home = () => {
                   <i className="fas fa-chevron-right"></i>
                 </button>
                 
-                {/* Slideshow Dots */}
                 <div className="slideshow-dots">
                   {stadiumImages.map((_, index) => (
                     <button
@@ -277,16 +393,15 @@ const Home = () => {
               </p>
 
               <div className="gallery-grid">
-                {/* Match Action */}
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/batting1.jpeg" />
-                      <img src="/image/batting2.jpeg" />
-                      <img src="/image/batting3.jpeg" />
-                      <img src="/image/batting1.jpeg" />
-                      <img src="/image/batting2.jpeg" />
-                      <img src="/image/batting3.jpeg" />
+                      <img src="/image/batting1.jpeg" alt="Batting" />
+                      <img src="/image/batting2.jpeg" alt="Batting" />
+                      <img src="/image/batting3.jpeg" alt="Batting" />
+                      <img src="/image/batting1.jpeg" alt="Batting" />
+                      <img src="/image/batting2.jpeg" alt="Batting" />
+                      <img src="/image/batting3.jpeg" alt="Batting" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -295,18 +410,17 @@ const Home = () => {
                   </div>
                 </div>
 
-                {/* Team Celebration */}
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/team1.jpeg" />
-                      <img src="/image/team2.jpeg" />
-                      <img src="/image/team3.jpeg" />
-                      <img src="/image/team4.jpeg" />
-                      <img src="/image/team1.jpeg" />
-                      <img src="/image/team2.jpeg" />
-                      <img src="/image/team3.jpeg" />
-                      <img src="/image/team4.jpeg" />
+                      <img src="/image/team1.jpeg" alt="Team" />
+                      <img src="/image/team2.jpeg" alt="Team" />
+                      <img src="/image/team3.jpeg" alt="Team" />
+                      <img src="/image/team4.jpeg" alt="Team" />
+                      <img src="/image/team1.jpeg" alt="Team" />
+                      <img src="/image/team2.jpeg" alt="Team" />
+                      <img src="/image/team3.jpeg" alt="Team" />
+                      <img src="/image/team4.jpeg" alt="Team" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -315,18 +429,17 @@ const Home = () => {
                   </div>
                 </div>
 
-                {/* Stadium */}
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/stadium4.jpeg" /> 
-                      <img src="/image/stadium2.jpeg" />
-                      <img src="/image/stadium3.jpeg" />
-                      <img src="/image/stadium4.jpeg" />
-                      <img src="/image/stadium1.jpeg" />
-                      <img src="/image/stadium2.jpeg" />
-                      <img src="/image/stadium3.jpeg" />
-                      <img src="/image/stadium4.jpeg" />
+                      <img src="/image/stadium4.jpeg" alt="Stadium" />
+                      <img src="/image/stadium2.jpeg" alt="Stadium" />
+                      <img src="/image/stadium3.jpeg" alt="Stadium" />
+                      <img src="/image/stadium4.jpeg" alt="Stadium" />
+                      <img src="/image/stadium1.jpeg" alt="Stadium" />
+                      <img src="/image/stadium2.jpeg" alt="Stadium" />
+                      <img src="/image/stadium3.jpeg" alt="Stadium" />
+                      <img src="/image/stadium4.jpeg" alt="Stadium" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -335,22 +448,21 @@ const Home = () => {
                   </div>
                 </div>
 
-                {/* Award Ceremony */}
                 <div className="gallery-item auto-gallery">
                   <div className="auto-track">
                     <div className="auto-scroll">
-                      <img src="/image/award1.jpeg" />
-                      <img src="/image/award2.jpeg" />
-                      <img src="/image/award3.jpeg" />
-                      <img src="/image/award4.jpeg" />
-                      <img src="/image/award5.jpeg" />
-                      <img src="/image/award6.jpeg" />
-                      <img src="/image/award1.jpeg" />
-                      <img src="/image/award2.jpeg" />
-                      <img src="/image/award3.jpeg" />
-                      <img src="/image/award4.jpeg" />
-                      <img src="/image/award5.jpeg" />
-                      <img src="/image/award6.jpeg" />
+                      <img src="/image/award1.jpeg" alt="Award" />
+                      <img src="/image/award2.jpeg" alt="Award" />
+                      <img src="/image/award3.jpeg" alt="Award" />
+                      <img src="/image/award4.jpeg" alt="Award" />
+                      <img src="/image/award5.jpeg" alt="Award" />
+                      <img src="/image/award6.jpeg" alt="Award" />
+                      <img src="/image/award1.jpeg" alt="Award" />
+                      <img src="/image/award2.jpeg" alt="Award" />
+                      <img src="/image/award3.jpeg" alt="Award" />
+                      <img src="/image/award4.jpeg" alt="Award" />
+                      <img src="/image/award5.jpeg" alt="Award" />
+                      <img src="/image/award6.jpeg" alt="Award" />
                     </div>
                   </div>
                   <div className="gallery-overlay">
@@ -360,7 +472,6 @@ const Home = () => {
                 </div>
               </div>
 
-              {/* Open Gallery Button */}
               <div className='open-gallery-btn-container' style={{ textAlign: "center", marginBottom: "30px" }}>
                 <button
                   className="open-gallery-btn"
@@ -427,7 +538,7 @@ const Home = () => {
             <h2>READY TO PLAY PROFESSIONAL CRICKET?</h2>
             <p>Don't miss your chance to be part of the most exciting cricket tournament in Yamunanagar. Register now and secure your spot in the CDS Cricket Premier League 2025-26. Limited slots available for each time session!</p>
             
-            <button className="cta-register-btn" onClick={() => navigate("/login")}>
+            <button className="cta-register-btn" onClick={() => navigate("/playerRegistration")}>
               <i className="fas fa-cricket"></i> REGISTER FOR CDS CRICKET LEAGUE
             </button>
             
