@@ -9,8 +9,7 @@ const API = axios.create({
     "Content-Type": "application/json",
   },
 });
- 
-  
+
 // Separate constants for image URL
 // export const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:4000";
 // export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
