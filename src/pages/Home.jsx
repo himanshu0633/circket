@@ -5,11 +5,10 @@ import Header from '../pages/components/header';
 import Footer from '../pages/components/footer';
 import TutorialVideo from "../assets/Tutorial.mp4";
 
-
 const Home = () => {
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [stadiumImageIndex, setStadiumImageIndex] = useState(0);
-   const [showVideo, setShowVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(true); // Always show video on load
   
   // Hero section images
   const heroImages = [
@@ -70,6 +69,30 @@ const Home = () => {
     };
   }, []);
 
+  // Video modal को open/close करते समय body scroll रोकने के लिए
+  useEffect(() => {
+    if (showVideo) {
+      document.body.classList.add('video-open');
+    } else {
+      document.body.classList.remove('video-open');
+    }
+    
+    return () => {
+      document.body.classList.remove('video-open');
+    };
+  }, [showVideo]);
+
+  // Auto-close video after 45 seconds
+  useEffect(() => {
+    if (showVideo) {
+      const timer = setTimeout(() => {
+        setShowVideo(false);
+      }, 45000); // 45 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showVideo]);
+
   const navigate = useNavigate();
 
   // Register now function
@@ -103,75 +126,96 @@ const Home = () => {
 
         {/* Hero Section with Slideshow */}
         <section className="hero">
-  {/* Hero Slideshow */}
-  <div className="hero-slideshow">
-    {heroImages.map((img, index) => (
-      <div 
-        key={index}
-        className={`hero-slide ${index === heroImageIndex ? 'active' : ''}`}
-        style={{
-          backgroundImage: `linear-gradient(rgba(10,10,10,0.7), rgba(0,0,0,0.56)), url('${img}')`
-        }}
-      />
-    ))}
+          {/* Hero Slideshow */}
+          <div className="hero-slideshow">
+            {heroImages.map((img, index) => (
+              <div 
+                key={index}
+                className={`hero-slide ${index === heroImageIndex ? 'active' : ''}`}
+                style={{
+                  backgroundImage: `linear-gradient(rgba(10,10,10,0.7), rgba(0,0,0,0.56)), url('${img}')`
+                }}
+              />
+            ))}
 
-    <div className="slideshow-dots">
-      {heroImages.map((_, index) => (
-        <button
-          key={index}
-          className={`dot ${index === heroImageIndex ? 'active' : ''}`}
-          onClick={() => setHeroImageIndex(index)}
-        />
-      ))}
-    </div>
-  </div>
+            <div className="slideshow-dots">
+              {heroImages.map((_, index) => (
+                <button
+                  key={index}
+                  className={`dot ${index === heroImageIndex ? 'active' : ''}`}
+                  onClick={() => setHeroImageIndex(index)}
+                />
+              ))}
+            </div>
+          </div>
 
-  {/* HERO CONTENT + VIDEO */}
-  <div className="hero-content-wrapper">
-    
-    {/* Left Content */}
-    <div className="hero-content">
-      <h1>JOIN THE CRICKET REVOLUTION AT YAMUNANAGAR GROUND</h1>
-      <p>
-        Experience professional cricket at our state-of-the-art stadium.
-        Register now for CDS Cricket Premier League 2025-26!
-      </p>
+          {/* HERO CONTENT */}
+          <div className="hero-content-wrapper">
+            {/* Left Content */}
+            <div className="hero-content">
+              <h1>JOIN THE CRICKET REVOLUTION AT YAMUNANAGAR GROUND</h1>
+              <p>
+                Experience professional cricket at our state-of-the-art stadium.
+                Register now for CDS Cricket Premier League 2025-26!
+              </p>
 
-      <button className="register-btn" onClick={() => navigate("/playerRegistration")}>
-        Register As Player
-      </button>
+              <button className="register-btn" onClick={() => navigate("/playerRegistration")}>
+                Register As Player
+              </button>
 
-      <button className="register-btn" onClick={() => navigate("/login")}>
-        Login
-      </button>
-    </div>
+              <button className="register-btn" onClick={() => navigate("/login")}>
+                Login
+              </button>
+            </div>
+          </div>
 
-    {/* Right Video Button */}
-    <div className="hero-video">
-      <button className="play-video-btn" onClick={() => setShowVideo(true)}>
-        ▶ Watch Video
-      </button>
-    </div>
-  </div>
+          <div className="cricket-ball ball-1"></div>
+          <div className="cricket-ball ball-2"></div>
+        </section>
 
-  {/* VIDEO POPUP */}
-  {showVideo && (
-    <div className="video-modal">
-      <div className="video-modal-content">
-        <button className="close-btn" onClick={() => setShowVideo(false)}>✕</button>
-
-        <video controls autoPlay>
-          <source src={TutorialVideo} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      </div>
-    </div>
-  )}
-
-  <div className="cricket-ball ball-1"></div>
-  <div className="cricket-ball ball-2"></div>
-</section>
-
+        {/* VIDEO POPUP - Always show on load */}
+        {showVideo && (
+          <div className="video-modal">
+            <div className="video-modal-content">
+              <div className="video-wrapper">
+                {/* Close button for all devices */}
+                <button
+                  className="video-cut-btn"
+                  onClick={() => setShowVideo(false)}
+                >
+                  ✕
+                </button>
+                
+                {/* Auto-play countdown timer */}
+                <div className="video-timer">
+                  Video will auto-close in <span id="countdown">45</span> seconds
+                </div>
+                
+                <video 
+                  controls 
+                  autoPlay 
+                  muted 
+                  playsInline
+                  onEnded={() => {
+                    // Video खत्म होने पर auto-close
+                    setTimeout(() => setShowVideo(false), 1000);
+                  }}
+                >
+                  <source src={TutorialVideo} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                
+                {/* Skip button */}
+                <button 
+                  className="skip-video-btn"
+                  onClick={() => setShowVideo(false)}
+                >
+                  Skip & Continue to Website
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="main-content">
