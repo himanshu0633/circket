@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   // State variables
@@ -484,25 +485,6 @@ const AdminDashboard = () => {
       // For now, we'll use CSV export as fallback
       exportToCSV();
       
-      /*
-      // Uncomment this for actual Excel export when backend is ready
-      const response = await axios.get(
-        `${API_BASE_URL}/player/export?${params}`,
-        { responseType: 'blob' }
-      );
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `cds-registrations-${new Date().toISOString().split('T')[0]}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      setSuccess('Data exported to Excel successfully!');
-      setTimeout(() => setSuccess(''), 3000);
-      */
-      
     } catch (error) {
       console.error('Error exporting to Excel:', error);
       setError('Failed to export data');
@@ -574,136 +556,40 @@ const AdminDashboard = () => {
     fetchAllPlayers();
   }, []);
 
-  const styles = {
-    adminDashboard: {
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '20px',
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-    },
-    container: {
-      maxWidth: '1400px',
-      margin: '0 auto',
-      background: 'white',
-      borderRadius: '20px',
-      boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-      overflow: 'hidden'
-    },
-    header: {
-      background: 'linear-gradient(135deg, #667eea, #764ba2)',
-      color: 'white',
-      padding: '30px 40px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      borderBottom: '5px solid rgba(255,255,255,0.1)'
-    },
-    modalOverlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    },
-    modalContent: {
-      background: 'white',
-      padding: '30px',
-      borderRadius: '15px',
-      maxWidth: '500px',
-      width: '90%',
-      maxHeight: '90vh',
-      overflowY: 'auto'
-    }
-  };
-
   return (
-    <div style={styles.adminDashboard}>
-      <div style={styles.container}>
+    <div className="admin-dashboard">
+      <div className="dashboard-container">
         {/* Header */}
-        <div style={styles.header}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '15px' }}>
-              🏏 CDS Champions Trophy
+        <div className="dashboard-header">
+          <div className="header-title">
+            <h1>
+              <span className="header-icon">🏏</span>
+              CDS Champions Trophy
             </h1>
-            <p style={{ margin: '5px 0 0 0', opacity: 0.9 }}>Admin Dashboard - Complete Player Management System</p>
+            <p className="header-subtitle">Admin Dashboard - Complete Player Management System</p>
           </div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '15px', 
-            background: 'rgba(255,255,255,0.1)', 
-            padding: '10px 20px', 
-            borderRadius: '50px',
-            backdropFilter: 'blur(10px)'
-          }}>
-            <div style={{
-              width: '50px',
-              height: '50px',
-              background: 'white',
-              color: '#667eea',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: 'bold'
-            }}>
+          <div className="admin-profile">
+            <div className="admin-avatar">
               A
             </div>
-            <div>
-              <div style={{ fontWeight: '600' }}>Administrator</div>
-              <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Full System Access</div>
+            <div className="admin-info">
+              <div className="admin-name">Administrator</div>
+              <div className="admin-role">Full System Access</div>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '20px',
-          padding: '30px',
-          background: '#f7fafc'
-        }}>
+        <div className="stats-grid">
           {statsCards.map((stat, index) => (
-            <div key={index} style={{
-              background: 'white',
-              padding: '25px',
-              borderRadius: '15px',
-              boxShadow: '0 5px 15px rgba(0,0,0,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              transition: 'transform 0.3s ease',
-              cursor: 'pointer',
-              ':hover': {
-                transform: 'translateY(-5px)'
-              }
-            }}>
-              <div style={{
-                fontSize: '2.5rem',
-                width: '70px',
-                height: '70px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `${stat.color}20`,
-                color: stat.color
-              }}>
+            <div key={index} className="stat-card">
+              <div className="stat-icon" style={{ background: `${stat.color}20`, color: stat.color }}>
                 {stat.icon}
               </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: '0 0 5px 0', color: '#2d3748', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  {stat.title}
-                </h3>
-                <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0, lineHeight: 1 }}>{stat.value}</p>
-                <p style={{ fontSize: '0.85rem', color: '#a0aec0', margin: '5px 0 0 0' }}>
+              <div className="stat-content">
+                <h3 className="stat-title">{stat.title}</h3>
+                <p className="stat-value">{stat.value}</p>
+                <p className="stat-description">
                   {stat.description}
                 </p>
               </div>
@@ -713,43 +599,27 @@ const AdminDashboard = () => {
 
         {/* Detailed Statistics */}
         {detailedStats.roleStats.length > 0 && (
-          <div style={{ padding: '0 30px' }}>
-            <div style={{
-              background: 'white',
-              borderRadius: '15px',
-              padding: '25px',
-              marginBottom: '30px',
-              boxShadow: '0 5px 15px rgba(0,0,0,0.05)'
-            }}>
-              <h3 style={{ margin: '0 0 20px 0', color: '#2d3748', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                📊 Detailed Statistics
+          <div className="detailed-stats-section">
+            <div className="detailed-stats-card">
+              <h3 className="section-title">
+                <span className="section-icon">📊</span>
+                Detailed Statistics
               </h3>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+              <div className="stats-details-grid">
                 {/* Role Distribution */}
-                <div>
-                  <h4 style={{ margin: '0 0 15px 0', color: '#4a5568', fontSize: '1rem' }}>Role Distribution</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div className="stat-detail-group">
+                  <h4 className="stat-group-title">Role Distribution</h4>
+                  <div className="stat-items-list">
                     {detailedStats.roleStats.map(role => (
-                      <div key={role._id} style={{
-                        background: '#f7fafc',
-                        padding: '15px',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#2d3748' }}>{role._id}</div>
-                          <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>
+                      <div key={role._id} className="stat-item">
+                        <div className="stat-item-content">
+                          <div className="stat-item-label">{role._id}</div>
+                          <div className="stat-item-subtext">
                             Total: {role.count} | ✓ {role.verified || 0} | ⏳ {role.pending || 0} | ✗ {role.rejected || 0}
                           </div>
                         </div>
-                        <div style={{
-                          fontSize: '1.2rem',
-                          fontWeight: 'bold',
-                          color: '#667eea'
-                        }}>
+                        <div className="stat-item-count">
                           {role.count}
                         </div>
                       </div>
@@ -758,24 +628,13 @@ const AdminDashboard = () => {
                 </div>
                 
                 {/* Category Distribution */}
-                <div>
-                  <h4 style={{ margin: '0 0 15px 0', color: '#4a5568', fontSize: '1rem' }}>Category Distribution</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div className="stat-detail-group">
+                  <h4 className="stat-group-title">Category Distribution</h4>
+                  <div className="stat-items-list">
                     {detailedStats.categoryStats.map(category => (
-                      <div key={category._id} style={{
-                        background: '#f7fafc',
-                        padding: '15px',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
-                        <div style={{ fontWeight: '600', color: '#2d3748' }}>{category._id}</div>
-                        <div style={{
-                          fontSize: '1.2rem',
-                          fontWeight: 'bold',
-                          color: '#48bb78'
-                        }}>
+                      <div key={category._id} className="stat-item">
+                        <div className="stat-item-label">{category._id}</div>
+                        <div className="stat-item-count category-count">
                           {category.count}
                         </div>
                       </div>
@@ -788,155 +647,72 @@ const AdminDashboard = () => {
         )}
 
         {/* Main Content */}
-        <div style={{ padding: '30px' }}>
+        <div className="main-content">
           {/* Messages */}
           {success && (
-            <div style={{
-              padding: '15px',
-              borderRadius: '10px',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              animation: 'slideIn 0.3s ease',
-              background: '#c6f6d5',
-              color: '#22543d',
-              borderLeft: '5px solid #48bb78'
-            }}>
-              ✅ {success}
+            <div className="alert alert-success">
+              <span className="alert-icon">✅</span>
+              {success}
             </div>
           )}
           
           {error && (
-            <div style={{
-              padding: '15px',
-              borderRadius: '10px',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              animation: 'slideIn 0.3s ease',
-              background: '#fed7d7',
-              color: '#742a2a',
-              borderLeft: '5px solid #f56565'
-            }}>
-              ⚠️ {error}
+            <div className="alert alert-error">
+              <span className="alert-icon">⚠️</span>
+              {error}
             </div>
           )}
 
           {/* View Toggle */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '30px',
-            paddingBottom: '20px',
-            borderBottom: '2px solid #f7fafc'
-          }}>
-            <div style={{ display: 'flex', gap: '15px' }}>
+          <div className="view-toggle-section">
+            <div className="view-toggle-buttons">
               <button
-                style={{
-                  padding: '12px 25px',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  background: !showAllPlayersView ? '#667eea' : '#e2e8f0',
-                  color: !showAllPlayersView ? 'white' : '#4a5568',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                className={`view-toggle-btn ${!showAllPlayersView ? 'active' : ''}`}
                 onClick={() => setShowAllPlayersView(false)}
               >
-                ⏳ Pending Verification
+                <span className="btn-icon">⏳</span>
+                Pending Verification
               </button>
               
               <button
-                style={{
-                  padding: '12px 25px',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  background: showAllPlayersView ? '#667eea' : '#e2e8f0',
-                  color: showAllPlayersView ? 'white' : '#4a5568',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                className={`view-toggle-btn ${showAllPlayersView ? 'active' : ''}`}
                 onClick={() => setShowAllPlayersView(true)}
               >
-                📋 All Players
+                <span className="btn-icon">📋</span>
+                All Players
               </button>
             </div>
             
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="action-buttons">
               <button
-                style={{
-                  padding: '10px 20px',
-                  background: '#48bb78',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                className="action-btn export-btn"
                 onClick={exportToExcel}
               >
-                📊 Export Excel
+                <span className="btn-icon">📊</span>
+                Export Excel
               </button>
               
               <button
-                style={{
-                  padding: '10px 20px',
-                  background: '#667eea',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                className="action-btn refresh-btn"
                 onClick={fetchAllPlayers}
                 disabled={loading}
               >
-                🔄 Refresh Data
+                <span className="btn-icon">🔄</span>
+                Refresh Data
               </button>
             </div>
           </div>
 
           {/* Advanced Filters (for All Players view) */}
           {showAllPlayersView && (
-            <div style={{
-              background: '#f7fafc',
-              padding: '25px',
-              borderRadius: '15px',
-              marginBottom: '30px',
-              boxShadow: '0 5px 15px rgba(0,0,0,0.05)'
-            }}>
-              <h3 style={{ margin: '0 0 20px 0', color: '#2d3748' }}>Advanced Filters</h3>
+            <div className="advanced-filters-card">
+              <h3 className="section-title">Advanced Filters</h3>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#4a5568' }}>Status</label>
+              <div className="filters-grid">
+                <div className="filter-group">
+                  <label className="filter-label">Status</label>
                   <select
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '8px',
-                      background: 'white'
-                    }}
+                    className="filter-select"
                     value={filters.status}
                     onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                   >
@@ -947,16 +723,10 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#4a5568' }}>Role</label>
+                <div className="filter-group">
+                  <label className="filter-label">Role</label>
                   <select
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '8px',
-                      background: 'white'
-                    }}
+                    className="filter-select"
                     value={filters.role}
                     onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
                   >
@@ -968,16 +738,10 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#4a5568' }}>Category</label>
+                <div className="filter-group">
+                  <label className="filter-label">Category</label>
                   <select
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '8px',
-                      background: 'white'
-                    }}
+                    className="filter-select"
                     value={filters.category}
                     onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
                   >
@@ -989,111 +753,66 @@ const AdminDashboard = () => {
                 </div>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '15px', marginBottom: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#4a5568' }}>Search</label>
+              <div className="search-filters-grid">
+                <div className="filter-group">
+                  <label className="filter-label">Search</label>
                   <input
                     type="text"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '8px'
-                    }}
+                    className="filter-input"
                     placeholder="Search by name, email, phone, or UTR..."
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                   />
                 </div>
                 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#4a5568' }}>From Date</label>
+                <div className="filter-group">
+                  <label className="filter-label">From Date</label>
                   <input
                     type="date"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '8px'
-                    }}
+                    className="filter-input"
                     value={filters.startDate}
                     onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
                   />
                 </div>
                 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#4a5568' }}>To Date</label>
+                <div className="filter-group">
+                  <label className="filter-label">To Date</label>
                   <input
                     type="date"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '8px'
-                    }}
+                    className="filter-input"
                     value={filters.endDate}
                     onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
                   />
                 </div>
               </div>
               
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div className="filter-actions">
                 <button
-                  style={{
-                    padding: '10px 20px',
-                    background: '#a0aec0',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 600
-                  }}
+                  className="filter-clear-btn"
                   onClick={clearFilters}
                 >
                   Clear Filters
                 </button>
                 
                 <button
-                  style={{
-                    padding: '10px 20px',
-                    background: '#667eea',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
+                  className="filter-apply-btn"
                   onClick={handleAdvancedSearch}
                 >
-                  🔍 Apply Filters
+                  <span className="btn-icon">🔍</span>
+                  Apply Filters
                 </button>
               </div>
             </div>
           )}
 
           {/* Quick Status Check */}
-          <div style={{
-            background: '#f7fafc',
-            padding: '25px',
-            borderRadius: '15px',
-            marginBottom: '30px',
-            boxShadow: '0 5px 15px rgba(0,0,0,0.05)'
-          }}>
-            <h3 style={{ margin: '0 0 20px 0', color: '#2d3748' }}>Quick Registration Lookup</h3>
-            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <span style={{ fontWeight: 600, color: '#4a5568' }}>Search by:</span>
+          <div className="quick-search-card">
+            <h3 className="section-title">Quick Registration Lookup</h3>
+            <div className="search-controls">
+              <div className="search-type-selector">
+                <span className="search-label">Search by:</span>
                 <select
-                  style={{
-                    padding: '10px',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '8px',
-                    background: 'white',
-                    cursor: 'pointer'
-                  }}
+                  className="search-select"
                   value={searchType}
                   onChange={(e) => setSearchType(e.target.value)}
                 >
@@ -1104,15 +823,7 @@ const AdminDashboard = () => {
               
               <input
                 type="text"
-                style={{
-                  flex: 1,
-                  minWidth: '250px',
-                  padding: '12px 20px',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease'
-                }}
+                className="search-input"
                 placeholder={searchType === 'email' ? 'Enter email address' : 'Enter UTR number'}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -1120,70 +831,48 @@ const AdminDashboard = () => {
               />
               
               <button
-                style={{
-                  background: '#667eea',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 25px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  transition: 'background 0.3s ease',
-                  opacity: searching ? 0.6 : 1
-                }}
+                className="search-btn"
                 onClick={handleStatusCheck}
                 disabled={searching}
               >
-                {searching ? 'Searching...' : '🔍 Check Status'}
+                <span className="btn-icon">🔍</span>
+                {searching ? 'Searching...' : 'Check Status'}
               </button>
             </div>
 
             {searchResults && (
-              <div style={{
-                marginTop: '20px',
-                padding: '20px',
-                background: 'white',
-                borderRadius: '10px',
-                border: '2px solid #e2e8f0'
-              }}>
-                <h4 style={{ margin: '0 0 15px 0', color: '#2d3748' }}>Registration Details</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', color: '#a0aec0' }}>Name</div>
-                    <div style={{ fontWeight: 600 }}>{searchResults.name}</div>
+              <div className="search-results-card">
+                <h4 className="results-title">Registration Details</h4>
+                <div className="results-grid">
+                  <div className="result-field">
+                    <div className="field-label">Name</div>
+                    <div className="field-value">{searchResults.name}</div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', color: '#a0aec0' }}>Email</div>
-                    <div>{searchResults.email}</div>
+                  <div className="result-field">
+                    <div className="field-label">Email</div>
+                    <div className="field-value">{searchResults.email}</div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', color: '#a0aec0' }}>UTR Number</div>
-                    <div style={{ fontFamily: 'monospace' }}>{searchResults.utrNumber}</div>
+                  <div className="result-field">
+                    <div className="field-label">UTR Number</div>
+                    <div className="field-value utr-number">{searchResults.utrNumber}</div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', color: '#a0aec0' }}>Status</div>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '3px 10px',
-                      borderRadius: '15px',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      ...getStatusColor(searchResults.paymentStatus)
-                    }}>
+                  <div className="result-field">
+                    <div className="field-label">Status</div>
+                    <span 
+                      className="status-badge"
+                      style={getStatusColor(searchResults.paymentStatus)}
+                    >
                       {searchResults.paymentStatus}
                     </span>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.9rem', color: '#a0aec0' }}>Registered</div>
-                    <div>{formatDate(searchResults.registeredAt)}</div>
+                  <div className="result-field">
+                    <div className="field-label">Registered</div>
+                    <div className="field-value">{formatDate(searchResults.registeredAt)}</div>
                   </div>
                   {searchResults.verifiedBy && (
-                    <div>
-                      <div style={{ fontSize: '0.9rem', color: '#a0aec0' }}>Verified By</div>
-                      <div>{searchResults.verifiedBy}</div>
+                    <div className="result-field">
+                      <div className="field-label">Verified By</div>
+                      <div className="field-value">{searchResults.verifiedBy}</div>
                     </div>
                   )}
                 </div>
@@ -1193,33 +882,16 @@ const AdminDashboard = () => {
 
           {/* Tabs for Pending View */}
           {!showAllPlayersView && (
-            <div style={{
-              display: 'flex',
-              gap: '10px',
-              background: '#f7fafc',
-              padding: '5px',
-              borderRadius: '12px',
-              marginBottom: '30px'
-            }}>
+            <div className="tabs-container">
               {['all', 'pending', 'verified', 'rejected'].map(tab => (
                 <button
                   key={tab}
-                  style={{
-                    padding: '12px 25px',
-                    border: 'none',
-                    background: activeTab === tab ? 'white' : 'transparent',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    transition: 'all 0.3s ease',
-                    color: activeTab === tab ? '#667eea' : '#a0aec0',
-                    boxShadow: activeTab === tab ? '0 3px 10px rgba(0,0,0,0.1)' : 'none'
-                  }}
+                  className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
                   onClick={() => setActiveTab(tab)}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   {tab !== 'all' && (
-                    <span style={{ marginLeft: '8px', fontSize: '0.8em' }}>
+                    <span className="tab-count">
                       ({stats[tab]})
                     </span>
                   )}
@@ -1230,66 +902,39 @@ const AdminDashboard = () => {
 
           {/* Players Table */}
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '50px', color: '#a0aec0' }}>
-              <div style={{
-                border: '4px solid #f3f3f3',
-                borderTop: '4px solid #667eea',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto 20px'
-              }}></div>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
               <p>Loading player data...</p>
             </div>
           ) : (
-            <div>
+            <div className="players-table-container">
               {/* Table Header */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px'
-              }}>
-                <h3 style={{ margin: 0, color: '#2d3748' }}>
+              <div className="table-header">
+                <h3 className="table-title">
                   {showAllPlayersView ? 'All Registered Players' : 'Players for Verification'}
-                  <span style={{ fontSize: '0.9rem', color: '#a0aec0', marginLeft: '10px' }}>
+                  <span className="table-subtitle">
                     ({showAllPlayersView ? allPlayers.length : filteredPlayers.length} players)
                   </span>
                 </h3>
                 
                 {showAllPlayersView && totalPages > 1 && (
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <div className="pagination-controls">
                     <button
+                      className="pagination-btn prev-btn"
                       disabled={currentPage === 1}
                       onClick={() => handlePageChange(currentPage - 1)}
-                      style={{
-                        padding: '8px 15px',
-                        border: 'none',
-                        background: currentPage === 1 ? '#e2e8f0' : '#667eea',
-                        color: currentPage === 1 ? '#a0aec0' : 'white',
-                        borderRadius: '6px',
-                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
-                      }}
                     >
                       ← Previous
                     </button>
                     
-                    <span style={{ fontSize: '0.9rem', color: '#4a5568' }}>
+                    <span className="page-info">
                       Page {currentPage} of {totalPages}
                     </span>
                     
                     <button
+                      className="pagination-btn next-btn"
                       disabled={currentPage === totalPages}
                       onClick={() => handlePageChange(currentPage + 1)}
-                      style={{
-                        padding: '8px 15px',
-                        border: 'none',
-                        background: currentPage === totalPages ? '#e2e8f0' : '#667eea',
-                        color: currentPage === totalPages ? '#a0aec0' : 'white',
-                        borderRadius: '6px',
-                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
-                      }}
                     >
                       Next →
                     </button>
@@ -1299,21 +944,13 @@ const AdminDashboard = () => {
 
               {/* Table */}
               {(showAllPlayersView ? allPlayers : filteredPlayers).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#a0aec0' }}>
-                  <div style={{ fontSize: '4rem', marginBottom: '20px' }}>📋</div>
+                <div className="empty-state">
+                  <div className="empty-icon">📋</div>
                   <h3>No players found</h3>
                   <p>No {showAllPlayersView ? 'players' : activeTab === 'all' ? '' : activeTab} registrations found</p>
                   {showAllPlayersView && (
                     <button
-                      style={{
-                        marginTop: '20px',
-                        padding: '10px 20px',
-                        background: '#667eea',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer'
-                      }}
+                      className="clear-filters-btn"
                       onClick={clearFilters}
                     >
                       Clear Filters
@@ -1321,143 +958,84 @@ const AdminDashboard = () => {
                   )}
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    background: 'white',
-                    borderRadius: '15px',
-                    overflow: 'hidden',
-                    boxShadow: '0 5px 15px rgba(0,0,0,0.05)'
-                  }}>
+                <div className="table-responsive">
+                  <table className="players-table">
                     <thead>
                       <tr>
-                        <th style={{
-                          background: '#f7fafc',
-                          padding: '20px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: '#2d3748',
-                          textTransform: 'uppercase',
-                          fontSize: '0.85rem',
-                          letterSpacing: '1px'
-                        }}>Player Details</th>
-                        
-                        <th style={{
-                          background: '#f7fafc',
-                          padding: '20px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: '#2d3748',
-                          textTransform: 'uppercase',
-                          fontSize: '0.85rem',
-                          letterSpacing: '1px'
-                        }}>UTR & Payment</th>
+                        <th className="table-header-cell">Player Details</th>
+                        <th className="table-header-cell">UTR & Payment</th>
                         
                         {showAllPlayersView && (
-                          <th style={{
-                            background: '#f7fafc',
-                            padding: '20px',
-                            textAlign: 'left',
-                            fontWeight: 600,
-                            color: '#2d3748',
-                            textTransform: 'uppercase',
-                            fontSize: '0.85rem',
-                            letterSpacing: '1px'
-                          }}>Category & Role</th>
+                          <th className="table-header-cell">Category & Role</th>
                         )}
                         
-                        <th style={{
-                          background: '#f7fafc',
-                          padding: '20px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: '#2d3748',
-                          textTransform: 'uppercase',
-                          fontSize: '0.85rem',
-                          letterSpacing: '1px'
-                        }}>Registration Timeline</th>
-                        
-                        <th style={{
-                          background: '#f7fafc',
-                          padding: '20px',
-                          textAlign: 'left',
-                          fontWeight: 600,
-                          color: '#2d3748',
-                          textTransform: 'uppercase',
-                          fontSize: '0.85rem',
-                          letterSpacing: '1px'
-                        }}>Actions</th>
+                        <th className="table-header-cell">Registration Timeline</th>
+                        <th className="table-header-cell">Actions</th>
                       </tr>
                     </thead>
                     
                     <tbody>
                       {(showAllPlayersView ? allPlayers : filteredPlayers).map(player => (
-                        <tr key={player._id} style={{ borderBottom: '1px solid #f7fafc' }}>
+                        <tr key={player._id} className="table-row">
                           {/* Player Details Column */}
-                          <td style={{ padding: '20px' }}>
-                            <div style={{ fontWeight: 600, marginBottom: '5px', fontSize: '1.1rem' }}>
+                          <td 
+                            className="table-cell player-details-cell"
+                            data-label="Player Details"
+                          >
+                            <div className="player-name">
                               {player.name}
                             </div>
-                            <div style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '3px' }}>
-                              📧 {player.email}
+                            <div className="player-info">
+                              <span className="info-icon">📧</span> {player.email}
                             </div>
-                            <div style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '3px' }}>
-                              📱 {player.phone}
+                            <div className="player-info">
+                              <span className="info-icon">📱</span> {player.phone}
                             </div>
                             {player.profileLink && (
                               <a 
                                 href={player.profileLink} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                style={{
-                                  color: '#667eea',
-                                  textDecoration: 'none',
-                                  fontSize: '0.85rem',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '5px'
-                                }}
+                                className="profile-link"
                               >
-                                🔗 Profile Link
+                                <span className="link-icon">🔗</span>
+                                Profile Link
                               </a>
                             )}
                             {player.teamPreference && (
-                              <div style={{ fontSize: '0.85rem', color: '#9f7aea', marginTop: '5px' }}>
-                                🏏 Prefers: {player.teamPreference}
+                              <div className="team-preference">
+                                <span className="preference-icon">🏏</span>
+                                Prefers: {player.teamPreference}
                               </div>
                             )}
                           </td>
                           
                           {/* UTR & Payment Column */}
-                          <td style={{ padding: '20px' }}>
-                            <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 600, marginBottom: '10px' }}>
+                          <td 
+                            className="table-cell payment-cell"
+                            data-label="Payment Details"
+                          >
+                            <div className="utr-number-display">
                               {player.utrNumber}
                             </div>
-                            <div style={{ marginBottom: '5px' }}>
-                              <span style={{
-                                display: 'inline-block',
-                                padding: '5px 15px',
-                                borderRadius: '20px',
-                                fontSize: '0.85rem',
-                                fontWeight: 600,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                ...getStatusColor(player.paymentStatus)
-                              }}>
+                            <div className="status-badge-container">
+                              <span 
+                                className="status-badge table-badge"
+                                style={getStatusColor(player.paymentStatus)}
+                              >
                                 {player.paymentStatus}
                               </span>
                             </div>
-                            <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>
+                            <div className="payment-method">
                               Method: {player.paymentMethod === 'qr' ? 'QR Code' : 'Bank Transfer'}
                             </div>
                             {player.verifiedBy && (
-                              <div style={{ fontSize: '0.85rem', color: '#a0aec0', marginTop: '5px' }}>
+                              <div className="verified-by">
                                 Verified by: {player.verifiedBy}
                               </div>
                             )}
                             {player.notes && (
-                              <div style={{ fontSize: '0.85rem', color: '#f56565', marginTop: '5px', fontStyle: 'italic' }}>
+                              <div className="player-notes">
                                 Note: {player.notes}
                               </div>
                             )}
@@ -1465,64 +1043,54 @@ const AdminDashboard = () => {
                           
                           {/* Category & Role Column (only for All Players view) */}
                           {showAllPlayersView && (
-                            <td style={{ padding: '20px' }}>
-                              <div style={{ marginBottom: '10px' }}>
-                                <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>Category</div>
-                                <div style={{ fontWeight: 600 }}>{player.category || 'Senior'}</div>
+                            <td 
+                              className="table-cell category-cell"
+                              data-label="Role & Category"
+                            >
+                              <div className="category-group">
+                                <div className="field-label-small">Category</div>
+                                <div className="field-value">{player.category || 'Senior'}</div>
                               </div>
-                              <div>
-                                <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>Role</div>
-                                <div style={{ fontWeight: 600, color: '#667eea' }}>{player.role}</div>
+                              <div className="role-group">
+                                <div className="field-label-small">Role</div>
+                                <div className="field-value role-value">{player.role}</div>
                               </div>
                             </td>
                           )}
                           
                           {/* Registration Timeline Column */}
-                          <td style={{ padding: '20px' }}>
-                            <div style={{ marginBottom: '10px' }}>
-                              <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>Registered</div>
-                              <div>{formatDate(player.createdAt)}</div>
+                          <td 
+                            className="table-cell timeline-cell"
+                            data-label="Timeline"
+                          >
+                            <div className="timeline-group">
+                              <div className="field-label-small">Registered</div>
+                              <div className="field-value">{formatDate(player.createdAt)}</div>
                             </div>
                             {player.verificationDate && (
-                              <div>
-                                <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>Verified</div>
-                                <div>{formatDate(player.verificationDate)}</div>
+                              <div className="timeline-group">
+                                <div className="field-label-small">Verified</div>
+                                <div className="field-value">{formatDate(player.verificationDate)}</div>
                               </div>
                             )}
                           </td>
                           
                           {/* Actions Column */}
-                          <td style={{ padding: '20px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <td 
+                            className="table-cell actions-cell"
+                            data-label="Actions"
+                          >
+                            <div className="action-buttons-group">
                               <button
-                                style={{
-                                  background: '#48bb78',
-                                  color: 'white',
-                                  border: 'none',
-                                  padding: '8px 15px',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer',
-                                  fontSize: '0.9rem',
-                                  transition: 'background 0.3s ease'
-                                }}
+                                className="action-btn verify-btn"
                                 onClick={() => openVerifyModal(player)}
                                 title="Verify/reject payment"
                               >
                                 Verify/Update
                               </button>
                               <button
-                                style={{
-                                  background: '#4299e1',
-                                  color: 'white',
-                                  border: 'none',
-                                  padding: '8px 15px',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer',
-                                  fontSize: '0.9rem',
-                                  transition: 'background 0.3s ease'
-                                }}
+                                className="action-btn view-btn"
                                 onClick={() => {
-                                  // View details action
                                   setSearchResults({
                                     name: player.name,
                                     email: player.email,
@@ -1549,20 +1117,11 @@ const AdminDashboard = () => {
         </div>
 
         {/* Footer */}
-        <div style={{
-          padding: '20px 30px',
-          background: '#f7fafc',
-          borderTop: '1px solid #e2e8f0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '0.9rem',
-          color: '#a0aec0'
-        }}>
-          <div>
+        <div className="dashboard-footer">
+          <div className="footer-left">
             CDS Premier League Admin Dashboard • {new Date().toLocaleDateString('en-IN')}
           </div>
-          <div>
+          <div className="footer-right">
             Total: {stats.total} players • Verified: {stats.verified} • Pending: {stats.pending}
           </div>
         </div>
@@ -1570,221 +1129,109 @@ const AdminDashboard = () => {
 
       {/* Verification Modal */}
       {showVerifyModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
-            <h2 style={{ margin: '0 0 20px 0', color: '#2d3748' }}>
-              {selectedPlayer?.paymentStatus === 'pending' ? 'Verify Payment' : 'Update Status'} - {selectedPlayer?.name}
-            </h2>
-            
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ marginBottom: '15px' }}>
-                <div style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '5px' }}>UTR Number</div>
-                <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 600 }}>
-                  {selectedPlayer?.utrNumber}
-                </div>
-              </div>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <div style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '5px' }}>Current Status</div>
-                <span style={{
-                  display: 'inline-block',
-                  padding: '5px 15px',
-                  borderRadius: '20px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  ...getStatusColor(selectedPlayer?.paymentStatus)
-                }}>
-                  {selectedPlayer?.paymentStatus}
-                </span>
-              </div>
-              
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '5px' }}>Change Status</div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {['verified', 'rejected', 'pending'].map(status => (
-                    <button
-                      key={status}
-                      style={{
-                        padding: '10px 15px',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                        background: verificationStatus === status ? 
-                                  (status === 'verified' ? '#48bb78' : 
-                                   status === 'rejected' ? '#f56565' : '#ed8936') : 
-                                  '#e2e8f0',
-                        color: verificationStatus === status ? 'white' : '#4a5568',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onClick={() => setVerificationStatus(status)}
-                    >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <div style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '5px' }}>
-                  Verified By (Your Name)
-                </div>
-                <input
-                  type="text"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease'
-                  }}
-                  placeholder="Enter your name"
-                  value={verifiedBy}
-                  onChange={(e) => setVerifiedBy(e.target.value)}
-                />
-              </div>
-              
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '5px' }}>
-                  Notes (Optional)
-                </div>
-                <textarea
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    minHeight: '80px',
-                    resize: 'vertical'
-                  }}
-                  placeholder="Add any notes or remarks..."
-                  value={verificationNotes}
-                  onChange={(e) => setVerificationNotes(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button
-                style={{
-                  padding: '12px 25px',
-                  border: '2px solid #e2e8f0',
-                  background: 'white',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  color: '#4a5568',
-                  transition: 'all 0.3s ease'
-                }}
-                onClick={() => {
-                  setShowVerifyModal(false);
-                  setSelectedPlayer(null);
-                  setVerificationStatus('');
-                  setVerifiedBy('');
-                  setVerificationNotes('');
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                style={{
-                  padding: '12px 25px',
-                  border: 'none',
-                  background: verificationStatus === 'verified' ? '#48bb78' : 
-                            verificationStatus === 'rejected' ? '#f56565' : '#ed8936',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  color: 'white',
-                  transition: 'all 0.3s ease',
-                  opacity: (!verificationStatus || !verifiedBy.trim()) ? 0.6 : 1
-                }}
-                onClick={handleVerifyPayment}
-                disabled={!verificationStatus || !verifiedBy.trim() || verifying}
-              >
-                {verifying ? 'Processing...' : `Mark as ${verificationStatus}`}
-              </button>
-            </div>
+  <div className="modal-overlay">
+    <div className="modal-content">
+      <h2 className="modal-title">
+        Verify Payment
+      </h2>
+      
+      <div className="modal-body">
+        {/* Change Status Section */}
+        <div className="modal-section">
+          <div className="modal-field-label">Change Status</div>
+          <div className="status-options">
+            <button
+              className={`status-option-btn ${verificationStatus === 'pending' ? 'active pending' : ''}`}
+              onClick={() => setVerificationStatus('pending')}
+            >
+              Pending
+            </button>
+            <button
+              className={`status-option-btn ${verificationStatus === 'verified' ? 'active verified' : ''}`}
+              onClick={() => setVerificationStatus('verified')}
+            >
+              Verified
+            </button>
+            <button
+              className={`status-option-btn ${verificationStatus === 'rejected' ? 'active rejected' : ''}`}
+              onClick={() => setVerificationStatus('rejected')}
+            >
+              Rejected
+            </button>
           </div>
         </div>
-      )}
-
-      <style jsx="true">{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
         
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+        {/* UTR Number Section */}
+        <div className="modal-section">
+          <div className="modal-field-label">UTR Number</div>
+          <div className="modal-utr-display">
+            {selectedPlayer?.utrNumber || '2334455675646523'}
+          </div>
+        </div>
         
-        button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
+        {/* Current Status Section */}
+        <div className="modal-section">
+          <div className="modal-field-label">Current Status</div>
+          <div className="current-status-display">
+            <span className="modal-status-badge pending">
+              {selectedPlayer?.paymentStatus || 'pending'}
+            </span>
+          </div>
+        </div>
         
-        @media (max-width: 1200px) {
-          .container {
-            max-width: 100%;
-            margin: 0 20px;
-          }
-        }
+        {/* Verified By field */}
+        <div className="modal-section">
+          <div className="modal-field-label">
+            Verified By (Your Name)
+          </div>
+          <input
+            type="text"
+            className="modal-input"
+            placeholder="Enter your name"
+            value={verifiedBy}
+            onChange={(e) => setVerifiedBy(e.target.value)}
+          />
+        </div>
         
-        @media (max-width: 768px) {
-          .header {
-            flex-direction: column;
-            gap: 20px;
-            text-align: center;
-          }
-          
-          .stats-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .filter-section {
-            flex-direction: column;
-          }
-          
-          .tabs {
-            flex-wrap: wrap;
-          }
-          
-          table {
-            display: block;
-            overflow-x: auto;
-          }
-          
-          th, td {
-            padding: 10px !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          .header h1 {
-            font-size: 1.8rem;
-          }
-          
-          .modal-content {
-            padding: 20px;
-            width: 95%;
-          }
-          
-          button {
-            padding: 8px 12px !important;
-            font-size: 0.9rem !important;
-          }
-        }
-      `}</style>
+        {/* Notes field */}
+        <div className="modal-section">
+          <div className="modal-field-label">
+            Notes (Optional)
+          </div>
+          <textarea
+            className="modal-textarea"
+            placeholder="Add any notes or remarks..."
+            value={verificationNotes}
+            onChange={(e) => setVerificationNotes(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      {/* Modal actions at the bottom */}
+      <div className="modal-actions">
+        <button
+          className="modal-btn cancel-btn"
+          onClick={() => {
+            setShowVerifyModal(false);
+            setSelectedPlayer(null);
+            setVerificationStatus('');
+            setVerifiedBy('');
+            setVerificationNotes('');
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          className={`modal-btn confirm-btn ${verificationStatus || 'pending'}`}
+          onClick={handleVerifyPayment}
+          disabled={!verifiedBy.trim() || verifying}
+        >
+          {verifying ? 'Processing...' : `Mark as ${verificationStatus || 'pending'}`}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

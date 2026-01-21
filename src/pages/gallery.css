@@ -9,23 +9,24 @@
 }
 
 /* Main gallery page */
-.gallery-page {
+.gallery-gallery-page {
   padding: 80px 6%;
   background: linear-gradient(to bottom, var(--cricket-cream), #f0f8ff);
   min-height: 100vh;
 }
 
 /* Page title & subtitle */
-.page-title {
+.gallery-page-title {
   text-align: center;
   font-size: 42px;
   color: var(--cricket-blue);
+  margin-top: 20px;
   margin-bottom: 8px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
-.page-subtitle {
+.gallery-page-subtitle {
   text-align: center;
   color: #444;
   margin-bottom: 30px;
@@ -35,13 +36,12 @@
   margin-right: auto;
 }
 
-
 /* Each gallery section */
-.gallery-section {
+.gallery-gallery-section {
   margin-bottom: 80px;
 }
 
-.section-title {
+.gallery-section-title {
   font-size: 32px;
   color: var(--cricket-green);
   margin-bottom: 12px;
@@ -50,21 +50,21 @@
   font-weight: 700;
 }
 
-.section-subtitle {
+.gallery-section-subtitle {
   font-size: 16px;
   color: #555;
   margin-bottom: 30px;
 }
 
 /* Grid layout */
-.gallery-grid {
+.gallery-gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 25px;
 }
 
 /* Gallery card */
-.gallery-card {
+.gallery-gallery-card {
   position: relative;
   border-radius: 15px;
   overflow: hidden;
@@ -75,7 +75,7 @@
 }
 
 /* Card image */
-.gallery-card img {
+.gallery-gallery-card img {
   width: 100%;
   height: 220px;
   object-fit: cover;
@@ -83,18 +83,24 @@
   transition: transform 0.5s ease;
 }
 
+.gallery-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Hover effect */
-.gallery-card:hover {
+.gallery-gallery-card:hover {
   transform: translateY(-8px) scale(1.03);
   box-shadow: 0 20px 40px rgba(0,0,0,0.25);
 }
 
-.gallery-card:hover img {
+.gallery-gallery-card:hover img {
   transform: scale(1.1);
 }
 
 /* Image overlay for text */
-.image-name {
+.gallery-image-name {
   position: absolute;
   bottom: 0;
   width: 100%;
@@ -109,7 +115,7 @@
 }
 
 /* Highlight badge on top-left corner */
-.image-badge {
+.gallery-image-badge {
   position: absolute;
   top: 10px;
   left: 10px;
@@ -124,7 +130,7 @@
 }
 
 /* MODAL OVERLAY */
-.image-modal {
+.gallery-image-modal {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
@@ -132,22 +138,23 @@
   justify-content: center;
   align-items: center;
   z-index: 999;
-  animation: fadeIn 0.3s ease;
+  animation: gallery-fadeIn 0.3s ease;
 }
 
 /* MODAL CONTENT */
-.modal-content {
+.gallery-modal-content {
   position: relative;
   max-width: 90vw;
-  max-height: 70vh;
+  max-height: 80vh;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.modal-content img {
+.gallery-modal-image {
   max-width: 100%;
   max-height: 80vh;
+  margin-top: 50px;
   width: auto;
   height: auto;
   object-fit: contain;   /* 🔥 MOST IMPORTANT */
@@ -155,11 +162,10 @@
   transition: transform 0.3s ease;
 }
 
-
 /* CLOSE BUTTON */
-.close-btn {
+.gallery-close-btn {
   position: absolute;
-  top: -25px;
+  top: 35px;
   right: 15px;
   background: white;
   border: none;
@@ -170,7 +176,7 @@
 }
 
 /* NEXT / PREV */
-.nav-btn {
+.gallery-nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -182,20 +188,39 @@
   border-radius: 20%;
 }
 
-.nav-btn.prev {
+.gallery-nav-btn.gallery-prev {
   left: -80px;
 }
 
-.nav-btn.next {
+.gallery-nav-btn.gallery-next {
   right: -80px;
 }
 
 /* ZOOM CONTROLS */
+.gallery-zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+}
 
-
+.gallery-zoom-btn {
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* ANIMATIONS */
-@keyframes fadeIn {
+@keyframes gallery-fadeIn {
   from {
     opacity: 0;
   }
@@ -204,7 +229,7 @@
   }
 }
 
-@keyframes scaleIn {
+@keyframes gallery-scaleIn {
   from {
     transform: scale(0.8);
   }
@@ -213,43 +238,67 @@
   }
 }
 
-
-
 /* Responsive */
 @media (max-width: 992px) {
-  .gallery-card img {
+  .gallery-gallery-card img {
     height: 200px;
   }
 }
 
 @media (max-width: 768px) {
-  .gallery-grid {
+  .gallery-gallery-grid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
   }
-  .gallery-card img {
+  .gallery-gallery-card img {
     height: 160px;
+  }
+
+  .gallery-close-btn{
+    position: fixed;
+    top: 90px;  
+    font-size: 16px;  
+  }
+  
+  .gallery-nav-btn.gallery-prev {
+    left: 10px;
+   font-size: 10px;
+  }
+  
+  .gallery-nav-btn.gallery-next {
+    right: 10px;
+    font-size: 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .page-title {
+  .gallery-page-title {
     font-size: 28px;
   }
-  .section-title {
+  .gallery-section-title {
     font-size: 24px;
   }
-  .image-name {
+  .gallery-image-name {
     font-size: 13px;
   }
-  .image-badge {
+  .gallery-image-badge {
     font-size: 10px;
     padding: 3px 8px;
   }
 
-    .page-title {
-        font-size: 30px;
-        margin-top: 30px;
-    }
+  .gallery-page-title {
+    font-size: 30px;
+    margin-top: 30px;
+  }
+  
+  .gallery-gallery-page {
+    padding: 60px 4% 40px;
+  }
 }
 
+/* Home container */
+.gallery-home-container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, var(--cricket-cream), #f0f8ff);
+}

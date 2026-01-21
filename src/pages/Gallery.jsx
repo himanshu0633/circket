@@ -1,15 +1,24 @@
 import "./gallery.css";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from '../pages/components/header';
 import Footer from '../pages/components/footer';
+
+
+
+
+
 const Gallery = () => {
   const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
 
-  
+  // 🔥 ADD THIS
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
 
   // 🔹 All images for navigation
   const allImages = [
@@ -67,16 +76,42 @@ const Gallery = () => {
     setSelectedImage(allImages[i]);
     setZoom(1);
   };
+ useEffect(() => {
+  if (!selectedImage) return;
 
-  const zoomIn = (e) => {
-    e.stopPropagation();
-    setZoom((z) => Math.min(z + 0.2, 3));
+  const handleKeyDown = (e) => {
+    if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
+      e.preventDefault(); // scroll band
+    }
+
+    if (e.key === "ArrowRight") {
+      const i = (currentIndex + 1) % allImages.length;
+      setCurrentIndex(i);
+      setSelectedImage(allImages[i]);
+      setZoom(1);
+    }
+
+    if (e.key === "ArrowLeft") {
+      const i = (currentIndex - 1 + allImages.length) % allImages.length;
+      setCurrentIndex(i);
+      setSelectedImage(allImages[i]);
+      setZoom(1);
+    }
+
+    if (e.key === "Escape") {
+      closeModal();
+    }
   };
 
-  const zoomOut = (e) => {
-    e.stopPropagation();
-    setZoom((z) => Math.max(z - 0.2, 1));
+  window.addEventListener("keydown", handleKeyDown);
+
+  
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
   };
+}, [selectedImage, currentIndex]);
+
 
   // 🔹 Gallery sections
   const gallerySections = [
@@ -134,55 +169,59 @@ const Gallery = () => {
 
   return (
     <>
-    <Header/>
-    <div className="home-container">
-      {/* 🔹 GALLERY */}
-      <section className="gallery-page">
-        <h1 className="page-title">Cricket Gallery</h1>
-        <p className="page-subtitle">
-          Relive the best moments from matches, celebrations, and awards
-        </p>
+      <Header/>
+      <div className="gallery-home-container">
+        {/* 🔹 GALLERY */}
+        <section className="gallery-gallery-page">
+          <h1 className="gallery-page-title">Cricket Gallery</h1>
+          <p className="gallery-page-subtitle">
+            Relive the best moments from matches, celebrations, and awards
+          </p>
 
-        {gallerySections.map((section, idx) => (
-          <div className="gallery-section" key={idx}>
-            <h2 className="section-title">{section.title}</h2>
-            <p className="section-subtitle">{section.subtitle}</p>
+          {gallerySections.map((section, idx) => (
+            <div className="gallery-gallery-section" key={idx}>
+              <h2 className="gallery-section-title">{section.title}</h2>
+              <p className="gallery-section-subtitle">{section.subtitle}</p>
 
-            <div className="gallery-grid">
-              {section.images.map((img, i) => (
-                <div
-                  key={i}
-                  className="gallery-card"
-                  onClick={() => openImage(img.src)}
-                >
-                  <img src={img.src} alt="" />
-                </div>
-              ))}
+              <div className="gallery-gallery-grid">
+                {section.images.map((img, i) => (
+                  <div
+                    key={i}
+                    className="gallery-gallery-card"
+                    onClick={() => openImage(img.src)}
+                  >
+                    <img src={img.src} alt="" className="gallery-card-image" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* 🔹 MODAL */}
+        {selectedImage && (
+          <div className="gallery-image-modal" onClick={closeModal}>
+            <div className="gallery-modal-content" onClick={(e) => e.stopPropagation()}>
+              <img
+                src={selectedImage}
+                alt="Full"
+                className="gallery-modal-image"
+                style={{ transform: `scale(${zoom})` }}
+              />
+
+              <button className="gallery-close-btn" onClick={closeModal}>✖</button>
+              <button className="gallery-nav-btn gallery-prev" onClick={prevImage}>❮</button>
+              <button className="gallery-nav-btn gallery-next" onClick={nextImage}>❯</button>
+
+              {/* <div className="gallery-zoom-controls">
+                <button className="gallery-zoom-btn" onClick={zoomIn}>+</button>
+                <button className="gallery-zoom-btn" onClick={zoomOut}>-</button>
+              </div> */}
             </div>
           </div>
-        ))}
-      </section>
-
-      {/* 🔹 MODAL */}
-      {selectedImage && (
-        <div className="image-modal" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={selectedImage}
-              alt="Full"
-              style={{ transform: `scale(${zoom})` }}
-            />
-
-            <button className="close-btn" onClick={closeModal}>✖</button>
-            <button className="nav-btn prev" onClick={prevImage}>❮</button>
-            <button className="nav-btn next" onClick={nextImage}>❯</button>
-
-           
-          </div>
-        </div>
-      )}
-    </div>
-    <Footer/>
+        )}
+      </div>
+      <Footer/>
     </>
   );
 };
