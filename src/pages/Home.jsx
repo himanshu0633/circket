@@ -3,10 +3,13 @@ import './Home.css';
 import { useNavigate } from "react-router-dom";
 import Header from '../pages/components/header';
 import Footer from '../pages/components/footer';
+import TutorialVideo from "../assets/Tutorial.mp4";
+
 
 const Home = () => {
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [stadiumImageIndex, setStadiumImageIndex] = useState(0);
+   const [showVideo, setShowVideo] = useState(false);
   
   // Hero section images
   const heroImages = [
@@ -100,50 +103,75 @@ const Home = () => {
 
         {/* Hero Section with Slideshow */}
         <section className="hero">
-          {/* Hero Slideshow Container */}
-          <div className="hero-slideshow">
-            {heroImages.map((img, index) => (
-              <div 
-                key={index}
-                className={`hero-slide ${index === heroImageIndex ? 'active' : ''}`}
-                style={{ backgroundImage: `linear-gradient(rgba(10, 10, 10, 0.7), rgba(0, 0, 0, 0.567)), url('${img}')` }}
-              />
-            ))}
-            
-            {/* Slideshow Dots */}
-            <div className="slideshow-dots">
-              {heroImages.map((_, index) => (
-                <button
-                  key={index}
-                  className={`dot ${index === heroImageIndex ? 'active' : ''}`}
-                  onClick={() => setHeroImageIndex(index)}
-                />
-              ))}
-            </div>
-          </div>
-          
-          <div className="hero-content">
-            <h1>JOIN THE CRICKET REVOLUTION AT YAMUNANAGAR GROUND</h1>
-            <p>Experience professional cricket at our state-of-the-art stadium. Daily matches with certified umpires, advanced facilities, and a perfect platform to showcase your talent. Register now for CDS Cricket Premier League 2025-26!</p>
-            
+  {/* Hero Slideshow */}
+  <div className="hero-slideshow">
+    {heroImages.map((img, index) => (
+      <div 
+        key={index}
+        className={`hero-slide ${index === heroImageIndex ? 'active' : ''}`}
+        style={{
+          backgroundImage: `linear-gradient(rgba(10,10,10,0.7), rgba(0,0,0,0.56)), url('${img}')`
+        }}
+      />
+    ))}
 
-              <button 
-            className="register-btn" 
-            onClick={() => navigate("/playerRegistration")}
-          >
-            Register As Player
-          </button>
-            
-            
-            <button onClick={() => navigate("/login")} className="register-btn">
-              Login
-            </button>
-          </div>
-          
-          {/* Floating Cricket Balls */}
-          <div className="cricket-ball ball-1"></div>
-          <div className="cricket-ball ball-2"></div>
-        </section>
+    <div className="slideshow-dots">
+      {heroImages.map((_, index) => (
+        <button
+          key={index}
+          className={`dot ${index === heroImageIndex ? 'active' : ''}`}
+          onClick={() => setHeroImageIndex(index)}
+        />
+      ))}
+    </div>
+  </div>
+
+  {/* HERO CONTENT + VIDEO */}
+  <div className="hero-content-wrapper">
+    
+    {/* Left Content */}
+    <div className="hero-content">
+      <h1>JOIN THE CRICKET REVOLUTION AT YAMUNANAGAR GROUND</h1>
+      <p>
+        Experience professional cricket at our state-of-the-art stadium.
+        Register now for CDS Cricket Premier League 2025-26!
+      </p>
+
+      <button className="register-btn" onClick={() => navigate("/playerRegistration")}>
+        Register As Player
+      </button>
+
+      <button className="register-btn" onClick={() => navigate("/login")}>
+        Login
+      </button>
+    </div>
+
+    {/* Right Video Button */}
+    <div className="hero-video">
+      <button className="play-video-btn" onClick={() => setShowVideo(true)}>
+        ▶ Watch Video
+      </button>
+    </div>
+  </div>
+
+  {/* VIDEO POPUP */}
+  {showVideo && (
+    <div className="video-modal">
+      <div className="video-modal-content">
+        <button className="close-btn" onClick={() => setShowVideo(false)}>✕</button>
+
+        <video controls autoPlay>
+          <source src={TutorialVideo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  )}
+
+  <div className="cricket-ball ball-1"></div>
+  <div className="cricket-ball ball-2"></div>
+</section>
+
 
         {/* Main Content */}
         <div className="main-content">

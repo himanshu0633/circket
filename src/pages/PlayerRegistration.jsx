@@ -332,14 +332,14 @@ const CricketPlayerRegistration = () => {
       border: '2px solid #e2e8f0'
     },
     qrImage: {
-      width: isMobile ? '200px' : '250px',
-      height: isMobile ? '200px' : '250px',
-      margin: '0 auto 20px',
+      width: isMobile ? '300px' : '350px',
+      height: isMobile ? '450px' : '450px',
+      // margin: '0 auto 20px',
       display: 'block',
-      border: '1px solid #e2e8f0',
+      // border: '1px solid #e2e8f0',
       borderRadius: '10px',
-      padding: '10px',
-      background: 'white',
+      // padding: '10px',
+      // background: 'white',
       maxWidth: '100%'
     },
     qrPlaceholder: {
@@ -1146,6 +1146,7 @@ const CricketPlayerRegistration = () => {
                           e.target.style.display = 'none';
                         }}
                       />
+                     
                     ) : (
                       <>
                         <img 
@@ -1167,7 +1168,13 @@ const CricketPlayerRegistration = () => {
                         <div style={{fontSize: '2rem', marginTop: '10px'}}>₹500</div>
                       </div>
                     )}
-                    
+                     <h3 style={{color: '#1e293b', marginBottom: '20px', fontSize: isMobile ? '1.1rem' : '1.2rem'}}>
+                      Or 
+                      <br />
+                      Pay on UPI: 
+                      <br />
+                      9896529577@ptsbi
+                    </h3>
                     <div style={styles.paymentInstructions}>
                       <h4 style={styles.instructionTitle}>How to Pay:</h4>
                       <ul style={styles.instructionList}>
