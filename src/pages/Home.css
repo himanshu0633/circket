@@ -315,8 +315,7 @@
 }
   .video-container video{
     height: 93%;
- 
-     object-fit: contain;
+     object-fit: inherit;
   }
   
   .popup-register-btn, .popup-explore-btn {
