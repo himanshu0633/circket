@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './Home.css';
 import { useNavigate } from "react-router-dom";
 import Header from '../pages/components/header';
 import Footer from '../pages/components/footer';
 import video from '../assets/popupview.mp4';
+
 const Home = () => {
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [stadiumImageIndex, setStadiumImageIndex] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [showVideo, setShowVideo] = useState(true);  
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const bodyRef = useRef(null);
   
   // Hero section images
   const heroImages = [
@@ -27,6 +30,8 @@ const Home = () => {
     '/image/stadium8.jpeg',
     '/image/stadium6.jpeg' 
   ];
+
+  const navigate = useNavigate();
 
   // Show popup on page load/refresh
   useEffect(() => {
@@ -83,31 +88,39 @@ const Home = () => {
     };
   }, []);
 
-  // Video modal को open/close करते समय body scroll रोकने के लिए
+  // Handle body scroll when video modal is open/closed
   useEffect(() => {
     if (showVideo) {
-      document.body.classList.add('video-open');
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      setScrollPosition(scrollY);
+      
+      // Disable scroll
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.classList.remove('video-open');
+      // Re-enable scroll and restore position
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      
+      // Restore scroll position
+      window.scrollTo(0, scrollPosition);
     }
     
     return () => {
-      document.body.classList.remove('video-open');
+      // Cleanup on unmount
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
     };
-  }, [showVideo]);
+  }, [showVideo, scrollPosition]);
 
-  // Auto-close video after 45 seconds
-  useEffect(() => {
-    if (showVideo) {
-      const timer = setTimeout(() => {
-        setShowVideo(false);
-      }, 45000); // 45 seconds
-      
-      return () => clearTimeout(timer);
-    }
-  }, [showVideo]);
-
-  const navigate = useNavigate();
+ 
 
   // Close popup function
   const closePopup = () => {
@@ -137,10 +150,15 @@ const Home = () => {
     }, 200);
   };
 
+  // Close video modal
+  const closeVideoModal = () => {
+    setShowVideo(false);
+  };
+
   return (
     <>
       <Header/>
-      <div className="home-container">
+      <div className="home-container" ref={bodyRef}>
         <div className="bg-pattern"></div>
 
         {/* Welcome Popup with Video */}
@@ -161,32 +179,44 @@ const Home = () => {
                     <div className="feature-item">
                       <i className="fas fa-trophy"></i>
                       <div>
-                        <h4>Professional League</h4>
-                        <p>Certified umpires & equipment</p>
+                        <h4> Fill Personal Details</h4>
+                        <p> Enter your name, age, contact number and other required personal
+          details in the registration form.</p>
                       </div>
                     </div>
                     
                     <div className="feature-item">
                       <i className="fas fa-calendar-day"></i>
                       <div>
-                        <h4>Daily Matches</h4>
-                        <p>4 time slots every day</p>
+                        <h4> Proceed to Payment</h4>
+                        <p>Click on the <strong>Next / Payment</strong> button to continue.
+          A payment screen will appear.</p>
                       </div>
                     </div>
                     
                     <div className="feature-item">
                       <i className="fas fa-users"></i>
                       <div>
-                        <h4>Youth Focused</h4>
-                        <p>Players aged 10-25 years</p>
+                        <h4> Pay Registration Fee</h4>
+                        <p> Scan the QR code or use the provided UPI ID to pay</p>
                       </div>
                     </div>
                     
                     <div className="feature-item">
                       <i className="fas fa-medal"></i>
                       <div>
-                        <h4>Prizes & Awards</h4>
-                        <p>Trophies, medals & certificates</p>
+                        <h4> Enter Payment Details</h4>
+                        <p> After payment, enter the <strong>UTR Number</strong> and upload
+          the payment screenshot for verification.</p>
+                      </div>
+                    </div>
+
+                     <div className="feature-item">
+                      <i className="fas fa-users"></i>
+                      <div>
+                        <h4>  Submit & Register</h4>
+                        <p>Click on the <strong>Submit</strong> button to complete your
+          registration successfully.</p>
                       </div>
                     </div>
                   </div>
@@ -212,8 +242,6 @@ const Home = () => {
                       <i className="fas fa-photo-video"></i> Explore Gallery
                     </button>
                   </div>
-                  
-       
                 </div>
                 
                 <div className="popup-video">
@@ -228,7 +256,6 @@ const Home = () => {
                       <source src={video} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
-               
                   </div>
                 </div>
               </div>
@@ -239,6 +266,8 @@ const Home = () => {
             </div>
           </div>
         )}
+
+    
 
         {/* Hero Section with Slideshow */}
         <section className="hero">
@@ -283,9 +312,6 @@ const Home = () => {
           <div className="cricket-ball ball-1"></div>
           <div className="cricket-ball ball-2"></div>
         </section>
-
-        {/* VIDEO POPUP - Always show on load */}
-       
 
         {/* Main Content */}
         <div className="main-content">
