@@ -865,13 +865,11 @@ const CricketPlayerRegistration = () => {
         
         // Go back to step 1 after successful submission
         setTimeout(() => {
-          setCurrentStep(1);
-          if (isMobile) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        }, 5000);
+            navigate("/");   
+          }, 5000); // 
+        }
         
-      } else {
+       else {
         throw new Error(response.data.message || 'Registration failed. Please try again.');
       }
 

@@ -201,7 +201,6 @@ const Home = () => {
                         <p> Scan the QR code or use the provided UPI ID to pay</p>
                       </div>
                     </div>
-                    
                     <div className="feature-item">
                       <i className="fas fa-medal"></i>
                       <div>
