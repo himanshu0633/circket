@@ -62,7 +62,7 @@ function Header() {
             className="login-btn" 
             onClick={() => navigate("/login")}
           >
-            Register
+            LOG-IN
           </button>
         </div>
 
