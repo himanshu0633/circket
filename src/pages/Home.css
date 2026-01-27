@@ -51,7 +51,7 @@
   }
 }
 
-.popup-close {
+.home-popup-close {
   position: absolute;
   top: 15px;
   right: 15px;
@@ -70,7 +70,7 @@
   justify-content: center;
 }
 
-.popup-close:hover {
+.home-popup-close:hover {
   background: #e0b82e;
   transform: rotate(90deg);
 }
@@ -234,7 +234,7 @@
 
 .video-container video {
   width: 100%;
-  height: 80%;
+  height: 100%;
   object-fit: contain;
   display: block;
 }
@@ -276,7 +276,7 @@
   .popup-grid {
     grid-template-columns: 1fr;
     min-height: auto;
-    height: 580px;
+    height: 700px;
   }
   
   .popup-content {
@@ -287,13 +287,13 @@
     
   }
 
-  .popup-close{
+  .home-popup-close{
     top: 5px;
     right: 5px;  
-    font-size: 25px!important;
-    line-height: 30px !important;
+    font-size: 30px!important;
+    line-height: 10px !important;
     height: 30px !important;
-    width: 35px !important;
+    width: 40px !important;
   }
   .popup-info{
     padding-top: 20px;
@@ -315,7 +315,7 @@
   font-weight: 500;
 }
   .video-container video{
-    height: 93%;
+    height: 100%;
      object-fit: inherit;
   }
   
@@ -324,7 +324,7 @@
   }
 
   .video-container {
-   height: 320px;
+   height: 100%;
     object-fit: cover; 
   }
   
@@ -343,6 +343,13 @@
     ;
   }
 }
+
+@media (max-width: 768px) {
+  .popup-content {
+    width: 90%;
+    max-height: 90vh;
+  }
+} 
 
 /* Existing Home.css Styles */
 :root {
@@ -480,6 +487,11 @@ body:not(.video-modal-open) {
   display: inline-block;
   text-transform: uppercase;
   letter-spacing: 1px;
+};
+
+.register-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(201, 162, 39, 0.3);
 }
 
 .register-btn:hover {
@@ -953,7 +965,7 @@ body:not(.video-modal-open) {
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero {
-    height: 80vh;
+    height: 90vh;
     margin-top: 50px;
   }
   
@@ -1009,7 +1021,7 @@ body:not(.video-modal-open) {
   
   .cta-register-btn {
     padding: 0.9rem 1.8rem;
-    font-size: 1.1rem;
+    font-size: 1.rem;
     font-weight: 900;
   }
   
@@ -1021,12 +1033,14 @@ body:not(.video-modal-open) {
   
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
   .header-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 10px;
+   
+
   }
 
   /* LEFT → LOGO */
@@ -1072,11 +1086,11 @@ body:not(.video-modal-open) {
   /* RIGHT → BUTTON */
   .login-btn {
     padding: 9px !important;
-    font-size: 0.1rem;
+    font-size: 0.5rem;
     text-align: center;
     width: 70px;
     height: 30px;
-    margin-bottom: 20px;
+    
   }
 
   .hero h1 {
@@ -1090,7 +1104,7 @@ body:not(.video-modal-open) {
   
   .register-btn, .cta-register-btn, .login-btn {
     padding: 0.8rem 1.5rem;
-    font-size: 0.7rem;
+    font-size: 0.9rem;
   }
   
   .section-title {
@@ -1112,6 +1126,24 @@ body:not(.video-modal-open) {
     border-radius: 5px;
   }
   
+}
+
+@media (max-width: 380px) {
+
+
+  .hero h1 {
+    font-size: 1.5rem;
+    padding: 15px;  
+
+  }
+
+  .hero p {
+    font-size: 0.9rem;
+}
+  .register-btn, .cta-register-btn, .login-btn {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.8rem;
+}
 }
 
 
