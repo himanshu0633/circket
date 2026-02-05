@@ -166,7 +166,7 @@ const Home = () => {
           <div className="welcome-popup">
             <div className="popup-overlay" onClick={closePopup}></div>
             <div className="popup-content">
-              <button className="popup-close" onClick={closePopup}>
+              <button className="home-popup-close" onClick={closePopup}>
                 <i className="fas fa-times"></i>
               </button>
               
