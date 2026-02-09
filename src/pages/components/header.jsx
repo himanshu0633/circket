@@ -51,12 +51,12 @@ function Header() {
 
         {/* RIGHT - DESKTOP BUTTONS */}
         <div className="desktop-buttons">
-          <button 
+          {/* <button 
             className="login-btn login-bnt-padding" 
             onClick={() => navigate("/playerRegistration")}
           >
             Register As Player
-          </button>
+          </button> */}
           
           <button 
             className="login-btn" 

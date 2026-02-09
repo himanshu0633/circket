@@ -298,13 +298,13 @@ const Home = () => {
             <h1>JOIN THE CRICKET REVOLUTION AT YAMUNANAGAR GROUND</h1>
             <p>Experience professional cricket at our state-of-the-art stadium. Daily matches with certified umpires, advanced facilities, and a perfect platform to showcase your talent. Register now for CDS Cricket Premier League 2025-26!</p>
             
-            <button 
+            {/* <button 
               className="register-btn" 
               onClick={() => navigate("/playerRegistration")}
             >
               Register As Player
             </button>
-            
+             */}
             <button onClick={() => navigate("/login")} className="register-btn">
               Login
             </button>
