@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import API, { IMAGE_BASE_URL, API_BASE_URL } from '../api/axios';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   // State variables
-  const [players, setPlayers] = useState([]);
-  const [allPlayers, setAllPlayers] = useState([]);
+  const [allPlayers, setAllPlayers] = useState([]); // सभी players का main array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -22,7 +21,6 @@ const AdminDashboard = () => {
     totalCollection: 0
   });
   
-  const [dashboardStats, setDashboardStats] = useState(null);
   const [detailedStats, setDetailedStats] = useState({
     roleStats: [],
     categoryStats: [],
@@ -96,19 +94,12 @@ const AdminDashboard = () => {
     }
   ];
 
-  // Fetch all players (not just pending) for admin view
-  const fetchAllPlayers = async () => {
+  // Fetch dashboard stats
+  const fetchDashboardStats = async () => {
     try {
-      setLoading(true);
-      setError('');
-      
-      // First get dashboard stats
       const statsResponse = await API.get(`/player/dashboard-stats`);
       
       if (statsResponse.data.success) {
-        setDashboardStats(statsResponse.data.data);
-        
-        // Calculate basic stats from dashboard data
         const overview = statsResponse.data.data.overview;
         setStats({
           total: overview.totalPlayers,
@@ -118,49 +109,50 @@ const AdminDashboard = () => {
           totalCollection: overview.totalCollection
         });
         
-        // Set detailed stats
         setDetailedStats({
           roleStats: statsResponse.data.data.roleStats || [],
           categoryStats: statsResponse.data.data.categoryStats || [],
           monthlyStats: statsResponse.data.data.monthlyStats || []
         });
       }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
+
+  // Fetch all players for both views
+  const fetchAllPlayers = async () => {
+    try {
+      setLoading(true);
+      setError('');
       
-      // Fetch all players with pagination
-      const playersResponse = await API.get(`/player/all-players`, { 
+      // Fetch dashboard stats
+      await fetchDashboardStats();
+      
+      // Fetch all players without pagination for verification view
+      const response = await API.get(`/player/all-players`, {
         params: {
-          page: currentPage,
-          limit: itemsPerPage,
-          status: filters.status !== 'all' ? filters.status : undefined,
-          role: filters.role !== 'all' ? filters.role : undefined,
-          category: filters.category !== 'all' ? filters.category : undefined
+          page: 1,
+          limit: 1000, // Large limit to get all players
+          status: 'all'
         }
       });
       
-      if (playersResponse.data.success) {
-        setAllPlayers(playersResponse.data.data);
-        setCurrentPage(playersResponse.data.pagination?.page || 1);
-        setTotalPages(playersResponse.data.pagination?.pages || 1);
-      }
-      
-      // Fetch pending players for the pending-only view
-      const pendingResponse = await API.get(`/player/pending-registrations`);
-      
-      if (pendingResponse.data.success) {
-        setPlayers(pendingResponse.data.data || []);
+      if (response.data.success) {
+        setAllPlayers(response.data.data);
       }
       
     } catch (err) {
-      console.error('Error fetching data:', err.response || err.message);
-      setError('Failed to connect to server. Using demo data.');
+      console.error('Error fetching all players:', err.response || err.message);
+      setError('Failed to fetch players. Using demo data.');
       useMockData();
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch players with advanced search
-  const fetchPlayersWithFilters = async (page = 1) => {
+  // Fetch players with filters for all players view
+  const fetchFilteredPlayers = async (page = 1) => {
     try {
       setLoading(true);
       
@@ -192,7 +184,30 @@ const AdminDashboard = () => {
     }
   };
 
-  // Helper function to generate mock players with specific status
+  // Filter players based on active tab and filters
+  const getFilteredPlayers = useMemo(() => {
+    let filtered = [...allPlayers];
+    
+    // Apply active tab filter (only for verification view)
+    if (!showAllPlayersView && activeTab !== 'all') {
+      filtered = filtered.filter(player => player.paymentStatus === activeTab);
+    }
+    
+    // Apply search filter if in all players view
+    if (showAllPlayersView && filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(player => 
+        player.name?.toLowerCase().includes(searchLower) ||
+        player.email?.toLowerCase().includes(searchLower) ||
+        player.phone?.includes(filters.search) ||
+        player.utrNumber?.includes(filters.search)
+      );
+    }
+    
+    return filtered;
+  }, [allPlayers, activeTab, showAllPlayersView, filters.search]);
+
+  // Helper function to generate mock players
   const generateMockPlayersWithStatus = (status, count) => {
     const names = ['Aarav Sharma', 'Vivaan Patel', 'Aditya Singh', 'Vihaan Kumar', 'Arjun Gupta'];
     const roles = ['Batsman', 'Bowler', 'Allrounder', 'Wicket Keeper'];
@@ -226,7 +241,6 @@ const AdminDashboard = () => {
       ...generateMockPlayersWithStatus('rejected', 4)
     ];
     
-    setPlayers(mockPlayers.filter(p => p.paymentStatus === 'pending'));
     setAllPlayers(mockPlayers);
     
     // Calculate stats
@@ -259,6 +273,32 @@ const AdminDashboard = () => {
     });
   };
 
+  // Handle role click - filter by role
+  const handleRoleClick = (role) => {
+    // Switch to All Players view
+    setShowAllPlayersView(true);
+    
+    // Set role filter
+    setFilters(prev => ({
+      ...prev,
+      role: role,
+      status: 'all', // Reset other filters
+      category: 'all',
+      search: ''
+    }));
+    
+    // Reset page
+    setCurrentPage(1);
+    
+    // Fetch players with role filter
+    setTimeout(() => {
+      fetchFilteredPlayers(1);
+    }, 100);
+    
+    setSuccess(`Filtered by role: ${role}`);
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
   // Handle verification
   const handleVerifyPayment = async () => {
     if (!selectedPlayer || !verificationStatus || !verifiedBy.trim()) {
@@ -270,7 +310,7 @@ const AdminDashboard = () => {
       setVerifying(true);
       
       // Skip API call for mock data
-      if (selectedPlayer._id.startsWith('mock_')) {
+      if (selectedPlayer._id && selectedPlayer._id.startsWith('mock_')) {
         // Update mock data locally
         const updatedPlayer = {
           ...selectedPlayer,
@@ -280,13 +320,7 @@ const AdminDashboard = () => {
           notes: verificationNotes || null
         };
         
-        // Update both players arrays
-        setPlayers(prevPlayers => 
-          prevPlayers.map(player => 
-            player._id === selectedPlayer._id ? updatedPlayer : player
-          )
-        );
-        
+        // Update players array
         setAllPlayers(prevPlayers => 
           prevPlayers.map(player => 
             player._id === selectedPlayer._id ? updatedPlayer : player
@@ -309,49 +343,19 @@ const AdminDashboard = () => {
           // Update local state
           const updatedPlayer = response.data.data;
           
-          setPlayers(prevPlayers => 
-            prevPlayers.map(player => 
-              player._id === selectedPlayer._id ? updatedPlayer : player
-            )
-          );
-          
           setAllPlayers(prevPlayers => 
             prevPlayers.map(player => 
               player._id === selectedPlayer._id ? updatedPlayer : player
             )
           );
+          
+          // Refresh stats
+          await fetchDashboardStats();
         } else {
           setError(response.data.message || 'Verification failed');
           return;
         }
       }
-      
-      // Update stats
-      setStats(prevStats => {
-        const newStats = { ...prevStats };
-        
-        // Decrease from old status
-        if (selectedPlayer.paymentStatus === 'pending') {
-          newStats.pending--;
-        } else if (selectedPlayer.paymentStatus === 'verified') {
-          newStats.verified--;
-          newStats.totalCollection -= 500;
-        } else if (selectedPlayer.paymentStatus === 'rejected') {
-          newStats.rejected--;
-        }
-        
-        // Increase to new status
-        if (verificationStatus === 'pending') {
-          newStats.pending++;
-        } else if (verificationStatus === 'verified') {
-          newStats.verified++;
-          newStats.totalCollection += 500;
-        } else if (verificationStatus === 'rejected') {
-          newStats.rejected++;
-        }
-        
-        return newStats;
-      });
       
       setShowVerifyModal(false);
       setSelectedPlayer(null);
@@ -412,7 +416,7 @@ const AdminDashboard = () => {
 
   // Handle advanced filter search
   const handleAdvancedSearch = () => {
-    fetchPlayersWithFilters(1);
+    fetchFilteredPlayers(1);
   };
 
   // Clear all filters
@@ -425,12 +429,14 @@ const AdminDashboard = () => {
       startDate: '',
       endDate: ''
     });
+    setCurrentPage(1);
+    setShowAllPlayersView(false);
     fetchAllPlayers();
   };
 
-  // Export data to CSV
+  // Export data to CSV (CURRENT VIEW/FILTERED DATA)
   const exportToCSV = () => {
-    const playersToExport = showAllPlayersView ? allPlayers : players;
+    const playersToExport = getFilteredPlayers;
     
     if (playersToExport.length === 0) {
       setError('No data to export');
@@ -448,8 +454,8 @@ const AdminDashboard = () => {
         `"${player.category || 'N/A'}"`,
         `"${player.utrNumber || 'N/A'}"`,
         `"${player.paymentStatus || 'N/A'}"`,
-        `"${player.createdAt ? new Date(player.createdAt).toLocaleDateString() : 'N/A'}"`,
-        `"${player.verificationDate ? new Date(player.verificationDate).toLocaleDateString() : 'Not Verified'}"`,
+        `"${player.createdAt ? new Date(player.createdAt).toLocaleDateString('en-IN') : 'N/A'}"`,
+        `"${player.verificationDate ? new Date(player.verificationDate).toLocaleDateString('en-IN') : 'Not Verified'}"`,
         `"${player.verifiedBy || 'N/A'}"`,
         `"${player.teamPreference || 'Not Specified'}"`
       ].join(','))
@@ -459,32 +465,57 @@ const AdminDashboard = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cds-premier-league-registrations-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `cds-premier-league-${showAllPlayersView ? 'all' : activeTab}-players-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
     
-    setSuccess('Data exported successfully!');
+    setSuccess(`Data exported successfully! (${playersToExport.length} records)`);
     setTimeout(() => setSuccess(''), 3000);
   };
 
   // Export to Excel via API
   const exportToExcel = async () => {
     try {
-      // Build query parameters from filters
+      // For verification view with tabs, use current filter
       const params = new URLSearchParams();
-      if (filters.status !== 'all') params.append('status', filters.status);
-      if (filters.role !== 'all') params.append('role', filters.role);
-      if (filters.category !== 'all') params.append('category', filters.category);
-      if (filters.search) params.append('search', filters.search);
-      if (filters.startDate) params.append('startDate', filters.startDate);
-      if (filters.endDate) params.append('endDate', filters.endDate);
       
-      // For now, use CSV export as fallback
-      exportToCSV();
+      if (showAllPlayersView) {
+        // Use advanced filters for all players view
+        if (filters.status !== 'all') params.append('status', filters.status);
+        if (filters.role !== 'all') params.append('role', filters.role);
+        if (filters.category !== 'all') params.append('category', filters.category);
+        if (filters.search) params.append('search', filters.search);
+        if (filters.startDate) params.append('startDate', filters.startDate);
+        if (filters.endDate) params.append('endDate', filters.endDate);
+      } else {
+        // For verification view, use active tab
+        if (activeTab !== 'all') {
+          params.append('status', activeTab);
+        }
+      }
+      
+      // Make API call to export endpoint
+      const response = await API.get(`/player/export-players`, {
+        params: params,
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `cds-premier-league-${showAllPlayersView ? 'all' : activeTab}-players-${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      setSuccess('Excel file exported successfully!');
+      setTimeout(() => setSuccess(''), 3000);
       
     } catch (error) {
       console.error('Error exporting to Excel:', error);
-      setError('Failed to export data');
+      // Fallback to CSV if Excel export fails
+      exportToCSV();
     }
   };
 
@@ -496,12 +527,6 @@ const AdminDashboard = () => {
     setVerificationNotes(player.notes || '');
     setShowVerifyModal(true);
   };
-
-  // Filter players based on active tab (for pending-only view)
-  const filteredPlayers = players.filter(player => {
-    if (activeTab === 'all') return true;
-    return player.paymentStatus === activeTab;
-  });
 
   // Format date
   const formatDate = (dateString) => {
@@ -534,7 +559,7 @@ const AdminDashboard = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     if (showAllPlayersView) {
-      fetchPlayersWithFilters(page);
+      fetchFilteredPlayers(page);
     }
   };
 
@@ -543,19 +568,38 @@ const AdminDashboard = () => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
+  // Handle view toggle
+  const handleViewToggle = (isAllPlayersView) => {
+    setShowAllPlayersView(isAllPlayersView);
+    setCurrentPage(1);
+    setActiveTab('all');
+    
+    if (isAllPlayersView) {
+      fetchFilteredPlayers(1);
+    } else {
+      fetchAllPlayers();
+    }
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  // Initial data fetch
   useEffect(() => {
     fetchAllPlayers();
-  }, [currentPage, showAllPlayersView]);
+  }, []);
 
-  // Add this useEffect to handle filters
+  // Handle filters in all players view
   useEffect(() => {
     if (showAllPlayersView) {
       const timer = setTimeout(() => {
-        fetchPlayersWithFilters(1);
+        fetchFilteredPlayers(1);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [filters.status, filters.role, filters.category]);
+  }, [filters.status, filters.role, filters.category, filters.search]);
 
   return (
     <div className="admin-dashboard">
@@ -613,38 +657,31 @@ const AdminDashboard = () => {
                   <h4 className="stat-group-title">Role Distribution</h4>
                   <div className="stat-items-list">
                     {detailedStats.roleStats.map(role => (
-                      <div key={role._id} className="stat-item">
+                      <div 
+                        key={role._id} 
+                        className="stat-item clickable-role"
+                        onClick={() => handleRoleClick(role._id)}
+                        title={`Click to filter by ${role._id}`}
+                      >
                         <div className="stat-item-content">
-                          <div className="stat-item-label">{role._id}</div>
+                          <span className="role-label">{role._id}</span>
                           <div className="stat-item-subtext">
                             Total: {role.count} | ✓ {role.verified || 0} | ⏳ {role.pending || 0} | ✗ {role.rejected || 0}
                           </div>
-                        </div>
-                        <div className="stat-item-count">
-                          {role.count}
+                           <div className="stat-item-label">
+                            <span className="click-hint">(click to filter)</span>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                
-                {/* Category Distribution */}
-                <div className="stat-detail-group">
-                  <h4 className="stat-group-title">Category Distribution</h4>
-                  <div className="stat-items-list">
-                    {detailedStats.categoryStats.map(category => (
-                      <div key={category._id} className="stat-item">
-                        <div className="stat-item-label">{category._id}</div>
-                        <div className="stat-item-count category-count">
-                          {category.count}
-                        </div>
-                      </div>
-                    ))}
+
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+          
+      
         )}
 
         {/* Main Content */}
@@ -669,7 +706,7 @@ const AdminDashboard = () => {
             <div className="view-toggle-buttons">
               <button
                 className={`view-toggle-btn ${!showAllPlayersView ? 'active' : ''}`}
-                onClick={() => setShowAllPlayersView(false)}
+                onClick={() => handleViewToggle(false)}
               >
                 <span className="btn-icon">⏳</span>
                 Pending Verification
@@ -677,7 +714,7 @@ const AdminDashboard = () => {
               
               <button
                 className={`view-toggle-btn ${showAllPlayersView ? 'active' : ''}`}
-                onClick={() => setShowAllPlayersView(true)}
+                onClick={() => handleViewToggle(true)}
               >
                 <span className="btn-icon">📋</span>
                 All Players
@@ -694,8 +731,16 @@ const AdminDashboard = () => {
               </button>
               
               <button
+                className="action-btn export-csv-btn"
+                onClick={exportToCSV}
+              >
+                <span className="btn-icon">📄</span>
+                Export CSV
+              </button>
+              
+              <button
                 className="action-btn refresh-btn"
-                onClick={fetchAllPlayers}
+                onClick={showAllPlayersView ? () => fetchFilteredPlayers(1) : fetchAllPlayers}
                 disabled={loading}
               >
                 <span className="btn-icon">🔄</span>
@@ -705,7 +750,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Advanced Filters (for All Players view) */}
-          {showAllPlayersView && (
+          {/* {showAllPlayersView && (
             <div className="advanced-filters-card">
               <h3 className="section-title">Advanced Filters</h3>
               
@@ -804,7 +849,7 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Quick Status Check */}
           <div className="quick-search-card">
@@ -836,7 +881,6 @@ const AdminDashboard = () => {
                 onClick={handleStatusCheck}
                 disabled={searching}
               >
-                {/* <span className="btn-icon">🔍</span> */}
                 {searching ? 'Searching...' : 'Check Status'}
               </button>
             </div>
@@ -868,7 +912,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="result-field">
                     <div className="field-label">Registered</div>
-                    <div className="field-value">{formatDate(searchResults.createdAt || searchResults.registeredAt)}</div>
+                    <div className="field-value">{formatDate(searchResults.registeredAt)}</div>
                   </div>
                   {searchResults.verifiedBy && (
                     <div className="result-field">
@@ -888,7 +932,7 @@ const AdminDashboard = () => {
                 <button
                   key={tab}
                   className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabChange(tab)}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   {tab !== 'all' && (
@@ -914,9 +958,58 @@ const AdminDashboard = () => {
                 <h3 className="table-title">
                   {showAllPlayersView ? 'All Registered Players' : 'Players for Verification'}
                   <span className="table-subtitle">
-                    ({showAllPlayersView ? allPlayers.length : filteredPlayers.length} players)
+                    ({getFilteredPlayers.length} players)
                   </span>
                 </h3>
+                
+                {showAllPlayersView && (
+                  <div className="filter-summary">
+                    {filters.role !== 'all' && (
+                      <span className="filter-tag">
+                        Role: {filters.role}
+                        <button 
+                          className="filter-remove"
+                          onClick={() => handleFilterChange('role', 'all')}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.status !== 'all' && (
+                      <span className="filter-tag">
+                        Status: {filters.status}
+                        <button 
+                          className="filter-remove"
+                          onClick={() => handleFilterChange('status', 'all')}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.category !== 'all' && (
+                      <span className="filter-tag">
+                        Category: {filters.category}
+                        <button 
+                          className="filter-remove"
+                          onClick={() => handleFilterChange('category', 'all')}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.search && (
+                      <span className="filter-tag">
+                        Search: {filters.search}
+                        <button 
+                          className="filter-remove"
+                          onClick={() => handleFilterChange('search', '')}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
                 
                 {showAllPlayersView && totalPages > 1 && (
                   <div className="pagination-controls">
@@ -944,7 +1037,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Table */}
-              {(showAllPlayersView ? allPlayers : filteredPlayers).length === 0 ? (
+              {getFilteredPlayers.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">📋</div>
                   <h3>No players found</h3>
@@ -976,7 +1069,7 @@ const AdminDashboard = () => {
                     </thead>
                     
                     <tbody>
-                      {(showAllPlayersView ? allPlayers : filteredPlayers).map(player => (
+                      {getFilteredPlayers.map(player => (
                         <tr key={player._id} className="table-row">
                           {/* Player Details Column */}
                           <td 
@@ -1124,7 +1217,7 @@ const AdminDashboard = () => {
                                     email: player.email,
                                     utrNumber: player.utrNumber,
                                     paymentStatus: player.paymentStatus,
-                                    createdAt: player.createdAt,
+                                    registeredAt: player.createdAt,
                                     verifiedBy: player.verifiedBy
                                   });
                                 }}

@@ -672,20 +672,24 @@ const CricketPlayerRegistration = () => {
   };
 
   // Validate CricHeroes profile link format
-  const validateCricHeroesLink = (link) => {
-    // Check if link contains cricheroes.com
-    if (!link.includes('cricheroes.com')) {
-      throw new Error('Profile link must be a valid CricHeroes URL');
-    }
-    
-    // Check for specific pattern: https://cricheroes.com/player-profile/{numbers}/{name}
-    const pattern = /^https:\/\/cricheroes\.com\/player-profile\/\d+\/[A-Za-z0-9_-]+$/;
-    if (!pattern.test(link)) {
-      throw new Error('CricHeroes profile link must be in format: https://cricheroes.com/player-profile/1572929/Pepsi');
-    }
-    
-    return true;
-  };
+const validateCricHeroesLink = (link) => {
+  // Check if link contains cricheroes.com or chshare.link
+  if (!link.includes('cricheroes.com') && !link.includes('chshare.link')) {
+    throw new Error('Profile link must be a valid CricHeroes or Chshare URL');
+  }
+
+  // Check for CricHeroes link format: https://cricheroes.com/player-profile/{numbers}/{name}
+  const cricHeroesPattern = /^https:\/\/cricheroes\.com\/player-profile\/\d+\/[A-Za-z0-9_-]+$/;
+  // Check for Chshare link format: https://chshare.link/player/{alphanumeric}
+  const chsharePattern = /^https:\/\/chshare\.link\/player\/[A-Za-z0-9_-]+$/;
+  
+  if (!cricHeroesPattern.test(link) && !chsharePattern.test(link)) {
+    throw new Error('Profile link must be in one of the following formats: \nhttps://cricheroes.com/player-profile/1572929/Pepsi\nhttps://chshare.link/player/r56Fec');
+  }
+
+  return true;
+};
+
 
   // Validate date of birth
   const validateDOB = (dob) => {
